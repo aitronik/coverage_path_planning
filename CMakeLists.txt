@@ -3,11 +3,17 @@
 
 cmake_minimum_required(VERSION 3.1...3.23)
 
-project( decomposer )
-
+project( coverage_path )
 
 # CGAL and its components
 find_package( CGAL QUIET COMPONENTS  )
+
+
+
+if (NOT CMAKE_CXX_STANDARD) 
+  set(CMAKE_CXX_STANDARD 17)
+endif ()
+
 
 if ( NOT CGAL_FOUND )
 
@@ -38,10 +44,11 @@ endif()
 # Creating entries for target: decomposer
 # ############################
 
-add_executable( decomposer  decomposer.cpp generatorPath.cpp utils.cpp )
+#add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
+add_executable(coverage_path main.cpp utils.cpp path_generator.cpp)
 
 add_to_cached_list( CGAL_EXECUTABLE_TARGETS decomposer )
 
 # Link the executable to CGAL and third-party libraries
-target_link_libraries(decomposer PRIVATE CGAL::CGAL ${OpenCV_LIBRARIES})
+target_link_libraries(coverage_path PRIVATE CGAL::CGAL ${OpenCV_LIBRARIES})
 
