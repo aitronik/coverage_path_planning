@@ -36,4 +36,5 @@ void plotSubPolygon(cv::Mat image, const string name, /*shared_ptr<Polygon>& p*/
 void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>> poly, float resolution);
 //vector<Point> extractVertices(shared_ptr<Polygon> p);
 void printInfo();
-void plotPathForConvexPolygon( vector<K::Point_2> grid ,shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution);
+void plotPathForConvexPolygon( vector<CGAL::Segment_2<K>> grid ,shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution);
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );

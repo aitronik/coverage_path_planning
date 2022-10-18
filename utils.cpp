@@ -140,20 +140,55 @@ void printInfo() {
 }
 
 
-void plotPathForConvexPolygon(vector<K::Point_2> grid , shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution) {
+void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid , shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution) {
     
     plotPolygon(image, name ,poly,resolution );
     int k = 0; 
     while (k < grid.size()) {
-        K::Point_2 p = grid.at(k); 
-        K::Point_2 q = grid.at(k+1);
+        K::Point_2 p = grid.at(k).source(); 
+        K::Point_2 q = grid.at(k).target();
         cv::line(image, cv::Point(p.hx(), p.hy()), cv::Point(q.hx(), q.hy()), cv::Scalar(0, 0, 255), 1, 8, 0);
-        k = k+2;    
+        k++;
     }
     cv::namedWindow(name, 1);    
     cv::imshow(name , image);
     cv::waitKey(0);    
 }
+
+// vector<CGAL::Segment_2<K>> extractEdges(shared_ptr<CGAL::Polygon_2<K>> poly) {
+//     int d = poly.edges().size();
+//     vector<CGAL::Segment_2<K>> edges; 
+//     for (int i = 0; i < ; i++) {
+//         edges.push_back(poly.edge(i));
+//     }
+//     return edges; 
+// }
+
+//suppongo che i punti in comune non possano essere più di due
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
+    int adj[2] = {-1,-1};
+    int cont = 0;
+    // per ogni lista di vertici di un poligono
+    for (size_t p: container1) {
+        // guardi tutti i vertici
+        for (size_t q:container2) {
+            // se sono uguali
+            if (p == q) {
+                adj[cont] = p;
+                cont++;
+            }
+        }
+    }
+    vertex_i = adj[0];
+    vertex_j = adj[1];
+    // vertex_i and j can be -1 if there is no adjacency
+    // or have a value containing the vertex in which they are adjacent
+    // return true if the two polygons have at least one vertex in common
+    return (vertex_i != -1);
+}
+
+
+
 
 // vector<Point> extractVertices(shared_ptr<Polygon> poly) {
 //     vector<Point> points;

@@ -9,14 +9,21 @@
 #include <CGAL/Direction_2.h>
 #include <CGAL/Triangulation_data_structure.h>
 #include <vector>
+#include <algorithm>
 #include <cassert>
 #include <list>
 #include <tuple>
 #include <iostream>
-#include <boost/variant/get.hpp>
+#include <CGAL/partition_2.h>
+#include <CGAL/Partition_traits_2.h>
+#include <CGAL/property_map.h>
+#include <bits/stdc++.h>
 
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Partition_traits_2<K, CGAL::Pointer_property_map<K::Point_2>::type > Partition_traits_2;
+typedef Partition_traits_2::Polygon_2 Polygon;  // a polygon of indicesS
+typedef std::list<Polygon> Polygon_list;
 
 using namespace std;
 
@@ -25,4 +32,8 @@ tuple<CGAL::Segment_2<K>, K::Point_2> findSweepDirection(shared_ptr<CGAL::Polygo
 vector<K::Point_2> divideSegment(K::Segment_2 segment, float range);
 vector<CGAL::Line_2<K>> createGrid(shared_ptr<CGAL::Polygon_2<K>> polygon,  CGAL::Segment_2<K> sweepDirection, K::Point_2 point, float range);
 K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
-vector<K::Point_2> generatePath( shared_ptr<CGAL::Polygon_2<K>> polygon, float range); 
+vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2<K>> polygon, float range); 
+// bool is_in( vector< int>& v, int k);
+int indexOfMinimum(vector<float>& dist, bool* visited);
+void Dijkstra(vector<vector<int>>& graph, int sorg, vector<float>& distances);
+vector<int> sortPolygons (vector<vector<vector<int>>> adj);

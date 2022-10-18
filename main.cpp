@@ -6,7 +6,10 @@
 #include <cassert>
 #include <string.h>
 #include <list>
+#include <iterator>
+#include <CGAL/Boolean_set_operations_2.h>
 #include <CGAL/draw_polygon_2.h>
+#include <CGAL/Polygon_with_holes_2.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -16,11 +19,12 @@
 using namespace std;
 // string decomposition;
 #define resolution (0.05)
-#define range (10)
+#define range (40)
 
 //SISTEMARE I RIFERIMENTI -> SHARED_PTR??
 //SE IL RANGE È GRANDE E NON CI STA NEANCHE UNA STRISCIATA DÀ PROBLEMI 
 //AGGIUNGERE IL NOME DELLA DECOMPOSIZIONE ALL'IMMAGINE 
+//AGGIUNGERE UNA TOLLERANZA PER CUI SCEGLIERE IL LATO PIÙ LUNGO ANCHE SE LA SUA ALTEZZA È LEGGERMENTE MAGGIORE 
 
 
 
@@ -116,8 +120,10 @@ int main(int argc, char* argv[]) {
     cv::waitKey(0);
 
 
+
     //generazione path per ogni poligono
-    vector<vector<K::Point_2>> grids;
+    vector<vector<CGAL::Segment_2<K>>> grids; 
+    // vector<vector<K::Point_2>> grids;
     vector<shared_ptr<CGAL::Polygon_2<K>>> polygons_for_path;
     int cont = 0;
 
@@ -128,7 +134,7 @@ int main(int argc, char* argv[]) {
             tmp.push_back(K::Point_2 (points[p].hx(), points[p].hy()));
         }
         polygons_for_path.push_back(createPolygon(tmp));
-        grids.push_back(generatePath(polygons_for_path.at(cont), range)); //a due a due sono i punti da collegare per creare la griglia 
+        grids.push_back(generatePathForOnePolygon(polygons_for_path.at(cont), range)); 
         plotPathForConvexPolygon(grids.at(cont), polygons_for_path.at(cont), image_path, "path", resolution);
         cont++;
 
@@ -137,5 +143,53 @@ int main(int argc, char* argv[]) {
     cv::waitKey(0);
 
 
+
+
+    //COSTRUZIONE MATRICE DI ADIACENZA
+    k = partition_polys.size(); 
+    //le adiacenze sono rappresentate da una coppia di indici di punti perché suppongo che tutti i poligoni siano convessi 
+    vector<vector<vector<int>>> adj;
+    adj.resize(k);
+    for (int i = 0; i < k; i++) {
+        adj.at(i).resize(k);
+        for (int j = 0; j < k; j++) {
+            adj.at(i).at(j).resize(2);
+        }
+    }
+    //adj[k][k][2]
+    int cont_i = 0;
+    int cont_j = 0;
+
+    for (const Polygon& poly1 : partition_polys){ 
+        for (const Polygon& poly2 : partition_polys){
+            if (cont_i == cont_j) { 
+                adj[cont_i][cont_j][0] = -1;
+                adj[cont_i][cont_j][1] = -1;
+            }
+            // if i != j, then assign the vertices
+            else {
+                int vert_i, vert_j;
+                adjacency (poly1.container(), poly2.container(), vert_i, vert_j);
+                adj[cont_i][cont_j][0] = vert_i;
+                adj[cont_i][cont_j][1] = vert_j;
+            }
+            cont_j++;
+        }
+        cont_i++;
+        cont_j = 0;
+    }
+
+
+
+    vector<int> polygonSorted = sortPolygons(adj); //polygons in ordine di visita
+
+   
+    //stampo ordine poligoni ==> per adesso ordina semplicemente in base alle distanze minime, non va bene 
+    cout << "Ordine poligoni nel path: " << endl;
+    for (int i = 0; i < polygonSorted.size(); i++ ) {
+        cout << polygonSorted.at(i) << endl;
+    }
+
     return 0;
+
 }
