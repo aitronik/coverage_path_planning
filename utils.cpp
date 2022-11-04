@@ -155,14 +155,6 @@ void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid , shared_ptr<CGAL:
     cv::waitKey(0);    
 }
 
-// vector<CGAL::Segment_2<K>> extractEdges(shared_ptr<CGAL::Polygon_2<K>> poly) {
-//     int d = poly.edges().size();
-//     vector<CGAL::Segment_2<K>> edges; 
-//     for (int i = 0; i < ; i++) {
-//         edges.push_back(poly.edge(i));
-//     }
-//     return edges; 
-// }
 
 //suppongo che i punti in comune non possano essere più di due
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
@@ -188,11 +180,12 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 }
 
 
+double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
 
-// vector<Point> extractVertices(shared_ptr<Polygon> poly) {
-//     vector<Point> points;
-//     //estraggo i vertici
-//     for(const Point& p : poly->vertices()) points.push_back(p); //dovrebbero essere in ordine? 
-//     return points;
-// }
+    double theta = CGAL::scalar_product(v,w);
+    double len1, len2;
+    len1 = sqrt(v.squared_length());
+    len2 = sqrt(w.squared_length());
+    return theta/ (len1*len2);
+}
