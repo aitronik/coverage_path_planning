@@ -16,44 +16,48 @@
 #include "utils.hpp"
 #include "path_generator.hpp"
 
-using namespace std;
-#define resolution (0.05)
-#define sweep_distance (30)
+//LINEA DI COMANDO: <tipocomposizione> <sweepDistance> 
 
+
+using namespace std;
+
+float sweep_distance;
+string decomposition_name;
+
+//funziona solo con la decomposizione 0
 //SISTEMARE I RIFERIMENTI -> SHARED_PTR??
 //SE IL RANGE È GRANDE E NON CI STA NEANCHE UNA STRISCIATA DÀ PROBLEMI 
-//AGGIUNGERE IL NOME DELLA DECOMPOSIZIONE ALL'IMMAGINE 
 //AGGIUNGERE UNA TOLLERANZA PER CUI SCEGLIERE IL LATO PIÙ LUNGO ANCHE SE LA SUA ALTEZZA È LEGGERMENTE MAGGIORE 
-//CON INPUT.TXT SI VEDE CHE IL PATH NON COPRE DAVVERO TUTTA L'AREA
-// COME GESTIRE ADIACENZE NEL CASO IN CUI L'ADIACENZA SIA SOLO UNA PARTE DEL LATO 
-
-
-
+//star.txt non va 
 
 int main(int argc, char* argv[]) {
     
-    //argomenti
-    if (argc < 3) { 
+    //argomenti linea di comando
+    if (argc < 4) { 
         cout << "Argument Error" << endl;
         printInfo();
         return 1;
     }
     string filename = argv[1];
+    sweep_distance = stof(argv[3]);
     
 
-    
     //leggo input 
     vector<K::Point_2> points = readFromFile(filename);
     shared_ptr<CGAL::Polygon_2<K>> initial_polygon = createPolygon(points);
     
     //immagine su cui plottare
-    cv::Mat initial_image(1500,1500, CV_8UC3, cv::Scalar(255,255,255));
-    cv::Mat image_decomposition(1500,1500, CV_8UC3, cv::Scalar(255,255,255));
-    cv::Mat image_path(1500,1500, CV_8UC3, cv::Scalar(255,255,255));
+    cv::Mat initial_image(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
+    cv::Mat image_decomposition(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
+    cv::Mat image_path(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
 
     if (initial_image.empty() || image_decomposition.empty() || image_path.empty()) {
         cout << "Could not open or find the image" << endl;
     }
+
+
+    //calcolo rapporto pixel/metri
+    float resolution = calculateresolution(points);
 
     //plot poligono iniziale
     plotPolygon(initial_image, "Initial Polygon", initial_polygon, resolution);
@@ -69,25 +73,25 @@ int main(int argc, char* argv[]) {
     switch (stoi(argv[2]))
     {
     case 0:
-        cout << "optimal convex partition" << endl;
         CGAL::optimal_convex_partition_2(polygon.vertices_begin(),
                                  polygon.vertices_end(),
                                  back_inserter(partition_polys), 
                                  traits);
+        decomposition_name = "Optimal convex partition";
         break;
     case 1: 
-        cout << "monotone partition" << endl;
         CGAL::y_monotone_partition_2(polygon.vertices_begin(),
                                  polygon.vertices_end(),
                                  back_inserter(partition_polys), 
                                  traits);
+        decomposition_name = "Monotone partition";
         break;
     case 2:
-        cout << "approx convex partition" << endl;
         CGAL::approx_convex_partition_2(polygon.vertices_begin(),
                                  polygon.vertices_end(),
                                  back_inserter(partition_polys), 
                                  traits);
+        decomposition_name = "Approx convex partition";
         break;
     case 3:
         cout << "green approx convex partition" << endl;
@@ -117,7 +121,7 @@ int main(int argc, char* argv[]) {
     int k = 0;
     for (const Polygon& poly : partition_polys){
         k++;
-        plotSubPolygon(image_decomposition,"decomposizione", poly, points, resolution) ;
+        plotSubPolygon(image_decomposition,decomposition_name, poly, points, resolution) ;
     }
     cv::waitKey(0);
 
@@ -236,7 +240,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        cout << "poligono " << cont << endl;
         grids.push_back(generatePathForOnePolygon(polygons_for_path.at(cont), sweep_distance, borders )); 
         plotPathForConvexPolygon(grids.at(cont), polygons_for_path.at(cont), image_path, "path", resolution);
         cont++;

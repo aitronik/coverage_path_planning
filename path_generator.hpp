@@ -36,7 +36,6 @@ vector<K::Point_2> divideSegment(K::Segment_2 segment, float sweep_distance);
 vector<CGAL::Line_2<K>> createGrid(shared_ptr<CGAL::Polygon_2<K>> polygon,  CGAL::Segment_2<K> sweepDirection, K::Point_2 point, float sweep_distance);
 K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
 vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2<K>> polygon, float sweep_distance, vector<bool> borders); 
-// bool is_in( vector< int>& v, int k);
 int indexOfMinimum(vector<float>& dist, bool* visited);
 void Dijkstra(vector<vector<int>>& graph, int sorg, vector<float>& distances);
 vector<int> sortPolygons (vector<vector<vector<int>>> adj);

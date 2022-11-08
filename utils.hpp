@@ -33,6 +33,8 @@ using namespace std;
 vector<K::Point_2> readFromFile(string filename); 
 void printPoint(K::Point_2 p);
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
+float pixelFromMetres (float x, float resolution);
+float calculateresolution(vector<K::Point_2> points);
 void plotSubPolygon(cv::Mat image, const string name, Polygon poly, vector<K::Point_2> points, float resolution);
 void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>> poly, float resolution);
 void printInfo();

@@ -63,31 +63,24 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float sweep_distanc
    
 
     float length = sqrt(v.squared_length());
+
     if (length <= sweep_distance || sweep_distance == 0) {
         path.push_back(segment.source());
         path.push_back(segment.target());
         return path;
     }
-    // //in quanti punti lo divido
-    // int num_points = (length/sweep_distance) +1 ;
-
-    
-
+   
     K::Point_2 next = source;
-    int i = 0;
+    int i = 1;
     
+    // path.push_back(source); //perché non rientra nel caso precedente? 
 
     while (segment.collinear_has_on(next)) {
-        // printPoint(next);
-        /*if (i != 0)*/ 
+        path.push_back(next);
         next = source + ( (v/length)  * sweep_distance * i);  //  v/length dovrebbe essere il vettore direzione 
-        path.push_back(next); //idem a riga 86
         i++;
-
     }
     
-    path.push_back(target); //se non voglio i bordi questo lo tolgo
-
     return path;
 }
 
@@ -101,12 +94,18 @@ vector<CGAL::Line_2<K>> createGrid(shared_ptr<CGAL::Polygon_2<K>> polygon,  CGAL
         num_lines = (int)num_lines++;
         sweep_distance = distance/num_lines;
     }
+    // cout << "createGrid: ampiezza sweep distance: " << sweep_distance << endl;
     CGAL::Line_2<K> ortogonal = sweepDirection.supporting_line().perpendicular(point); //linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono 
     auto projection = CGAL::intersection(ortogonal, sweepDirection); //punto di proiezione del punto più lontano sul lato della direzione ==> è per forza un punto si ? 
-    // CGAL::Vector_2<K> v (projection, point); //"altezza " del poligono 
+
     const K::Point_2* p = boost::get<K::Point_2>(&*projection);
     CGAL::Segment_2<K> h ( *p,point); 
+
+    // cout << "createGrid: altezza: " << sqrt(h.squared_length()) << endl;
+
     vector<K::Point_2> inters = divideSegment(h,sweep_distance);
+    // cout <<  "createGrid: numero strisciate: " << inters.size() << endl;
+
     //genero una linea con direzione sweepDirection.direction e che passa per il punto i-esimo 
     for (int i = 0; i < inters.size(); i++ ) {
         grid.push_back(CGAL::Line_2<K> (inters.at(i), sweepDirection.direction()));
@@ -123,14 +122,18 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
         const auto inter = CGAL::intersection(line, polygon->edge(i));
         if (inter){
             if ( const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
-                a[cont] = s->source();
-                a[cont+1] = s->target();
-                cont = cont++;
+                //Prima target perché altrimenti viene in ordine diverso dagli altri segmenti intersezione
+                a[0] = s->target();
+                a[1] = s->source();
+                return a;
             }    
             else {
                 const K::Point_2* p = boost::get<K::Point_2>(&*inter);
                 a[cont] = *p;
                 cont++;
+                if (cont == 2) {
+                    return a;
+                }
             }
         }
     }
@@ -141,7 +144,6 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     if (cont == 1) {
         a[1] = K::Point_2(-1,-1);
     } 
-
     return a;  
 }
  
@@ -150,14 +152,16 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
 //PUò non essere un poligono? 
 vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2<K>> polygon, float sweep_distance,vector<bool> borders/*, K::Point_2 start_point*/) { 
 
+    //start_point deve essere uno dei 4 vertici del poligono da cui possono partire le strisciate (come fare a controllare se è uno di quei 4? )
+
     // if ( !count(polygon->vertices().begin(), polygon->vertices().end(), start_point)) {
     //     //errore 
 
     // }
 
-    if (borders.size() != polygon->edges().size() ) {
-        cout << "generatePathForOnePolygon: errore" << endl;
-    }
+    // if (borders.size() != polygon->edges().size() ) {
+    //     cout << "generatePathForOnePolygon: errore" << endl;
+    // }
 
     borders.resize(borders.size());
     vector<K::Point_2> vertices;
@@ -165,12 +169,16 @@ vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2
     CGAL::Polygon_2<K> pol= *polygon;
     shared_ptr<CGAL::Polygon_2<K>> polygon_new =  make_shared <CGAL::Polygon_2<K>>(pol);
     
+    // cout << "Vertici poligono iniziale: " << endl;
+    // for (int i = 0; i < polygon->vertices().size(); i++) {
+    //     cout << polygon->vertex(i).hx() << ", " << polygon->vertex(i).hy() << endl;
+    // }
     
     //se ci sono adiacenze 
     //creo un nuovo poligono con i lati spostati
     for (int i = 0; i < borders.size(); i++) {
-
-        if (borders[i] != 0) {
+        
+        if (borders[i] != 0) { //lascio uno spazio diverso nelle adiacenze
             //LE ADIACENZE VENGONO CALCOLATE BENE
             CGAL::Segment_2<K> corr = polygon_new->edge(i); //lato corrente
 
@@ -206,7 +214,6 @@ vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2
             K::Point_2* a = intersect_polygon_line( polygon_new, new_line);
             //interseca per forza in due punti? 
             int cont = 0;
-            //PROBLEMA :: RIMARRANNO IN ORDINE (SENSO ORARIO O ANTIORARIO) I VERTICI? dipende dalla funzione di intersezione 
             for (K::Point_2 &p : polygon_new->container()) {
                 if (p == polygon_new->edge(i).source() || p == polygon_new->edge(i).target() ) {
                     if ( cont == 0) {
@@ -222,102 +229,78 @@ vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2
         }
     }
 
+    // cout << "Vertici poligono nuovo: " << endl;
+    // for (int i = 0; i < polygon_new->vertices().size(); i++) {
+    //     cout << polygon_new->vertex(i).hx() << ", " << polygon_new->vertex(i).hy() << endl;
+    // }
 
-    //start_point deve essere uno dei 4 vertici del poligono da cui possono partire le strisciate (come fare a controllare se è uno di quei 4? )
-    
-    auto[edge, point] = findSweepDirection(polygon_new);
+    auto[edge, point] = findSweepDirection(polygon_new); //questo dovrebbe funzionare bene
     //edge è il lato parallelo alla direzione di spazzata 
     //point è il punto più lontano a quel lato 
 
+
     //creo griglia 
     vector<CGAL::Line_2<K>> grid = createGrid(polygon_new, edge, point , sweep_distance);
+    // cout <<"generatePath grid.size: " << grid.size() << endl;
     vector<K::Point_2> intersections; //intersezioni tra le sweep lines e il poligono
     
     for (int i = 0; i < grid.size(); i++) {
+
         K::Point_2* a = intersect_polygon_line(polygon_new, grid.at(i));
         
         //o non interseca oppure interseca solo in un punto
-        if (a[0].hx() == -1 || a[1].hx() == -1) continue;
-
-        intersections.push_back(a[0]);
-        intersections.push_back(a[1]);
+        if (a[0].hx() == -1 || a[1].hx() == -1) {
+            cout << a[0].hx() << ", " << a[0].hy() << "   " << a[1].hx() << ", " << a[1].hy() << endl;
+        }
+        else {
+            intersections.push_back(a[0]);
+            intersections.push_back(a[1]);
+        }
         
     }   
 
     intersections.resize(intersections.size());
-
+    // cout << "generatePath intersections.size(): " << intersections.size() << endl;
     //creazione path vero e proprio 
     vector<CGAL::Segment_2<K>> path; 
     CGAL::Segment_2<K> old;
     int cont = 0;
 
-    for (int i = 0; i < intersections.size() ;i = i+2) {
-        CGAL::Segment_2<K> tmp (intersections[i], intersections[i+1]);
-        // CGAL::Line_2<K> line (intersections[i], intersections[i+1]);
-        vector< K::Point_2> p = divideSegment(tmp, 0); 
+    for (int i = 0; i < intersections.size() ; i = i+2) {
 
-        if (p.size() == 1 ) { //è troppo piccolo, non ci passa => BISOGNA VALUTAREs
-            return path;
-        }
+        CGAL::Segment_2<K> seg (intersections[i], intersections[i+1]);
 
-
-        CGAL::Segment_2<K> seg (p.at(0), p.at(p.size()-1)); //p.size()-2 nel caso in non cui voglio arrivare fino al bordo da un lato 
-
-
-        if (cont == 0) {
-            path.push_back(seg);
-            cont++;
-            old = path.at(cont-1);
-        }
-        if (i == intersections.size()-2 || i == intersections.size()-1 ) {
-            CGAL::Segment_2<K> link (old.target(), seg.source());
-            path.push_back(link); 
-            cont++;
-            CGAL::Segment_2<K> l(seg.source(), seg.target());
-            path.push_back(l);
-            cont++;
-            old = path.at(cont-1);
-        }
-        if (i%4==2) {
-            CGAL::Segment_2<K> link (old.target(), seg.target());
-            path.push_back(link); 
-            cont++;
-            CGAL::Segment_2<K> l(seg.target(), seg.source());
-            path.push_back(l);
-            cont++;
-            old = path.at(cont-1); 
-        } 
-        if (i%4==0) {
-            CGAL::Segment_2<K> link (old.target(), seg.source());
-            path.push_back(link); 
-            cont++;
-            CGAL::Segment_2<K> l(seg.source(), seg.target());
-            path.push_back(l);
-            cont++;
-            old = path.at(cont-1);
-        }
-        
-        // if (i != 0  && i%2 != 0) {
-        //     CGAL::Segment_2<K> link (old.target(), seg.target());
-        //     path.push_back(link); 
-        //     cont++;
-        //     CGAL::Segment_2<K> l(seg.target(), seg.source());
-        //     path.push_back(l);
-        //     cont++;
-        //     old = path.at(cont-1);
-
-        // } 
-        // else if (cont!= 0 && i%2 == 0) {
-        //     CGAL::Segment_2<K> link (old.target(), seg.source());
-        //     path.push_back(link); 
-        //     cont++;
-        //     CGAL::Segment_2<K> l(seg.source(), seg.target());
-        //     path.push_back(l);
-        //     cont++;
-        //     old = path.at(cont-1);
+        // //SE IL ROBOT NON CI PASSA?? 
+        // vector< K::Point_2> p = divideSegment(tmp, 0); 
+        // cout << p.size() << endl;
+        // if (p.size() == 1 ) { //è troppo piccolo, non ci passa => BISOGNA VALUTARE
+        //     cout << "Boh" << endl;
+        //     return path;
         // }
-       
 
+        //cont = numero di pezzi nel path compresi i raccordi 
+
+        if (i == 0) {
+            path.push_back(seg);
+            old = seg;
+            cont++;
+        }
+        else if (i%4==2) {
+            CGAL::Segment_2<K> link(old.target(), seg.target());
+            path.push_back(link);
+            CGAL::Segment_2<K> l(seg.target(), seg.source());
+            cont = cont + 2;
+            path.push_back(l);
+            old = l;
+        }
+        else { //i%4 == 0
+            CGAL::Segment_2<K> link(old.target(), seg.source());
+            path.push_back(link);
+            CGAL::Segment_2<K> l(seg.source(), seg.target());
+            cont = cont + 2;
+            path.push_back(l);
+            old = l;
+        }
     }
 
     return path;
@@ -337,15 +320,6 @@ int indexOfMinimum(vector<float>& dist, bool* visited) {
     }
     return index;
 }
-
-
-// bool is_in( vector< int>& v, int k) {
-//     for (int i = 0; i < v.size(); i++) {
-//         if (v.at(i) == k) return true;
-//     }
-//     return false;
-// }
-
 
 
 //sorg è il nodo sorgente 
@@ -428,9 +402,6 @@ vector<int> sortPolygons (vector<vector<vector<int>>> adj){
      
 }
 
-
-
-// vector<K::Point_2> generatePath(Polygon_list partition_polys,  vector<K::Point_2> points , int src, int dest, )
 
 
 

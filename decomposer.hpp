@@ -18,7 +18,7 @@ typedef CGAL::Vector_2<K> Vector;
 typedef CGAL::Line_2<K> Line;
 
 using namespace std;
-#define resolution (0.05)
+// #define resolution (10)
 
 vector<Point> findCriticalPoints(vector<shared_ptr<Polygon>> polygons);
 vector<shared_ptr<Polygon>> decompose(vector<shared_ptr<Polygon>> polygons, vector<Point> criticalPoints);

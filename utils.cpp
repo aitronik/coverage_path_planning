@@ -39,19 +39,13 @@ vector<K::Point_2> readFromFile(string name){
     return perimeters.at(0);
 }
 
-// template <class InputIterator, class OutputIterator, class Traits>
-// inline
-// OutputIterator optimal_convex_partition_2(InputIterator first,
-//                                           InputIterator beyond,
-//                                           OutputIterator result,
-//                                           const Traits& traits)
-// {
-//    return partition_optimal_convex_2(first, beyond, result, traits);
-// }
+
 
 void printPoint(K::Point_2 p) {
     cout << p.hx() << "," << p.hy() << endl;
 }
+
+
 
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
     size_t sz = points.size();
@@ -63,23 +57,43 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 }
 
 
-// void plotPoints(const string& name, const vector<Point>& points,  cv::Mat image) {
-//     vector<cv::Point> points;
-//     cout << "num points : " << points.size() << endl;;
-//     for (int i = 0; i < points.size(); i++) {
-//         cv::Point p (points.at(i).hx(), points.at(i).hy());
-//         //cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
-//         cv::circle(image,p,5,cv::Scalar(255, 0, 0), 1, 8, 0 );
-//     }
-//     cv::imshow(name, image);
-//     cv::waitKey(0);  
-// }
 
-void plotSubPolygon(cv::Mat image, const string name, /*shared_ptr<Polygon>& p*/ Polygon poly,  vector<K::Point_2> points, float resolution){ //sulla stessa immagine se sono più di uno
+//non so se ha senso fare una funzione così
+float pixelFromMetres (float x, float resolution) {
+    return x*resolution;
+}
+
+
+
+//resolution non è il termine giusto
+float calculateresolution(vector<K::Point_2> points) {
+
+    float x_max = points.at(0).hx();
+    float y_max = points.at(0).hy();
+    for (int i = 0; i < points.size(); i++ ){
+        if (points.at(i).hx() > x_max) {
+            x_max = points.at(i).hx();
+        }
+        if (points.at(i).hy() > y_max) {
+            y_max = points.at(i).hy();
+        }
+    }
+    if (y_max >= x_max) {
+        return 980/y_max;
+    }
+
+    return 980/x_max;
+}
+
+
+
+
+void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::Point_2> points, float resolution){ //sulla stessa immagine se sono più di uno
    
     if (image.empty()) {
         cout << "Could not open or find the image" <<endl;
     }
+
 
     cv::Point p_old;
     cv::Point first;
@@ -87,7 +101,7 @@ void plotSubPolygon(cv::Mat image, const string name, /*shared_ptr<Polygon>& p*/
     int cont = 0;
     size_t sz = poly.container().size();
     for (Point p: poly.container()) {
-        cv::Point point (points[p].hx(), points[p].hy());
+        cv::Point point ( pixelFromMetres(points[p].hx(), resolution), pixelFromMetres(points[p].hy(), resolution) );
         if (cont == 0) {
             p_old = point;
             first = point;
@@ -106,18 +120,23 @@ void plotSubPolygon(cv::Mat image, const string name, /*shared_ptr<Polygon>& p*/
     cv::waitKey(0);    
 }
 
+
+
 void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>> poly, float resolution){ 
-    //creating a blank image with white background
+
     if (image.empty()) cout << "Could not open or find the image" <<endl;
+
     //points di cgal ==> points di opencv
     vector<K::Point_2> points;
     for(const K::Point_2& pt : poly->vertices()) points.push_back(pt);
-    //creo points di opencv 
+ 
+    
+    //creo points di opencv ==> trasformando da metri a pixel
     cv::Point p_old;
     cv::Point first;
     cv::Point last;
     for (int i = 0; i < points.size(); i++) {
-        cv::Point point (points.at(i).hx(), points.at(i).hy());
+        cv::Point point ( pixelFromMetres(points.at(i).hx(), resolution) , pixelFromMetres(points.at(i).hy(), resolution ) );
         if (i == 0) {
             p_old = point;
             first = point;
@@ -132,6 +151,8 @@ void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>
     cv::waitKey(0);    
 }
 
+
+
 void printInfo() {
     cout << "0 -> optimal convex partition" << endl;
     cout << "1 -> monotone partition" << endl;
@@ -140,20 +161,28 @@ void printInfo() {
 }
 
 
+
+
+
 void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid , shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution) {
-    
+
     plotPolygon(image, name ,poly,resolution );
     int k = 0; 
     while (k < grid.size()) {
         K::Point_2 p = grid.at(k).source(); 
         K::Point_2 q = grid.at(k).target();
-        cv::line(image, cv::Point(p.hx(), p.hy()), cv::Point(q.hx(), q.hy()), cv::Scalar(0, 0, 255), 1, 8, 0);
+        // cout << "Linea "<<  k << " da (" << p.hx()<< ", " << p.hy() << ") a ("<< q.hx() <<", " << q.hy() <<")" << endl;
+        cv::line(image, cv::Point( pixelFromMetres(p.hx(), resolution), pixelFromMetres(p.hy(), resolution) ), 
+        cv::Point(pixelFromMetres(q.hx(), resolution), pixelFromMetres(q.hy(), resolution) ), cv::Scalar(0, 0, 255), 1, 8, 0);
         k++;
     }
     cv::namedWindow(name, 1);    
     cv::imshow(name , image);
     cv::waitKey(0);    
 }
+
+
+
 
 
 //suppongo che i punti in comune non possano essere più di due
@@ -180,12 +209,14 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 }
 
 
-double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
+
+double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
     double theta = CGAL::scalar_product(v,w);
     double len1, len2;
     len1 = sqrt(v.squared_length());
     len2 = sqrt(w.squared_length());
     return theta/ (len1*len2);
+
 }
