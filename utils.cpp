@@ -88,7 +88,7 @@ float calculateresolution(vector<K::Point_2> points) {
 
 
 
-void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::Point_2> points, float resolution){ //sulla stessa immagine se sono più di uno
+void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::Point_2> points, float resolution, int k){ //sulla stessa immagine se sono più di uno
    
     if (image.empty()) {
         cout << "Could not open or find the image" <<endl;
@@ -100,8 +100,10 @@ void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::P
     cv::Point last;
     int cont = 0;
     size_t sz = poly.container().size();
+    cv::Point p_label;
     for (Point p: poly.container()) {
         cv::Point point ( pixelFromMetres(points[p].hx(), resolution), pixelFromMetres(points[p].hy(), resolution) );
+        p_label += point;
         if (cont == 0) {
             p_old = point;
             first = point;
@@ -113,9 +115,12 @@ void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::P
         p_old = point;
         cont++;
     }
+    p_label /= cont;
 
     cv::line(image, last, first, cv::Scalar(115, 44, 83), 1, 8, 0);
-    cv::namedWindow(name, 1);
+    cv::putText(image, std::to_string(k-1) , p_label, 
+        cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+    cv::namedWindow(name, 1); 
     cv::imshow(name, image);
     cv::waitKey(0);    
 }

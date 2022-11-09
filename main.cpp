@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
     int k = 0;
     for (const Polygon& poly : partition_polys){
         k++;
-        plotSubPolygon(image_decomposition,decomposition_name, poly, points, resolution) ;
+        plotSubPolygon(image_decomposition,decomposition_name, poly, points, resolution,k);
     }
     cv::waitKey(0);
 
@@ -149,6 +149,17 @@ int main(int argc, char* argv[]) {
     int cont_i = 0;
     int cont_j = 0;
 
+
+    // for (const Polygon& poly1 : partition_polys) {
+    //     cout << "vertici sottopoligono" << endl;
+    //     for (int j = 0 ; j < poly1.vertices().size(); j++ ) {
+    //         cout << poly1.vertex(j) << endl;
+
+    //     }
+
+    // }
+
+
     for (const Polygon& poly1 : partition_polys){ 
         for (const Polygon& poly2 : partition_polys){
             if (cont_i == cont_j) { 
@@ -171,10 +182,16 @@ int main(int argc, char* argv[]) {
 
     vector<int> polygonSorted = sortPolygons(adj); //polygons in ordine di visita
 
-   
 
-
-
+    // //prova tsp
+    // vector<int> route = findMinRoute(adj, 0);
+    cout << "ORDINE POLIGONI" << endl; 
+    for (int i = 0; i < polygonSorted.size(); i++) {
+        cout << polygonSorted.at(i) << endl;
+    }
+    // for (int i = 0; i < route.size(); i++) {
+    //     cout<< route.at(i) << endl;
+    // }
 
     // //stampo ordine poligoni ==> per adesso ordina semplicemente in base alle distanze minime, non va bene 
     // cout << "Ordine poligoni nel path: " << endl;

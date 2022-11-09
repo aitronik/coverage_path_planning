@@ -123,8 +123,8 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
         if (inter){
             if ( const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
                 //Prima target perché altrimenti viene in ordine diverso dagli altri segmenti intersezione
-                a[0] = s->target();
-                a[1] = s->source();
+                a[0] = polygon->edge(i).target();
+                a[1] = polygon->edge(i).source();
                 return a;
             }    
             else {
@@ -179,7 +179,7 @@ vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2
     for (int i = 0; i < borders.size(); i++) {
         
         if (borders[i] != 0) { //lascio uno spazio diverso nelle adiacenze
-            //LE ADIACENZE VENGONO CALCOLATE BENE
+
             CGAL::Segment_2<K> corr = polygon_new->edge(i); //lato corrente
 
             CGAL::Line_2<K> perp(corr);
@@ -325,7 +325,7 @@ int indexOfMinimum(vector<float>& dist, bool* visited) {
 //sorg è il nodo sorgente 
 //graph il grafo di adiacenza con i pesi 
 //dist array delle distanze dal nodo sorgente 
-void Dijkstra( vector<vector<int>>& graph, int sorg , vector<float>& distances) { //come passare per riferimento ? 
+void Dijkstra( vector<vector<int>>& graph, int sorg , vector<float>& distances) { 
     
     int numNodes = graph.at(0).size();
     distances.resize(numNodes);
@@ -360,15 +360,50 @@ void Dijkstra( vector<vector<int>>& graph, int sorg , vector<float>& distances) 
 
 
 
-vector<int> sortPolygons (vector<vector<vector<int>>> adj){
+vector<int> sortPolygons (vector<vector<vector<int>>> adj){ //si può aggiungere l'indice di start che al momento è sempre 0 nella chiamata a findMinRoute
 
-    int k = adj.size();
-     //creo matrice che abbia i pesi come elementi, al momento tutti 1 se i poligoni sono adiacenti 
+    vector<int> route = findMinRoute(adj,0);
+    vector<int> polygonSorted; 
+
+
+    int cont = 0;
+    int j = 0;
+    while (cont < route.size()) {
+        for (int i = 0; i < route.size(); i++) {
+    
+            if (route[i] == j-1) {
+                polygonSorted.push_back(i);
+                j = i+1;
+                cont++;
+                break;
+            }
+        }
+    }
+
+    return polygonSorted;
+     
+}
+
+
+int numAdiacency(vector<vector<vector<int>>>&adj, int node) {
+    int x = 0; 
+    for (int i = 0; i < adj[node].size(); i++) {
+        if (adj[node][i][0] != -1 || adj[node][i][1] != -1) {
+            x++;
+        }
+    }
+    return x;
+}
+
+
+vector<int> findMinRoute(vector<vector<vector<int>>>&adj, int start) {
+    int N = adj.size(); 
+    //creo matrice che abbia i pesi come elementi, al momento tutti 1 se i poligoni sono adiacenti 
     vector< vector < int> > adj_new;
 
-    for (int i = 0; i < k; i++) {
+    for (int i = 0; i < N; i++) {
         vector<int> tmp;
-        for (int j = 0; j < k; j++) {
+        for (int j = 0; j < N; j++) {
             if (adj[i][j][0] != -1) { //il secondo può essere -1 e il primo no , ma non il contrario
                 tmp.push_back(1);
             }
@@ -379,31 +414,108 @@ vector<int> sortPolygons (vector<vector<vector<int>>> adj){
         adj_new.push_back(tmp);
     }
 
+        //creazione matrice con i pesi ==> per adesso peso : numero di poligoni di distanza
+    vector<vector<float>> matrix;
 
-    vector<float> dist;
-    
-    Dijkstra(adj_new, 0, dist );
-   
-
-    bool visited[dist.size()];
-    for (int i = 0; i < dist.size(); i++) {
-        visited[i] = false;
-    }
-    
-    vector<int> polygonSorted; 
-
-    for (int i = 0; i < dist.size(); i++) {
-        int index = indexOfMinimum(dist, visited);
-        visited[index] = true;
-        polygonSorted.push_back(index);
+    for (int i = 0; i < N; i++ ) {
+        vector<float> distances;
+        Dijkstra(adj_new, i, distances);
+        for (int j = 0 ; j < distances.size(); j++) {
+            distances[j] = distances[j];            
+        }
+        matrix.push_back(distances);
     }
 
-    return polygonSorted;
-     
+    
+    //inizializzo il vettore dei nodi visitati e dei costi 
+    //start è il nodo di partenza 
+    //il costo per andare a start è 0
+
+    vector<bool> visitedNodes;
+    vector<float> cost;
+    vector<int> precedent; 
+    visitedNodes.resize(N);
+    cost.resize(N);
+    precedent.resize(N);
+
+    for (int i = 0; i < N; i++) {
+        visitedNodes[i] = false; 
+        cost[i] = INT_MAX;
+        precedent[i] = -1;
+    }
+
+
+    visitedNodes[start] = true; 
+    cost[start] = 0; 
+    
+    int corrente = start;
+    int cont = 0;
+    bool all_visited = false;
+
+
+
+    while (!all_visited) {
+
+    
+
+        vector<float> tmp_cost;
+        tmp_cost.resize(N);
+        for (int i = 0; i < N ; i++ ) {
+            tmp_cost[i] = INT_MAX;
+        }
+
+
+        for (int i = 0; i < N; i++) {
+            if (!visitedNodes[i]) { //i nodo non ancora visitato
+                if (cost[i] > cost[corrente] + matrix[corrente][i]) {
+                    tmp_cost[i] = cost[corrente] + matrix[corrente][i];
+                }
+            }
+        }
+
+
+
+        //per terminazione
+        all_visited = true;
+        for (int i = 0 ; i < N ; i++ ) {
+            if (visitedNodes[i] == false ) {
+                all_visited = false;
+            }
+        }
+
+
+        int j_min = 0;
+        int min = INT_MAX;
+        for (int j = 0; j < N; j++) {
+            if (tmp_cost[j] == min ){ //se costano = prendo quello che ha più adiacenze 
+
+                if (j_min != 0 && numAdiacency(adj,j) < numAdiacency(adj,j_min) ) {
+                    j_min = j;
+                }
+            }
+            else if (tmp_cost[j] < min) {
+                min = tmp_cost[j];
+                j_min = j;
+
+            }
+        }       
+        if (j_min != start) {
+            cost[j_min] = cost[corrente] + matrix[corrente][j_min];
+            precedent[j_min] = corrente;
+            visitedNodes[j_min] = true;
+            corrente = j_min;
+        }
+
+        // cout << "corrente: " << corrente << endl;
+        // corrente = (corrente+1)%N;
+
+        continue;
+
+    }
+
+
+    return precedent;
 }
-
-
-
 
 
 

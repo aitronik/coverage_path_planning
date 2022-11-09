@@ -39,3 +39,5 @@ vector<CGAL::Segment_2<K>> generatePathForOnePolygon( shared_ptr<CGAL::Polygon_2
 int indexOfMinimum(vector<float>& dist, bool* visited);
 void Dijkstra(vector<vector<int>>& graph, int sorg, vector<float>& distances);
 vector<int> sortPolygons (vector<vector<vector<int>>> adj);
+int numAdiacency(vector<vector<vector<int>>>&adj, int node);
+vector<int> findMinRoute(vector<vector<vector<int>>>&adj, int start);
