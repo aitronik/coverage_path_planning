@@ -1,6 +1,5 @@
 #include "utils.hpp"
 
-
 using namespace std; 
 
 vector<K::Point_2> readFromFile(string name){
@@ -40,12 +39,7 @@ vector<K::Point_2> readFromFile(string name){
 }
 
 
-
-void printPoint(K::Point_2 p) {
-    cout << p.hx() << "," << p.hy() << endl;
-}
-
-
+/*************************************/
 
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
     size_t sz = points.size();
@@ -57,105 +51,7 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 }
 
 
-
-//non so se ha senso fare una funzione così
-float pixelFromMetres (float x, float resolution) {
-    return x*resolution;
-}
-
-
-
-//resolution non è il termine giusto
-float calculateresolution(vector<K::Point_2> points) {
-
-    float x_max = points.at(0).hx();
-    float y_max = points.at(0).hy();
-    for (int i = 0; i < points.size(); i++ ){
-        if (points.at(i).hx() > x_max) {
-            x_max = points.at(i).hx();
-        }
-        if (points.at(i).hy() > y_max) {
-            y_max = points.at(i).hy();
-        }
-    }
-    if (y_max >= x_max) {
-        return 980/y_max;
-    }
-
-    return 980/x_max;
-}
-
-
-
-
-void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::Point_2> points, float resolution, int k){ //sulla stessa immagine se sono più di uno
-   
-    if (image.empty()) {
-        cout << "Could not open or find the image" <<endl;
-    }
-
-
-    cv::Point p_old;
-    cv::Point first;
-    cv::Point last;
-    int cont = 0;
-    size_t sz = poly.container().size();
-    cv::Point p_label;
-    for (Point p: poly.container()) {
-        cv::Point point ( pixelFromMetres(points[p].hx(), resolution), pixelFromMetres(points[p].hy(), resolution) );
-        p_label += point;
-        if (cont == 0) {
-            p_old = point;
-            first = point;
-        }
-        if (cont == sz -1 ) {
-            last = point;
-        }
-        cv::line(image, p_old, point, cv::Scalar(115, 44, 83), 1, 8, 0);
-        p_old = point;
-        cont++;
-    }
-    p_label /= cont;
-
-    cv::line(image, last, first, cv::Scalar(115, 44, 83), 1, 8, 0);
-    cv::putText(image, std::to_string(k-1) , p_label, 
-        cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
-    cv::namedWindow(name, 1); 
-    cv::imshow(name, image);
-    cv::waitKey(0);    
-}
-
-
-
-void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>> poly, float resolution){ 
-
-    if (image.empty()) cout << "Could not open or find the image" <<endl;
-
-    //points di cgal ==> points di opencv
-    vector<K::Point_2> points;
-    for(const K::Point_2& pt : poly->vertices()) points.push_back(pt);
- 
-    
-    //creo points di opencv ==> trasformando da metri a pixel
-    cv::Point p_old;
-    cv::Point first;
-    cv::Point last;
-    for (int i = 0; i < points.size(); i++) {
-        cv::Point point ( pixelFromMetres(points.at(i).hx(), resolution) , pixelFromMetres(points.at(i).hy(), resolution ) );
-        if (i == 0) {
-            p_old = point;
-            first = point;
-        }
-        if (i == points.size()-1 ) last = point;
-        cv::line(image, p_old, point, cv::Scalar(115, 44, 83), 1, 8, 0);
-        p_old = point;
-    }
-    cv::line(image, last, first, cv::Scalar(115, 44, 83), 1, 8, 0);
-    cv::namedWindow(name, 1);
-    cv::imshow(name, image);
-    cv::waitKey(0);    
-}
-
+/*************************************/
 
 
 void printInfo() {
@@ -168,26 +64,23 @@ void printInfo() {
 
 
 
+/*************************************/
 
-void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid , shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution) {
 
-    plotPolygon(image, name ,poly,resolution );
-    int k = 0; 
-    while (k < grid.size()) {
-        K::Point_2 p = grid.at(k).source(); 
-        K::Point_2 q = grid.at(k).target();
-        // cout << "Linea "<<  k << " da (" << p.hx()<< ", " << p.hy() << ") a ("<< q.hx() <<", " << q.hy() <<")" << endl;
-        cv::line(image, cv::Point( pixelFromMetres(p.hx(), resolution), pixelFromMetres(p.hy(), resolution) ), 
-        cv::Point(pixelFromMetres(q.hx(), resolution), pixelFromMetres(q.hy(), resolution) ), cv::Scalar(0, 0, 255), 1, 8, 0);
-        k++;
-    }
-    cv::namedWindow(name, 1);    
-    cv::imshow(name , image);
-    cv::waitKey(0);    
+double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
+
+    double theta = CGAL::scalar_product(v,w);
+    double len1, len2;
+    len1 = sqrt(v.squared_length());
+    len2 = sqrt(w.squared_length());
+    return theta/ (len1*len2);
+
 }
 
 
 
+
+/*************************************/
 
 
 //suppongo che i punti in comune non possano essere più di due
@@ -216,12 +109,107 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 
 
 
-double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
-    double theta = CGAL::scalar_product(v,w);
-    double len1, len2;
-    len1 = sqrt(v.squared_length());
-    len2 = sqrt(w.squared_length());
-    return theta/ (len1*len2);
+/*************************************/
 
+//si suppone che sia convesso
+K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
+
+    static K::Point_2 a[2];
+    int cont = 0;
+
+    for (int i = 0 ; i < polygon->edges().size();  i++) {
+        // cout << "Cerco intersezione con lato " << i << endl; 
+        // cout << line.direction().dx() << ", " << line.direction().dy() << endl; 
+        // cout << polygon->edge(i).direction().dx() << ", " << polygon->edge(i).direction().dy() << endl; 
+
+
+        // if (polygon->edge(i).direction() == line.direction() ) {
+        //     cout << "parallela al lato " << i << endl;
+        // }
+        // cout << "LAto " << i << " "  << polygon->edge(i).source().hx() << " " << polygon->edge(i).source().hy() << " -> "  << polygon->edge(i).target().hx() << " "polygon->edge(i).target().hy() << endl;
+
+        const auto inter = CGAL::intersection(line, polygon->edge(i));
+        // if (!inter) {
+        //     cout << "no inter whit edge " << i  << endl;
+        // }
+        if (inter){
+            K::Point_2 tmp;
+            if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
+                a[0] = polygon->edge(i).target();
+                a[1] = polygon->edge(i).source();
+                return a;
+            }    
+            else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
+                a[cont] = *p;
+                cont++;
+                if (cont == 2) {
+                    return a;
+                }
+            }
+            else {
+                cout << "Error" << endl;
+            }
+        }
+    }
+    if (cont == 0) {
+        a[0] = K::Point_2(-1,-1);
+        a[1] = a[0];
+    }
+    if (cont == 1) {
+        a[1] = K::Point_2(-1,-1);
+    } 
+    return a;  
+}
+
+
+/*************************************/
+
+//divido il poligono perpendicolarmente alla direzione di sweep con ampiezza la larghezza del robot 
+vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepDistance) {
+    //creazione del path 
+    vector<K::Point_2> path;
+
+    //creo il vettore 
+    K::Point_2 source = segment.source();
+    K::Point_2 target = segment.target();
+    CGAL::Vector_2<K> v(source, target);
+   
+
+    //calcolo la distanza tra le righe 
+    float length = sqrt(v.squared_length());
+    float mySweepDistance = initialSweepDistance;
+    // float distance = sqrt(CGAL::squared_distance(sweepDirection, point));
+    float num_lines = length/mySweepDistance; 
+    if (num_lines != (int)num_lines) {
+        num_lines = (int)num_lines++;
+        mySweepDistance = length/num_lines;
+    }
+
+    if (length <= mySweepDistance || mySweepDistance == 0) {
+        path.push_back(segment.source());
+        path.push_back(segment.target());
+        return path;
+    }
+   
+
+
+
+    K::Point_2 next = source;
+    int i = 1;
+    
+    while (segment.collinear_has_on(next)) {
+        path.push_back(next);
+        next = source + ( (v/length)  * mySweepDistance * i);  //  v/length dovrebbe essere il vettore direzione 
+        i++;
+    }
+    
+    // cout << "segment " << endl;
+    // cout << segment.source().hx() << " " << segment.source().hy() << endl;
+    // cout << segment.target().hx() << " " << segment.target().hy() << endl;
+
+    // cout <<"next" << endl;
+    // cout << next.hx() << " " << next.hy() << endl;
+
+    return path;
 }

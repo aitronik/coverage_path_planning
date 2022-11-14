@@ -19,6 +19,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include "CoveragePlotHelper.h"
 
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -31,13 +32,9 @@ typedef std::list<Polygon> Polygon_list;
 using namespace std;
 
 vector<K::Point_2> readFromFile(string filename); 
-void printPoint(K::Point_2 p);
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
-float pixelFromMetres (float x, float resolution);
-float calculateresolution(vector<K::Point_2> points);
-void plotSubPolygon(cv::Mat image, const string name, Polygon poly,  vector<K::Point_2> points, float resolution, int k);
-void plotPolygon(cv::Mat image, const string name, shared_ptr<CGAL::Polygon_2<K>> poly, float resolution);
 void printInfo();
-void plotPathForConvexPolygon( vector<CGAL::Segment_2<K>> grid ,shared_ptr<CGAL::Polygon_2<K>> poly, cv::Mat image, const string name, float resolution);
-bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
 double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
+K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
+vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepDistance);

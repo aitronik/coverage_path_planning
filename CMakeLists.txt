@@ -45,9 +45,9 @@ endif()
 # ############################
 
 #add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
-add_executable(coverage_path main.cpp utils.cpp path_generator.cpp)
+add_executable(coverage_path main.cpp utils.cpp CoveragePathCreator.cpp CoveragePlotHelper.cpp)
 
-add_to_cached_list( CGAL_EXECUTABLE_TARGETS decomposer )
+# add_to_cached_list( CGAL_EXECUTABLE_TARGETS decomposer )
 
 # Link the executable to CGAL and third-party libraries
 target_link_libraries(coverage_path PRIVATE CGAL::CGAL ${OpenCV_LIBRARIES})
