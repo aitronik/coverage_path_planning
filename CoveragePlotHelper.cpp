@@ -194,13 +194,29 @@ void CoveragePlotHelper::plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> gri
 
 /***********************************/
 
-void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line, string decomposition_name) {
+void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path) {
+    
+    for (int i = 0; i < path.size(); i++) {
+        K::Point_2 p = path.at(i).source();
+        K::Point_2 q = path.at(i).target(); 
+        cv::line(m_initial_image, cv::Point( pixelFromMetres(p.hx()), pixelFromMetres(p.hy()) ) , 
+            cv::Point(pixelFromMetres(q.hx()), pixelFromMetres(q.hy()) ), cv::Scalar(0, 0, 255), 1, 8, 0);
+    }
+    cv::namedWindow("FinalPath", 1);    
+    cv::imshow("FinalPath" , m_initial_image);
+    cv::waitKey(0);    
+
+}
+
+
+/***********************************/
+void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
     double a = line.a(); 
     double b = line.b(); 
     double c = line.c(); 
     
-    cv::line(m_image_decomposition, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   cv::Scalar(0, 0, 255), 1, 8, 0   );
-    cv::namedWindow(decomposition_name, 1);    
-    cv::imshow(decomposition_name , m_image_path);
+    cv::line(m_image_path, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   cv::Scalar(0, 0, 255), 1, 8, 0   );
+    cv::namedWindow("Path", 1);    
+    cv::imshow("Path" , m_image_path);
     cv::waitKey(0);    
 }

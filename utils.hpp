@@ -38,3 +38,5 @@ double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
 K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepDistance);
+void switchElements(vector<K::Point_2>& points);
+void invertOrder(vector<K::Point_2>& points);

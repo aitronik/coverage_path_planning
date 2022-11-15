@@ -119,16 +119,7 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     int cont = 0;
 
     for (int i = 0 ; i < polygon->edges().size();  i++) {
-        // cout << "Cerco intersezione con lato " << i << endl; 
-        // cout << line.direction().dx() << ", " << line.direction().dy() << endl; 
-        // cout << polygon->edge(i).direction().dx() << ", " << polygon->edge(i).direction().dy() << endl; 
-
-
-        // if (polygon->edge(i).direction() == line.direction() ) {
-        //     cout << "parallela al lato " << i << endl;
-        // }
-        // cout << "LAto " << i << " "  << polygon->edge(i).source().hx() << " " << polygon->edge(i).source().hy() << " -> "  << polygon->edge(i).target().hx() << " "polygon->edge(i).target().hy() << endl;
-
+      
         const auto inter = CGAL::intersection(line, polygon->edge(i));
         // if (!inter) {
         //     cout << "no inter whit edge " << i  << endl;
@@ -203,13 +194,59 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepD
         next = source + ( (v/length)  * mySweepDistance * i);  //  v/length dovrebbe essere il vettore direzione 
         i++;
     }
-    
-    // cout << "segment " << endl;
-    // cout << segment.source().hx() << " " << segment.source().hy() << endl;
-    // cout << segment.target().hx() << " " << segment.target().hy() << endl;
-
-    // cout <<"next" << endl;
-    // cout << next.hx() << " " << next.hy() << endl;
 
     return path;
 }
+
+
+/*************************************/
+
+//supponendo il numero di elementi sia pari, scambio a due a due 
+void switchElements(vector<K::Point_2>& points) {
+    // cout << "BEFORE SWITCH" << endl;
+    // for (int i = 0; i < points.size() ;i++ ) {
+    //     cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
+    // }
+
+    vector<K::Point_2> tmp; 
+    tmp.resize(points.size());
+    for (int i = 0; i < points.size(); i = i+2) {
+        tmp[i] = points[i+1]; 
+        tmp[i+1] = points[i];  
+    }
+    points = tmp; 
+
+    // cout << "AFTER SWITCH" << endl;
+    // for (int i = 0; i < points.size() ;i++ ) {
+    //     cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
+    // }
+}
+
+
+
+/*************************************/
+
+//inverte ordine elementi array
+void invertOrder(vector<K::Point_2>& points) {
+        cout << "BEFORE INVERT" << endl;
+    for (int i = 0; i < points.size() ;i++ ) {
+        cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
+    }
+    vector<K::Point_2> tmp; 
+    int N = points.size();
+    tmp.resize(N);
+    for (int i = 0; i < N ; i = i++) {
+        tmp[N-i] = points[i]; 
+    }
+    points = tmp; 
+    
+        cout << "BEFORE INVERT" << endl;
+    for (int i = 0; i < points.size() ;i++ ) {
+        cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
+    }
+}
+
+
+
+/*************************************/
+
