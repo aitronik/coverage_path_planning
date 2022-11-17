@@ -1,0 +1,17 @@
+<package format="2">
+    <name>coverage_path_lib</name>
+    <version>0.1.0</version>
+    <description>Coverage path ceator package</description>
+    
+    <maintainer email="gemma.ragadini@gmail.com">Gemma Ragadini</maintainer>
+    <license>MIT</license>
+    
+    <buildtool_depend>ament_cmake</buildtool_depend>
+    
+    <test_depend>ament_lint_auto</test_depend>
+    <test_depend>ament_lint_common</test_depend>
+    
+    <export>
+      <build_type>ament_cmake</build_type>
+    </export>
+</package>
