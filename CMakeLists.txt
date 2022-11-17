@@ -44,8 +44,8 @@ endif()
 # Creating entries for target: decomposer
 # ############################
 
-#add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
-add_executable(coverage_path main.cpp utils.cpp CoveragePathCreator.cpp CoveragePlotHelper.cpp)
+#add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp)
+add_executable(coverage_path main.cpp utils.cpp CoveragePathCreator.cpp CoveragePlotHelper.cpp )
 
 # add_to_cached_list( CGAL_EXECUTABLE_TARGETS decomposer )
 

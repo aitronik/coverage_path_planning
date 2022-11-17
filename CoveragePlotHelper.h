@@ -27,20 +27,22 @@ class CoveragePlotHelper {
         CoveragePlotHelper();
         ~CoveragePlotHelper();
         bool init(vector<K::Point_2>& perimeter_vertices);
-        void plotInitialPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly);
+        void plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly);
         void plotCoveredPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly);        
         void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name);
-        void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid , shared_ptr<CGAL::Polygon_2<K>> poly);
+        void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid  /*, shared_ptr<CGAL::Polygon_2<K>> poly*/);
         void plotLineForTest(CGAL::Line_2<K> line);
-        void plotFinalPath(vector<CGAL::Segment_2<K>> path);
+        void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint);
+        void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly);
 
     private: 
 
-        cv::Mat m_initial_image;
+        cv::Mat m_perimeterImage;
         cv::Mat m_image_decomposition;
         cv::Mat m_image_path;
+        string m_decompositionName;
         float m_resolution; //rapporto pixel/metri
-
+        //così si alternano i colori 
         float pixelFromMetres (float x);
         void calculateResolution(vector<K::Point_2>& perimeter_vertices);
         

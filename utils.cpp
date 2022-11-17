@@ -2,12 +2,16 @@
 
 using namespace std; 
 
-vector<K::Point_2> readFromFile(string name){
+//qua non devo mai usare CGAL?
+
+
+vector<pair<float,float>> readFromFile(string name){
     string filename("../" + name);
     ifstream input_file(filename);
     vector<string> lines;
     string line;
-    vector<vector<K::Point_2>> perimeters; //il primo sarà il perimetro esterno, gli altri gli ostacoli 
+    vector<vector<pair<float,float>>> perimeters; 
+    // vector<vector<K::Point_2>> perimeters; //il primo sarà il perimetro esterno, gli altri gli ostacoli 
     if (!input_file.is_open()) {
         cerr << "Could not open the file -'" << filename <<"'"<< endl;
         exit(-1);
@@ -18,7 +22,8 @@ vector<K::Point_2> readFromFile(string name){
     string token, tmp;
     string delimiter = ",";
     size_t pos;
-    vector<K::Point_2> tmp_polygon;
+    // vector<K::Point_2> tmp_poygon; 
+    vector<pair<float,float>> tmp_polygon;
     int cont = 0;
     for (int i = 0; i < lines.size(); i++) {
         tmp = lines.at(i);
@@ -31,11 +36,12 @@ vector<K::Point_2> readFromFile(string name){
         pos = tmp.find(delimiter);
         token = tmp.substr(0,pos); //primo pezzo
         tmp.erase(0, delimiter.size() + token.size()) ;
-        K::Point_2 p (stof(token),stof(tmp));
+        pair<float,float> p(stof(token),stof(tmp)); 
+        // K::Point_2 p (stof(token),stof(tmp));
         tmp_polygon.push_back(p);
     }   
     input_file.close();
-    return perimeters.at(0);
+    return perimeters.at(0); //se metto gli ostacoli bisognerà aggiungere
 }
 
 
@@ -50,6 +56,17 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
     return poly;
 }
 
+
+
+// CGAL::Polygon_2<K> createPolygon(vector<K::Point_2> points) {
+//     size_t sz = points.size();
+//     K::Point_2 array[sz]; 
+//     for (int i = 0; i < sz; i++) array[i] = points.at(i); 
+//     CGAL::Polygon_2<K> p (array, array+sz);
+//     // shared_ptr<CGAL::Polygon_2<K>> poly = make_shared<CGAL::Polygon_2<K>>(p);
+//     return p;
+    
+// }
 
 /*************************************/
 
@@ -197,56 +214,4 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepD
 
     return path;
 }
-
-
-/*************************************/
-
-//supponendo il numero di elementi sia pari, scambio a due a due 
-void switchElements(vector<K::Point_2>& points) {
-    // cout << "BEFORE SWITCH" << endl;
-    // for (int i = 0; i < points.size() ;i++ ) {
-    //     cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
-    // }
-
-    vector<K::Point_2> tmp; 
-    tmp.resize(points.size());
-    for (int i = 0; i < points.size(); i = i+2) {
-        tmp[i] = points[i+1]; 
-        tmp[i+1] = points[i];  
-    }
-    points = tmp; 
-
-    // cout << "AFTER SWITCH" << endl;
-    // for (int i = 0; i < points.size() ;i++ ) {
-    //     cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
-    // }
-}
-
-
-
-/*************************************/
-
-//inverte ordine elementi array
-void invertOrder(vector<K::Point_2>& points) {
-        cout << "BEFORE INVERT" << endl;
-    for (int i = 0; i < points.size() ;i++ ) {
-        cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
-    }
-    vector<K::Point_2> tmp; 
-    int N = points.size();
-    tmp.resize(N);
-    for (int i = 0; i < N ; i = i++) {
-        tmp[N-i] = points[i]; 
-    }
-    points = tmp; 
-    
-        cout << "BEFORE INVERT" << endl;
-    for (int i = 0; i < points.size() ;i++ ) {
-        cout << points.at(i).hx() << " " << points.at(i).hy() << endl;
-    }
-}
-
-
-
-/*************************************/
 

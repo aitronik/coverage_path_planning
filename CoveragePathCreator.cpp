@@ -14,8 +14,13 @@ CoveragePathCreator::~CoveragePathCreator()
 
 /*******************************************************/
 
-bool CoveragePathCreator::init(vector<K::Point_2> perimeter_vertices, float sweepDistance, int decompositionType){
+bool CoveragePathCreator::init(/*vector<K::Point_2> perimeter_vertices,*/ vector<pair<float,float>> points,  float sweepDistance, int decompositionType){
 
+    vector<K::Point_2> perimeter_vertices;
+    for (int i = 0; i < points.size(); i++) {
+        K::Point_2 p(points.at(i).first, points.at(i).second); 
+        perimeter_vertices.push_back(p);
+    }
     // creazione del poligono iniziale
     m_perimeterVertices = perimeter_vertices;
     m_initialPolygon = createPolygon(m_perimeterVertices);
@@ -715,17 +720,17 @@ void CoveragePathCreator::cover()
 {
 
     // vector di appoggio
-    vector<Polygon> m_partitionPolys_new;
+    vector<Polygon> partitionPolys_new;
     for (const Polygon &poly : m_partitionPolys)
     {
-        m_partitionPolys_new.push_back(poly);
+        partitionPolys_new.push_back(poly);
     }
 
     int cont = 0;
-    for (int pol_i = 0; pol_i < m_partitionPolys_new.size(); pol_i++)
+    for (int pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
     {
 
-        Polygon poly = m_partitionPolys_new.at(m_polygonsSorted.at(pol_i));
+        Polygon poly = partitionPolys_new.at(m_polygonsSorted.at(pol_i));
 
         vector<K::Point_2> tmp;
         for (Point p : poly.container())
@@ -767,7 +772,7 @@ void CoveragePathCreator::cover()
 
 
     m_pathS.push_back( generatePathForOnePolygon(m_intersections.at(0), 0) ); //parto dal punto 0 ==> volendo si può cambiare 
-    m_Helper.plotPathForConvexPolygon(m_pathS.at(0), m_polygonsForPath.at(0));
+    m_Helper.plotPathForConvexPolygon(m_pathS.at(0) /*, m_polygonsForPath.at(0) */);
 
 
     for (int i = 1; i < m_intersections.size(); i++) { //per ogni poligono  (il numero poligoni potrei metterlo in una variabile)
@@ -793,7 +798,7 @@ void CoveragePathCreator::cover()
 
 
         m_pathS.push_back( generatePathForOnePolygon(m_intersections.at(i), ind ) );
-        m_Helper.plotPathForConvexPolygon(m_pathS.at(i), m_polygonsForPath.at(i));
+        m_Helper.plotPathForConvexPolygon(m_pathS.at(i)/*, m_polygonsForPath.at(i) */);
     }
 
 
@@ -811,13 +816,46 @@ void CoveragePathCreator::cover()
     }
 
     cv::waitKey(0);
+
+    //m_finalPath è il path finale in segment 
+    //creo un path costituito da punti a distanza 2*sweepDistance 
+
+    for (int i = 0; i < m_finalPath.size(); i++ ) {
+        vector<K::Point_2> v = divideSegment(m_finalPath.at(i), 2*m_sweepDistance );
+        for (int j = 0; j< v.size(); j++) {
+            m_pathToReturn.push_back(v.at(j)); 
+        }
+    }
+
 }
+
+
+/*******************************************************/
+// vector<pair<float,float>> CoveragePathCreator::getFinalPath(){
+
+// }
 
 /*******************************************************/
 bool CoveragePathCreator::run(){
 
     // plot perimetro
-    m_Helper.plotInitialPerimeter(m_initialPolygon);
+    m_Helper.plotPerimeter(m_initialPolygon);
+
+    //approssimazione poligono 
+    PS::Squared_distance_cost cost; 
+    CGAL::Polygon_2<K> approx = PS::simplify(*m_initialPolygon, cost, Stop((m_sweepDistance/2)*(m_sweepDistance/2) ) ); 
+    m_approximatePolygon = make_shared<CGAL::Polygon_2<K>>(approx);
+
+    //aggiorno vertici salvati 
+    m_perimeterVertices.clear();
+    for (int i = 0; i < m_approximatePolygon->vertices().size(); i++) {
+        m_perimeterVertices.push_back(m_approximatePolygon->vertex(i));
+    }
+
+    //plot nuovo perimetro
+    m_Helper.updatePerimeterImage(m_approximatePolygon);
+
+
 
     // decomposizione
     if (!decompose())
@@ -825,27 +863,45 @@ bool CoveragePathCreator::run(){
         return false;
     }
 
-    // plot dei sottopoligoni
-    int k = 0;
-    for (const Polygon &poly : m_partitionPolys)
-    {
-        k++;
-        m_Helper.plotSubPolygon(poly, m_perimeterVertices, k, m_decompositionName);
-    }
-    cv::waitKey(0);
+    // // plot dei sottopoligoni
+    // int k = 0;
+    // for (const Polygon &poly : m_partitionPolys)
+    // {
+    //     k++;
+    //     m_Helper.plotSubPolygon(poly, m_perimeterVertices, k, m_decompositionName);
+    // }
+    // cv::waitKey(0);
 
+
+    //creazione matrice di adiacenza dei sottopoligoni
     createAdjMatrix(); 
 
-    // ordinamento sottopoligoni con tsp
+    // ordinamento sottopoligoni con TSP
     if (!orderSubPolygons())
     {
         return false;
     }
 
-    //creazione dei path per ogni sottopoligoni e plot 
+
+    //stampo i sottopoligoni ordinati 
+    int k; 
+    vector<Polygon> partitionPolys_new; //vector di appoggio in cui inserisco i sottopoligoni 
+    for (const Polygon &poly : m_partitionPolys) {
+        partitionPolys_new.push_back(poly);
+    }
+    for (int pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
+    {
+        Polygon poly = partitionPolys_new.at(m_polygonsSorted.at(pol_i));
+        m_Helper.plotSubPolygon(poly, m_perimeterVertices, pol_i , m_decompositionName);
+    }
+
+
+    //creazione dei path per ogni sottopoligoni e unione
     cover();
 
-    m_Helper.plotFinalPath(m_finalPath);
+
+    //plot del path finale ==> quello che mi interessa è solo m_pathToReturn, l'altro serve per il plot
+    m_Helper.plotFinalPath(m_finalPath, m_pathToReturn);
     cv::waitKey(0);
 
     return true;

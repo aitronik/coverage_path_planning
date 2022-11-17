@@ -8,16 +8,10 @@
 #include "CoveragePathCreator.h"
 
 //deve funzionare con sweepdistance 0? 
-
-//BUGS: 
-/*
-un pezzetto non viene pulito nelle adiacenze quando è diagonale
-./coverage_path input.txt 0 1
-./coverage_path input.txt 0 1.5
-
-
-*/
-
+//sistemare gli shared ptr
+//algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
+//va bene che i punti del path siano a dx 2*sweepDistance?
+//aggiungere (o meno)  all'inizio del path il path originario (perimetro) con un booleano 
 
 using namespace std;
 
@@ -32,7 +26,9 @@ int main(int argc, char* argv[]) {
     string filename = argv[1];
     
     //leggo input 
-    vector<K::Point_2> points = readFromFile(filename);
+    // vector<K::Point_2> points = readFromFile(filename);
+    vector<pair<float,float>> points = readFromFile(filename);
+
 
     //inizializzazione Coverage Path Creator 
     CoveragePathCreator coverage_path_creator;
@@ -42,6 +38,15 @@ int main(int argc, char* argv[]) {
     } 
 
     coverage_path_creator.run();
+
+
+    // vector<pair<float,float>> path;
+    // coverage_path_creator.getPath(path);
+
+
+    // getPath(vector<pair<float,float>>& path){
+
+    // }
 
 
     return 0;
