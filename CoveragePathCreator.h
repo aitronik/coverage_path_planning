@@ -29,8 +29,7 @@ class CoveragePathCreator {
       ~CoveragePathCreator();
       bool init( vector<pair<float,float>> points, float sweepDistance, int m_decompositionType );
       bool run();
-      // vector<pair<float,float>> getFinalPath();
-
+      vector<pair<float,float>> getFinalPath();
 
 
     private:
@@ -47,8 +46,6 @@ class CoveragePathCreator {
         vector<CGAL::Segment_2<K>> m_finalPath;
         vector<K::Point_2> m_pathToReturn;
 
-        // vector<grid> polygonCovered;
-        // vector<int> orderList;
         int m_decompositionType;
         string m_decompositionName;
         bool m_doPlotting;

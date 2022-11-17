@@ -831,9 +831,15 @@ void CoveragePathCreator::cover()
 
 
 /*******************************************************/
-// vector<pair<float,float>> CoveragePathCreator::getFinalPath(){
+vector<pair<float,float>> CoveragePathCreator::getFinalPath(){
+    vector<pair<float, float>> result; 
+    for (int i = 0; i < m_pathToReturn.size(); i++) {
+        pair<float,float> p(m_pathToReturn.at(i).hx(), m_pathToReturn.at(i).hy()); 
+        result.push_back(p);
+    } 
+    return result;
+}
 
-// }
 
 /*******************************************************/
 bool CoveragePathCreator::run(){
