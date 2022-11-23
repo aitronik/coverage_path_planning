@@ -23,6 +23,9 @@ typedef PS::Stop_above_cost_threshold Stop;
 
 using namespace std;
 
+
+
+
 class CoveragePathCreator {
     public:
       CoveragePathCreator();
@@ -30,10 +33,10 @@ class CoveragePathCreator {
       bool init( vector<pair<float,float>> points, float sweepDistance, int m_decompositionType );
       bool run();
       vector<pair<float,float>> getFinalPath();
-
+      void setAddPerimeterToPath(bool b); 
+      
 
     private:
-
         vector<K::Point_2> m_perimeterVertices;
         shared_ptr<CGAL::Polygon_2<K>> m_initialPolygon;
         shared_ptr<CGAL::Polygon_2<K>> m_approximatePolygon;
@@ -45,12 +48,13 @@ class CoveragePathCreator {
         vector<vector<CGAL::Segment_2<K>>> m_pathS; 
         vector<CGAL::Segment_2<K>> m_finalPath;
         vector<K::Point_2> m_pathToReturn;
-
+        bool m_addPerimeterToPath;
         int m_decompositionType;
         string m_decompositionName;
         bool m_doPlotting;
         float m_sweepDistance;
         CoveragePlotHelper m_Helper;
+        K::Point_2 m_firstVertex;
 
 
         bool decompose();

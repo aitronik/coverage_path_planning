@@ -11,7 +11,8 @@
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
 //va bene che i punti del path siano a dx 2*sweepDistance?
-//aggiungere (o meno)  all'inizio del path il path originario (perimetro) con un booleano 
+//bisogna fare attenzione al punto di partenza di tutto, vedi commenti a riga 814 di CoveragePathCreator.cpp
+//IL TUTTO DEVE PARTIRE DAL PUNTO 0 DEL POLIGONO INIZIALE!
 
 using namespace std;
 
@@ -39,15 +40,13 @@ int main(int argc, char* argv[]) {
 
     coverage_path_creator.run();
 
-
-    // vector<pair<float,float>> path;
-    // coverage_path_creator.getPath(path);
-
-
-    // getPath(vector<pair<float,float>>& path){
-
+    points = coverage_path_creator.getFinalPath(); 
+    
+    // //stampo punti ottenuti 
+    // cout << "PATH:" << endl; 
+    // for (int i = 0; i < points.size(); i++ ) {
+    //     cout << points.at(i).first << ", " << points.at(i).second << endl;
     // }
-
 
     return 0;
 }

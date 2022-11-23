@@ -4,6 +4,7 @@ CoveragePathCreator::CoveragePathCreator()
 {
     // parametri di default
     m_doPlotting = true;
+    m_addPerimeterToPath = true; 
 }
 
 /*******************************************************/
@@ -14,19 +15,22 @@ CoveragePathCreator::~CoveragePathCreator()
 
 /*******************************************************/
 
-bool CoveragePathCreator::init(/*vector<K::Point_2> perimeter_vertices,*/ vector<pair<float,float>> points,  float sweepDistance, int decompositionType){
+bool CoveragePathCreator::init( vector<pair<float,float>> points,  float sweepDistance, int decompositionType){
 
     vector<K::Point_2> perimeter_vertices;
     for (int i = 0; i < points.size(); i++) {
         K::Point_2 p(points.at(i).first, points.at(i).second); 
         perimeter_vertices.push_back(p);
     }
+
     // creazione del poligono iniziale
     m_perimeterVertices = perimeter_vertices;
     m_initialPolygon = createPolygon(m_perimeterVertices);
     m_decompositionType = decompositionType;
     m_sweepDistance = sweepDistance;
-    // cout << m_sweepDistance << endl;
+    m_firstVertex = perimeter_vertices.at(0); //il punto di partenza è il primo punto trai vertici dati 
+
+
     // tipo di decomosizione
     if (m_decompositionType != 0 && m_decompositionType != 1 && m_decompositionType != 2 && m_decompositionType != 3)
     {
@@ -108,6 +112,12 @@ bool CoveragePathCreator::decompose()
 
 /*******************************************************/
 
+void CoveragePathCreator::setAddPerimeterToPath(bool b) {
+    m_addPerimeterToPath = b; 
+}
+
+
+/*******************************************************/
 // crea una matrice di adiacenza in cui gli elementi sono coppie di indici di punti che rappresentano un'adiacenza tra due sottopoligoni (suppongo siano convessi)
 void CoveragePathCreator::createAdjMatrix() {
 
@@ -206,8 +216,11 @@ int CoveragePathCreator::numAdiacency(int node) {
 
 /*******************************************************/
 
+
+//trova la minima distanza di tutti i nodi da sorg
 void CoveragePathCreator::Dijkstra(vector<vector<int>> &graph, int sorg, vector<float> &distances)
 {
+
 
     int numNodes = graph.at(0).size();
     distances.resize(numNodes);
@@ -228,10 +241,8 @@ void CoveragePathCreator::Dijkstra(vector<vector<int>> &graph, int sorg, vector<
 
         for (int j = 0; j < numNodes; j++)
         {
-
             if (graph.at(index).at(j) != 0 && !visited[j] && distances[index] != INT_MAX)
             {
-
                 if (distances[index] + graph.at(index).at(j) < distances[j])
                 {
                     distances[j] = distances[index] + graph.at(index).at(j);
@@ -295,6 +306,29 @@ vector<int> CoveragePathCreator::findMinRoute(int start) {
         precedent[i] = -1;
     }
 
+
+
+    // int start = -1; 
+    // bool found = false; 
+    // //cerco qual è il poligono start, ovvero quello di cui fa parte il primo punto 
+    // for (const Polygon &poly : m_partitionPolys) {
+    //     if (found != false) { //già trovato uno 
+    //         break; 
+    //     }
+    //     start++;
+    //     for (int j = 0 ; j < poly.vertices().size(); j++) {
+    //         if (m_perimeterVertices[poly.vertex(j)] == m_firstVertex) {
+    //             found = true; 
+    //         }
+    //     }
+    // }
+
+    // int start = 6;
+
+    // if (start == -1) {
+    //     cout << "CoveragePathCreator::findMinRoute() start point not found" << endl;
+    // }
+
     visitedNodes[start] = true;
     cost[start] = 0;
 
@@ -333,24 +367,25 @@ vector<int> CoveragePathCreator::findMinRoute(int start) {
             }
         }
 
-        int j_min = 0;
+        int j_min = start;
+        bool atLeastOne = false; 
         int min = INT_MAX;
-        for (int j = 0; j < N; j++)
-        {
-            if (tmp_cost[j] == min)
-            { // se costano = prendo quello che ha più adiacenze
 
-                if (j_min != 0 && numAdiacency(j) < numAdiacency(j_min))
-                {
+        //scelgo un nodo tra quelli con i costi "aggiornabili" come nodo successivo ==> quello con il minimo costo 
+        for (int j = 0; j < N; j++) {
+            if (tmp_cost[j] == min) { // se costano = prendo quello che ha più adiacenze
+
+                if (atLeastOne && numAdiacency(j) < numAdiacency(j_min)) {
                     j_min = j;
                 }
             }
-            else if (tmp_cost[j] < min)
-            {
+            else if (tmp_cost[j] < min) {
+                atLeastOne = true;
                 min = tmp_cost[j];
                 j_min = j;
             }
         }
+
         if (j_min != start)
         {
             cost[j_min] = cost[corrente] + matrix[corrente][j_min];
@@ -370,8 +405,27 @@ vector<int> CoveragePathCreator::findMinRoute(int start) {
 bool CoveragePathCreator::orderSubPolygons()
 { // si può aggiungere l'indice di start che al momento è sempre 0 nella chiamata a findMinRoute
 
-
-    vector<int> route = findMinRoute(0); // route è il vector dei precedenti -> all'indice i c'è il precedente del poligono i
+    //cerco qual è il poligono start, ovvero quello di cui fa parte il primo punto 
+    bool found = false;
+    int start = -1;
+    for (const Polygon &poly : m_partitionPolys) {
+        if (found != false) { //già trovato uno 
+            break; 
+        }
+        start++;
+        for (int j = 0 ; j < poly.vertices().size(); j++) {
+            if (m_perimeterVertices[poly.vertex(j)] == m_firstVertex) {
+                found = true; 
+            }
+        }
+    }
+    
+    vector<int> route = findMinRoute(start); // route è il vector dei precedenti -> all'indice i c'è il precedente del poligono i
+    
+    // cout << "route size: " << route.size() << endl; 
+    // for (int i = 0; i < route.size(); i++) {
+    //     cout << route.at(i) << endl;
+    // }
 
     // oridnamento effettivo
     int cont = 0;
@@ -391,6 +445,7 @@ bool CoveragePathCreator::orderSubPolygons()
                 break;
             }
         }
+
         if (i == route.size() && n == 0)
         { // non lo ha trovato
             cout << "CoveragePathCreator: ordering polygon error" << endl;
@@ -461,24 +516,8 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(shared_ptr<CGAL::Polygon
     
     vector<CGAL::Line_2<K>> grid;
     
-    // m_Helper.plotLineForTest(sweepDirection.supporting_line(), m_decompositionName);
-    // cout << "direzione di spazzata " << endl;
-    // cout << sweepDirection.source().hx() << " " << sweepDirection.source().hy() << endl;
-    // cout << sweepDirection.target().hx() << " " << sweepDirection.target().hy() << endl;
-    
     CGAL::Line_2<K> ortogonal = sweepDirection.supporting_line().perpendicular(point); //linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono 
     
-    // cout << "punto " << point.hx() << " " << point.hy() << endl;
-    // double a = ortogonal.a(); 
-    // double b = ortogonal.b(); 
-    // double c = ortogonal.c(); 
-
-    // cout << "ortogonale " << endl;
-    // cout << "0" << " " << -(c/b) << endl; 
-    // cout << -(c/a) << " " << "0" << endl;
-    // m_Helper.plotLineForTest(ortogonal, m_decompositionName);
-
-
     auto projection = CGAL::intersection(ortogonal, sweepDirection.supporting_line()); //punto di proiezione del punto più lontano sul lato della direzione ==> è per forza un punto si ? 
 
     const K::Point_2* p = boost::get<K::Point_2>(&*projection);
@@ -784,19 +823,7 @@ void CoveragePathCreator::cover()
         int ind = initialIndex(CGAL::squared_distance(last_point, m_intersections.at(i).at(0)) ,  CGAL::squared_distance(last_point, m_intersections.at(i).at(1) )  , 
                 CGAL::squared_distance( last_point, m_intersections.at(i).at(n-2) ) ,  
                 CGAL::squared_distance(last_point, m_intersections.at(i).at(n-1) ) ); 
-        
-
-        // cout << "ultimo: " << last_point.hx() << " " << last_point.hy() << endl;
-        // cout << m_intersections.at(i).at(0).hx() << " " << m_intersections.at(i).at(0).hy() << endl; 
-        // cout << "distanza da " << CGAL::squared_distance(last_point, m_intersections.at(i).at(0)) << endl;  
-        // cout << m_intersections.at(i).at(1).hx() << " " << m_intersections.at(i).at(1).hy() << endl;
-        // cout << "distanza da " << CGAL::squared_distance(last_point, m_intersections.at(i).at(1) )<< endl;
-        // cout << m_intersections.at(i).at(n-2).hx() << " " << m_intersections.at(i).at(n-2).hy() << endl;
-        // cout << "distanza da " << CGAL::squared_distance(last_point, m_intersections.at(i).at(n-2) )<< endl;
-        // cout << m_intersections.at(i).at(n-1).hx() << " " << m_intersections.at(i).at(n-1).hy() << endl;
-        // cout << "distanza da " << CGAL::squared_distance(last_point, m_intersections.at(i).at(n-1) )<< endl;
-
-
+    
         m_pathS.push_back( generatePathForOnePolygon(m_intersections.at(i), ind ) );
         m_Helper.plotPathForConvexPolygon(m_pathS.at(i)/*, m_polygonsForPath.at(i) */);
     }
@@ -804,10 +831,22 @@ void CoveragePathCreator::cover()
 
 
     //unisco i path 
-    for (int i = 0; i < m_pathS.size(); i++) {
+
+
+    // Parto inserendo nel path il perimetro (m_firstVertex dovrebbe essere il source del lato 0 , quindi dovrebbe partire e tornare lì)
+    for (int i = 0; i < m_approximatePolygon->edges().size(); i++) {
+        m_finalPath.push_back(m_approximatePolygon->edge(i)); 
+    }
+
+    //poi collego il punto iniziale al punto da cui si parte del primo sottopoligono 
+    m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS.at(0).at(0).source()));
+
+    //poi tutti i path dei sottopoligoni    
+    for (int i = 0; i < m_pathS.size(); i++) {  
         for (int j = 0; j< m_pathS.at(i).size(); j++) {
             m_finalPath.push_back(m_pathS.at(i).at(j));
         }
+
         //collego l'ultimo punto del path precedente col primo del successivo 
         if (i != m_pathS.size()-1) {
             CGAL::Segment_2<K> segment_new(m_pathS.at(i).at(m_pathS.at(i).size()-1).target(), m_pathS.at(i+1).at(0).source());
@@ -817,9 +856,21 @@ void CoveragePathCreator::cover()
 
     cv::waitKey(0);
 
-    //m_finalPath è il path finale in segment 
-    //creo un path costituito da punti a distanza 2*sweepDistance 
 
+
+    //m_finalPath è il path finale in segment 
+
+
+    //creo un path costituito da punti a distanza 2*sweepDistance 
+    //inserendo prima il perimetro 
+    for (int i = 0; i < m_approximatePolygon->edges().size(); i++) {
+        vector<K::Point_2> v = divideSegment(m_approximatePolygon->edge(i),  2*m_sweepDistance ); 
+        for (int j = 0; j< v.size() - 1 ; j++) { //il -1 è per non passare due volte sul punto finale del lato perché è lo stesso del primo punto del successivo 
+            m_pathToReturn.push_back(v.at(j)); 
+        }
+    }
+    
+    //l'ultimo punto di questo sarà il source di approximatePolygon->edge(0) , da qui dovrebbe partire il path (oppure bisogna scegliere il primo lato su cui girare in base a questo )
     for (int i = 0; i < m_finalPath.size(); i++ ) {
         vector<K::Point_2> v = divideSegment(m_finalPath.at(i), 2*m_sweepDistance );
         for (int j = 0; j< v.size(); j++) {
@@ -869,14 +920,7 @@ bool CoveragePathCreator::run(){
         return false;
     }
 
-    // // plot dei sottopoligoni
-    // int k = 0;
-    // for (const Polygon &poly : m_partitionPolys)
-    // {
-    //     k++;
-    //     m_Helper.plotSubPolygon(poly, m_perimeterVertices, k, m_decompositionName);
-    // }
-    // cv::waitKey(0);
+
 
 
     //creazione matrice di adiacenza dei sottopoligoni
@@ -906,8 +950,15 @@ bool CoveragePathCreator::run(){
     cover();
 
 
-    //plot del path finale ==> quello che mi interessa è solo m_pathToReturn, l'altro serve per il plot
-    m_Helper.plotFinalPath(m_finalPath, m_pathToReturn);
+    // //plot del path finale ==> quello che mi interessa è solo m_pathToReturn, l'altro serve solo per il plot
+    // cout << "PATH FINALE " << endl; 
+    // for (int i = 0; i < m_pathToReturn.size(); i++) {
+    //     cout << m_pathToReturn.at(i).hx() << "  " << m_pathToReturn.at(i).hy() << endl;
+    // }
+
+
+    //stampo path finale con i punti 
+    m_Helper.plotFinalPath(m_finalPath, m_pathToReturn, m_firstVertex);
     cv::waitKey(0);
 
     return true;

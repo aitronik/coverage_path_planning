@@ -57,17 +57,6 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 }
 
 
-
-// CGAL::Polygon_2<K> createPolygon(vector<K::Point_2> points) {
-//     size_t sz = points.size();
-//     K::Point_2 array[sz]; 
-//     for (int i = 0; i < sz; i++) array[i] = points.at(i); 
-//     CGAL::Polygon_2<K> p (array, array+sz);
-//     // shared_ptr<CGAL::Polygon_2<K>> poly = make_shared<CGAL::Polygon_2<K>>(p);
-//     return p;
-    
-// }
-
 /*************************************/
 
 
@@ -200,8 +189,6 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepD
         return path;
     }
    
-
-
 
     K::Point_2 next = source;
     int i = 1;

@@ -208,7 +208,7 @@ void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
 
 
 /***********************************/
-void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint) {
+void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint, K::Point_2 start) {
     
     for (int i = 0; i < path.size(); i++) {
         K::Point_2 p = path.at(i).source();
@@ -217,9 +217,15 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
             cv::Point(pixelFromMetres(q.hx()), pixelFromMetres(q.hy()) ), cv::Scalar(0, 0, 255), 1, 8, 0);
     }
     for (int i = 0; i < pointsToPrint.size(); i++) {
-        cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
-            2, cv::Scalar(255,0,0), 1 ); 
-    }
+        if (pointsToPrint.at(i) == start) {
+            cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
+            3, cv::Scalar(255,0,0), 3 ); 
+        }
+        else {
+            cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
+                2, cv::Scalar(0,255,0), 1 ); 
+        }
+    }   
     cv::namedWindow("FinalPath", 1);    
     cv::imshow("FinalPath" , m_perimeterImage);
     cv::waitKey(0);    
