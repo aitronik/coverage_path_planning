@@ -33,7 +33,9 @@ class CoveragePlotHelper {
         void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> grid  /*, shared_ptr<CGAL::Polygon_2<K>> poly*/);
         void plotLineForTest(CGAL::Line_2<K> line);
         void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint,  K::Point_2 start);
+        void plotPartialPath(vector<CGAL::Segment_2<K>> path);
         void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly);
+        void plotPoint(K::Point_2 point); 
 
     private: 
 

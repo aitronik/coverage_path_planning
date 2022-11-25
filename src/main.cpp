@@ -10,9 +10,8 @@
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
-//va bene che i punti del path siano a dx 2*sweepDistance?
-//bisogna fare attenzione al punto di partenza di tutto, vedi commenti a riga 814 di CoveragePathCreator.cpp
-//IL TUTTO DEVE PARTIRE DAL PUNTO 0 DEL POLIGONO INIZIALE!
+//il robot fa due volte il giro del perimetro
+//metti 0.2 la distanza tra i punti del path finale 
 
 using namespace std;
 
@@ -44,7 +43,7 @@ int main(int argc, char* argv[]) {
     
     // //stampo punti ottenuti 
     // cout << "PATH:" << endl; 
-    // for (int i = 0; i < points.size(); i++ ) {
+    // for (size_t i = 0; i < points.size(); i++ ) {
     //     cout << points.at(i).first << ", " << points.at(i).second << endl;
     // }
 

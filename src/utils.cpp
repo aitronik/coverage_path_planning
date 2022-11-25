@@ -25,7 +25,7 @@ vector<pair<float,float>> readFromFile(string name){
     // vector<K::Point_2> tmp_poygon; 
     vector<pair<float,float>> tmp_polygon;
     int cont = 0;
-    for (int i = 0; i < lines.size(); i++) {
+    for (size_t i = 0; i < lines.size(); i++) {
         tmp = lines.at(i);
         if (tmp.compare("--") == 0) {
             cont ++;
@@ -50,7 +50,7 @@ vector<pair<float,float>> readFromFile(string name){
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
     size_t sz = points.size();
     K::Point_2 array[sz]; 
-    for (int i = 0; i < sz; i++) array[i] = points.at(i); 
+    for (size_t i = 0; i < sz; i++) array[i] = points.at(i); 
     CGAL::Polygon_2<K> p (array, array+sz);
     shared_ptr<CGAL::Polygon_2<K>> poly = make_shared<CGAL::Polygon_2<K>>(p);
     return poly;
@@ -124,7 +124,7 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     static K::Point_2 a[2];
     int cont = 0;
 
-    for (int i = 0 ; i < polygon->edges().size();  i++) {
+    for (size_t i = 0 ; i < polygon->edges().size();  i++) {
       
         const auto inter = CGAL::intersection(line, polygon->edge(i));
         // if (!inter) {
@@ -158,10 +158,65 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     } 
     return a;  
 }
+/*************************************/
+//restituisce l'indice di v nel quale c'è l'elemento x // -1 se non lo trova 
+int indexOf(vector<int> v, int x) {
+    for (size_t i = 0; i < v.size(); i++) {
+        if (v.at(i) == x) {
+            return i;
+        }
+    }
+    return -1;
+
+}
 
 
 /*************************************/
+// K::Point_2* intersect_polygon_segment(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Segment_2<K> segment) {
+    
+//     static K::Point_2 a[2];
+//     int cont = 0;
 
+//     for (size_t i = 0 ; i < polygon->edges().size();  i++) {
+      
+//         const auto inter = CGAL::intersection(segment, polygon->edge(i));
+//         // if (!inter) {
+//         //     cout << "no inter whit edge " << i  << endl;
+//         // }
+//         if (inter){
+//             K::Point_2 tmp;
+//             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
+//                 a[0] = polygon->edge(i).target();
+//                 a[1] = polygon->edge(i).source();
+//                 return a;
+//             }    
+//             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
+//                 a[cont] = *p;
+//                 cont++;
+//                 if (cont == 2) {
+//                     return a;
+//                 }
+//             }
+//             else {
+//                 cout << "Error" << endl;
+//             }
+//         }
+//     }
+//     if (cont == 0) {
+//         a[0] = K::Point_2(-1,-1);
+//         a[1] = a[0];
+//     }
+//     if (cont == 1) {
+//         a[1] = K::Point_2(-1,-1);
+//     } 
+//     return a;  
+
+// }
+
+
+
+
+/*************************************/
 //divido il poligono perpendicolarmente alla direzione di sweep con ampiezza la larghezza del robot 
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepDistance) {
     //creazione del path 

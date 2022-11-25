@@ -7,6 +7,7 @@
 #include <CGAL/partition_2.h>
 #include <CGAL/Partition_traits_2.h>
 #include <CGAL/property_map.h>
+#include <CGAL/intersections.h>
 #include <CGAL/Polyline_simplification_2/simplify.h>
 #include "utils.hpp"
 #include "CoveragePlotHelper.h"
@@ -37,13 +38,14 @@ class CoveragePathCreator {
       
 
     private:
-        vector<K::Point_2> m_perimeterVertices;
+        vector<K::Point_2> m_perimeterVertices; //vengono aggiornati quando si semplifica il perimetro
         shared_ptr<CGAL::Polygon_2<K>> m_initialPolygon;
         shared_ptr<CGAL::Polygon_2<K>> m_approximatePolygon;
         Polygon_list m_partitionPolys;
         vector<vector<K::Point_2>> m_intersections;
-        vector<shared_ptr<CGAL::Polygon_2<K>>> m_polygonsForPath;
+        vector<shared_ptr<CGAL::Polygon_2<K>>> m_polygonsForPath; //dovrebbero essere già ordinati , ma controlla
         vector<vector<vector<int>>> m_adj; //matrice di adiacenza 
+        vector<vector<float>> m_adjWeigthMatrix; //matrice di adiacenza che ha come elemetni i costi (numero di poligoni da attraversare ) 
         vector<int> m_polygonsSorted; 
         vector<vector<CGAL::Segment_2<K>>> m_pathS; 
         vector<CGAL::Segment_2<K>> m_finalPath;
@@ -57,18 +59,22 @@ class CoveragePathCreator {
         K::Point_2 m_firstVertex;
 
 
+
         bool decompose();
         void createAdjMatrix();
         bool orderSubPolygons();
         tuple<float, K::Point_2> maxDistance(vector<K::Point_2>& points, K::Segment_2& segment); 
         tuple<CGAL::Segment_2<K>, K::Point_2> findSweepDirection(shared_ptr<CGAL::Polygon_2<K>> polygon);
-        vector<CGAL::Line_2<K>> createGrid(shared_ptr<CGAL::Polygon_2<K>> polygon,  CGAL::Segment_2<K> sweepDirection, K::Point_2 point);
+        vector<CGAL::Line_2<K>> createGrid(CGAL::Segment_2<K> sweepDirection, K::Point_2 point);
         vector<CGAL::Segment_2<K>> generatePathForOnePolygon(int cont , vector<bool>& borders);
         vector<int> findMinRoute(int start);
+        // vector<int> findMinRoute(int start, int end);
+        void findMinRoute(int start, int end, vector<int>& precedent, vector<int>& route);
         int indexOfMinimum(vector<float>& dist, bool* visited);
         int initialIndex(float a, float b, float c, float d);  //tra le 4 distanza restituisce 0,1,2,3 in base a qual è la minore 
         int numAdiacency(int node);
         void Dijkstra(vector<vector<int>> &graph, int sorg , vector<float>& distances);
+        void createAdjWeigthMatrix();
         void cover();
         vector<K::Point_2> generateGridForOnePolygon(int cont , vector<bool>& borders);
         vector<CGAL::Segment_2<K>> generatePathForOnePolygon(vector<K::Point_2> intersections, int start);
