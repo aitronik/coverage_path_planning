@@ -27,7 +27,7 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
 
     // creazione del poligono iniziale
     m_perimeterVertices = perimeter_vertices;
-    m_initialPolygon = createPolygon(m_perimeterVertices);
+    m_perimeter = createPolygon(m_perimeterVertices);
     m_decompositionType = decompositionType;
     m_sweepDistance = sweepDistance;
     m_firstVertex = perimeter_vertices.at(0); // il punto di partenza è il primo punto trai vertici dati
@@ -220,7 +220,7 @@ int CoveragePathCreator::numAdiacency(int node)
 
 /*******************************************************/
 
-// trova la minima distanza di tutti i nodi da sorg
+//DEVO CONTROLLARE CHE LA MATRICE CON I PESI CHE USA QUA SIA EFFETTIVAMENTE DIVERSA DA M_ADJWEIGTHMATRIX
 void CoveragePathCreator::Dijkstra(vector<vector<int>> &graph, int sorg, vector<float> &distances)
 {
 
@@ -283,10 +283,6 @@ void CoveragePathCreator::createAdjWeigthMatrix() { // crea una matrice di adiac
     {
         vector<float> distances;
         Dijkstra(adj_new, i, distances);
-        for (size_t j = 0; j < distances.size(); j++)
-        {
-            distances[j] = distances[j];
-        }
         m_adjWeigthMatrix.push_back(distances);
     }
 }
@@ -392,12 +388,14 @@ vector<int> CoveragePathCreator::findMinRoute(int start)
 /*******************************************************/
 
 // trova il percorso che trova la strada tra start ed end minimizzando la distanza
-void CoveragePathCreator::findMinRoute(int start, int end, vector<int>& precedent, vector<int>& route) {
+void CoveragePathCreator::findMinRoute(int start, int end) {
 
     // cout << "da " << start << "a " << end << endl;
     // penso non sia possibile che non si possa andare da start ad end , sia perché parte di un poligono, che perché se siamo arrivati fino a chiamare questa funzione ,
     // il percorso minimo è già stato calcolato una volta
 
+    vector<int> precedent; 
+    vector<int> route;     
     size_t N = m_adj.size(); 
     vector<bool> visitedNodes;
     visitedNodes.resize(N);
@@ -462,119 +460,12 @@ void CoveragePathCreator::findMinRoute(int start, int end, vector<int>& preceden
 
     }
 
+    return route;
     // for (int i = 0; i < route.size(); i++) {
     //     cout << route.at(i) << endl;
     // } 
 }
 
-    // size_t N = m_adj.size();
-
-    // vector<bool> visitedNodes;
-    // vector<float> cost;
-    // vector<int> precedent;
-    // visitedNodes.resize(N);
-    // cost.resize(N);
-    // precedent.resize(N);
-
-    // for (size_t i = 0; i < N; i++)
-    // {
-    //     visitedNodes[i] = false;
-    //     cost[i] = INT_MAX;
-    //     precedent[i] = -1;
-    // }
-
-    // visitedNodes[start] = true;
-    // cost[start] = 0;
-
-    // int corrente = start;
-
-    // while (!visitedNodes[end]) {
-
-    //     vector<float> tmp_cost;
-    //     tmp_cost.resize(N);
-    //     for (size_t i = 0; i < N; i++)
-    //     {
-    //         tmp_cost[i] = INT_MAX;
-    //     }
-
-    //     for (size_t i = 0; i < N; i++)
-    //     {
-    //         if (!visitedNodes[i])
-    //         { // i nodo non ancora visitato
-    //             if (cost[i] > cost[corrente] + m_adjWeigthMatrix[corrente][i])
-    //             {
-    //                 tmp_cost[i] = cost[corrente] + m_adjWeigthMatrix[corrente][i];
-    //             }
-    //         }
-    //     }
-
-    //     int j_min = start;
-    //     bool atLeastOne = false;
-    //     int min = INT_MAX;
-
-    //     // scelgo un nodo tra quelli con i costi "aggiornabili" come nodo successivo ==> quello con il minimo costo
-    //     for (size_t j = 0; j < N; j++)
-    //     {
-    //         if (tmp_cost[j] == min)
-    //         { // se costano = prendo quello che ha più adiacenze
-
-    //             if (atLeastOne && numAdiacency(j) < numAdiacency(j_min))
-    //             {
-    //                 j_min = j;
-    //             }
-    //         }
-    //         else if (tmp_cost[j] < min)
-    //         {
-    //             atLeastOne = true;
-    //             min = tmp_cost[j];
-    //             j_min = j;
-    //         }
-    //     }
-
-    //     if (j_min != start)
-    //     {
-    //         cost[j_min] = cost[corrente] + m_adjWeigthMatrix[corrente][j_min];
-    //         precedent[j_min] = corrente;
-    //         visitedNodes[j_min] = true;
-    //         corrente = j_min;
-    //     }
-
-    //     continue;
-    // }
-
-    // vector<int> route;
-    // int corr = start;
-    // route.push_back(start);
-    // bool finished = false;
-
-    // cout << "START: " << start << endl;
-    // cout << "END: " << end << endl;
-    // cout << "PRECEDENTS" << endl;
-    // for (size_t i = 0 ; i < N; i++) {
-    //     cout << precedent[i] << endl;
-    // }
-
-    // //li ordino 
-    // while (corr != end) {
-
-    //     for (size_t i = 0; i < N ; i++ ) {
-    //         if (precedent[i] == corr) {
-    //             route.push_back(i); 
-    //             corr = i; 
-    //             break;
-    //         }
-    //     }
-
-    // }
-
-
-    // cout << "ROUTE" << endl;
-    // for (size_t j = 0; j < route.size(); j++) {
-    //     cout << route.at(j) << endl;
-    // }
-
-//     return route;
-// }
 
 /*******************************************************/
 
@@ -1014,9 +905,9 @@ void CoveragePathCreator::cover()
     // unisco i path
 
     // Parto inserendo nel path il perimetro (m_firstVertex dovrebbe essere il source del lato 0 , quindi dovrebbe partire e tornare lì)
-    for (size_t i = 0; i < m_approximatePolygon->edges().size(); i++)
+    for (size_t i = 0; i < m_simplyfiedPerimeter->edges().size(); i++)
     {
-        m_finalPath.push_back(m_approximatePolygon->edge(i));
+        m_finalPath.push_back(m_simplyfiedPerimeter->edge(i));
     }
 
     m_Helper.plotPoint(m_firstVertex);
@@ -1046,10 +937,9 @@ void CoveragePathCreator::cover()
             float distance1, distance2; 
             int index; //può essere 0 o 1 
 
-            vector<int> route, precedent;
+            vector<int> route = findMinRoute(m_polygonsSorted[i], m_polygonsSorted[i+1]);
 
-            findMinRoute(m_polygonsSorted[i], m_polygonsSorted[i+1], precedent, route);
-    
+            
             for ( size_t j = 0; j < route.size()-1; j++) {
 
                 if ((m_adj[route[j]][route[j+1]][0] == -1 && m_adj[route[j]][route[j+1]][1] == -1)) { // non sono adiacenti
@@ -1077,7 +967,21 @@ void CoveragePathCreator::cover()
                     index = 1;
                 }
 
-                cout << "unendo " << m_polygonsSorted[route.at(j)] << "con " << m_polygonsSorted[route.at(j+1)] << endl;
+
+
+                //stampo per debug
+                int x, y;
+                for (int k = 0; k < m_polygonsSorted.size(); k++) {
+                    if (m_polygonsSorted[k] == route.at(j)  ) {
+                        x = k;
+                    }
+                    else if (m_polygonsSorted[k] == route.at(j+1)  ) {
+                        y = k;
+                    }
+                }
+                cout << "unendo " << x << "con " << y << endl;
+
+
 
                 if (! ( m_pathS.at(i).at(m_pathS.at(i).size() - 1).target() == m_perimeterVertices[m_adj[route[j]][route[j+1]][index]] )) {
                     segment_new = CGAL::Segment_2<K>(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_perimeterVertices[m_adj[route[j]][route[j+1]][index]]);
@@ -1100,15 +1004,15 @@ void CoveragePathCreator::cover()
 
     // m_finalPath è il path finale in segment
 
-    // inserendo prima il perimetro
-    for (size_t i = 0; i < m_approximatePolygon->edges().size(); i++)
-    {
-        vector<K::Point_2> v = divideSegment(m_approximatePolygon->edge(i), 0.2);
-        for (size_t j = 0; j < v.size() - 1; j++)
-        { // il -1 è per non passare due volte sul punto finale del lato perché è lo stesso del primo punto del successivo
-            m_pathToReturn.push_back(v.at(j));
-        }
-    }
+    // // inserendo prima il perimetro
+    // for (size_t i = 0; i < m_simplyfiedPerimeter->edges().size(); i++)
+    // {
+    //     vector<K::Point_2> v = divideSegment(m_simplyfiedPerimeter->edge(i), 0.2);
+    //     for (size_t j = 0; j < v.size() - 1; j++)
+    //     { // il -1 è per non passare due volte sul punto finale del lato perché è lo stesso del primo punto del successivo
+    //         m_pathToReturn.push_back(v.at(j));
+    //     }
+    // }
 
     // l'ultimo punto di questo sarà il source di approximatePolygon->edge(0) , da qui dovrebbe partire il path (oppure bisogna scegliere il primo lato su cui girare in base a questo )
     for (size_t i = 0; i < m_finalPath.size(); i++)
@@ -1138,22 +1042,22 @@ bool CoveragePathCreator::run()
 {
 
     // plot perimetro
-    m_Helper.plotPerimeter(m_initialPolygon);
+    m_Helper.plotPerimeter(m_perimeter);
 
     // approssimazione poligono
     PS::Squared_distance_cost cost;
-    CGAL::Polygon_2<K> approx = PS::simplify(*m_initialPolygon, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
-    m_approximatePolygon = make_shared<CGAL::Polygon_2<K>>(approx);
+    CGAL::Polygon_2<K> approx = PS::simplify(*m_perimeter, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
+    m_simplyfiedPerimeter = make_shared<CGAL::Polygon_2<K>>(approx);
 
     // aggiorno vertici salvati
     m_perimeterVertices.clear();
-    for (size_t i = 0; i < m_approximatePolygon->vertices().size(); i++)
+    for (size_t i = 0; i < m_simplyfiedPerimeter->vertices().size(); i++)
     {
-        m_perimeterVertices.push_back(m_approximatePolygon->vertex(i));
+        m_perimeterVertices.push_back(m_simplyfiedPerimeter->vertex(i));
     }
 
     // plot nuovo perimetro
-    m_Helper.updatePerimeterImage(m_approximatePolygon);
+    m_Helper.updatePerimeterImage(m_simplyfiedPerimeter);
 
     // decomposizione
     if (!decompose())
