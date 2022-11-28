@@ -11,7 +11,6 @@
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
 //il robot fa due volte il giro del perimetro
-//metti 0.2 la distanza tra i punti del path finale 
 
 using namespace std;
 

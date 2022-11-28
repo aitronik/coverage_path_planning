@@ -394,6 +394,7 @@ vector<int> CoveragePathCreator::findMinRoute(int start)
 // trova il percorso che trova la strada tra start ed end minimizzando la distanza
 void CoveragePathCreator::findMinRoute(int start, int end, vector<int>& precedent, vector<int>& route) {
 
+    // cout << "da " << start << "a " << end << endl;
     // penso non sia possibile che non si possa andare da start ad end , sia perché parte di un poligono, che perché se siamo arrivati fino a chiamare questa funzione ,
     // il percorso minimo è già stato calcolato una volta
 
@@ -423,13 +424,7 @@ void CoveragePathCreator::findMinRoute(int start, int end, vector<int>& preceden
                     if (m_adjWeigthMatrix[corr][i] == 1) {
                         adiacents.push_back(i); 
                     }
-                }
-                // cout << "corrent " << corr << endl; 
-                // cout << "adiacents: " << endl;
-                // for (int i = 0; i < adiacents.size(); i++) {
-                //     cout << adiacents.at(i) << endl;
-                // }
-                
+                }                
                 //scelgo
                 int min_dist = INT_MAX; 
                 int closer;
@@ -466,6 +461,10 @@ void CoveragePathCreator::findMinRoute(int start, int end, vector<int>& preceden
         }
 
     }
+
+    // for (int i = 0; i < route.size(); i++) {
+    //     cout << route.at(i) << endl;
+    // } 
 }
 
     // size_t N = m_adj.size();
@@ -982,6 +981,7 @@ void CoveragePathCreator::cover()
                     {
                         borders[j] = 1;
                     }
+
                 }
             }
         }
@@ -1020,7 +1020,7 @@ void CoveragePathCreator::cover()
     }
 
     m_Helper.plotPoint(m_firstVertex);
-    m_Helper.plotPartialPath(m_finalPath);
+    m_Helper.plotPartialPath(m_finalPath); // blu il perimetro 
     // poi collego il punto iniziale al punto da cui si parte del primo sottopoligono
     m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS.at(0).at(0).source()));
     m_Helper.plotPartialPath(m_finalPath);
@@ -1032,12 +1032,13 @@ void CoveragePathCreator::cover()
         {
             m_finalPath.push_back(m_pathS.at(i).at(j));
         }
-        m_Helper.plotPartialPath(m_finalPath);
+        m_Helper.plotPartialPath(m_finalPath); //rosse le strisciate 
 
 
         // collego l'ultimo punto del path precedente col primo del successivo
         if (i != m_pathS.size() - 1)
         {
+
             CGAL::Segment_2<K> segment_new;
             
             m_polygonsSorted.resize(m_polygonsSorted.size());
@@ -1048,22 +1049,23 @@ void CoveragePathCreator::cover()
             vector<int> route, precedent;
 
             findMinRoute(m_polygonsSorted[i], m_polygonsSorted[i+1], precedent, route);
-            
+    
             for ( size_t j = 0; j < route.size()-1; j++) {
 
                 if ((m_adj[route[j]][route[j+1]][0] == -1 && m_adj[route[j]][route[j+1]][1] == -1)) { // non sono adiacenti
                     cout << "CoveragePathCreator::cover error" << endl;
                     return;
                 }
+                
                 // scelgo il punto dell'adiacenza a distanza minima
-                distance1 = sqrt(CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
-                                                        m_perimeterVertices[m_adj[route[j]][route[j+1]][0] ]  )) +
-                            sqrt(CGAL::squared_distance(m_perimeterVertices[m_adj[route[j]][route[j+1]][0]], m_pathS.at(i+1).at(0).source()));
+                distance1 = CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
+                                                        m_perimeterVertices[m_adj[route[j]][route[j+1]][0] ]  ) +
+                                    CGAL::squared_distance(m_perimeterVertices[m_adj[route[j]][route[j+1]][0]], m_pathS.at(i+1).at(0).source());
                 
 
-                distance2 = sqrt(CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
-                                                        m_perimeterVertices[m_adj[route[j]][route[j+1]][1]] )) +
-                            sqrt( CGAL::squared_distance(m_perimeterVertices[m_adj[route[j]][route[j+1]][1]], m_pathS.at(i+1).at(0).source()));
+                distance2 = CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
+                                                        m_perimeterVertices[m_adj[route[j]][route[j+1]][1]] ) +
+                                CGAL::squared_distance(m_perimeterVertices[m_adj[route[j]][route[j+1]][1]], m_pathS.at(i+1).at(0).source());
 
 
                 if (distance1 <= distance2)
@@ -1075,9 +1077,17 @@ void CoveragePathCreator::cover()
                     index = 1;
                 }
 
-                segment_new = CGAL::Segment_2<K>(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_perimeterVertices[m_adj[route[j]][route[j+1]][index]]);
-                m_finalPath.push_back(segment_new); // inserisco il primo pezzo
-                m_Helper.plotPartialPath(m_finalPath);
+                cout << "unendo " << m_polygonsSorted[route.at(j)] << "con " << m_polygonsSorted[route.at(j+1)] << endl;
+
+                if (! ( m_pathS.at(i).at(m_pathS.at(i).size() - 1).target() == m_perimeterVertices[m_adj[route[j]][route[j+1]][index]] )) {
+                    segment_new = CGAL::Segment_2<K>(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_perimeterVertices[m_adj[route[j]][route[j+1]][index]]);
+                    m_finalPath.push_back(segment_new); // inserisco il primo pezzo
+                    m_Helper.plotPartialPath(m_finalPath);
+                }
+
+                if (m_perimeterVertices[m_adj[route[j]][route[j+1]][index]] == m_pathS.at(i+1).at(0).source()) {
+                    continue; 
+                }
 
                 segment_new = CGAL::Segment_2<K>(m_perimeterVertices[m_adj[route[j]][route[j+1]][index]], m_pathS.at(i+1).at(0).source());
                 m_finalPath.push_back(segment_new); // inserisco il secondo pezzo
@@ -1087,15 +1097,13 @@ void CoveragePathCreator::cover()
         }
     }
 
-    cv::waitKey(0);
 
     // m_finalPath è il path finale in segment
 
-    // creo un path costituito da punti a distanza 2*sweepDistance
     // inserendo prima il perimetro
     for (size_t i = 0; i < m_approximatePolygon->edges().size(); i++)
     {
-        vector<K::Point_2> v = divideSegment(m_approximatePolygon->edge(i), 2*m_sweepDistance);
+        vector<K::Point_2> v = divideSegment(m_approximatePolygon->edge(i), 0.2);
         for (size_t j = 0; j < v.size() - 1; j++)
         { // il -1 è per non passare due volte sul punto finale del lato perché è lo stesso del primo punto del successivo
             m_pathToReturn.push_back(v.at(j));
@@ -1105,7 +1113,7 @@ void CoveragePathCreator::cover()
     // l'ultimo punto di questo sarà il source di approximatePolygon->edge(0) , da qui dovrebbe partire il path (oppure bisogna scegliere il primo lato su cui girare in base a questo )
     for (size_t i = 0; i < m_finalPath.size(); i++)
     {
-        vector<K::Point_2> v = divideSegment(m_finalPath.at(i), 2* m_sweepDistance);
+        vector<K::Point_2> v = divideSegment(m_finalPath.at(i), 0.2);
         for (size_t j = 0; j < v.size(); j++)
         {
             m_pathToReturn.push_back(v.at(j));
@@ -1177,15 +1185,6 @@ bool CoveragePathCreator::run()
     // creazione dei path per ogni sottopoligoni e unione
     cover();
 
-    
-    // //plot del path finale ==> quello che mi interessa è solo m_pathToReturn, l'altro serve solo per il plot
-    // cout << "PATH FINALE " << endl;
-    // for (size_t i = 0; i < m_pathToReturn.size(); i++) {
-    //     cout << m_pathToReturn.at(i).hx() << "  " << m_pathToReturn.at(i).hy() << endl;
-    // }
-
-    // stampo path finale con i punti
-    // m_Helper.plotFinalPath(m_finalPath, m_pathToReturn, m_firstVertex);
     cv::waitKey(0);
 
     return true;
