@@ -388,7 +388,7 @@ vector<int> CoveragePathCreator::findMinRoute(int start)
 /*******************************************************/
 
 // trova il percorso che trova la strada tra start ed end minimizzando la distanza
-void CoveragePathCreator::findMinRoute(int start, int end) {
+vector<int> CoveragePathCreator::findMinRoute(int start, int end) {
 
     // cout << "da " << start << "a " << end << endl;
     // penso non sia possibile che non si possa andare da start ad end , sia perché parte di un poligono, che perché se siamo arrivati fino a chiamare questa funzione ,
@@ -465,6 +465,9 @@ void CoveragePathCreator::findMinRoute(int start, int end) {
     //     cout << route.at(i) << endl;
     // } 
 }
+
+
+
 
 
 /*******************************************************/
@@ -830,62 +833,9 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
 
 /*******************************************************/
 
-void CoveragePathCreator::cover()
-{
-
-    // vector di appoggio
-    vector<Polygon> partitionPolys_new;
-    for (const Polygon &poly : m_partitionPolys)
-    {
-        partitionPolys_new.push_back(poly);
-    }
-
-    int cont = 0;
-    for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
-    {
-
-        Polygon poly = partitionPolys_new.at(m_polygonsSorted.at(pol_i));
-
-        vector<K::Point_2> tmp;
-        for (Point p : poly.container())
-        {
-            tmp.push_back(K::Point_2(m_perimeterVertices[p].hx(), m_perimeterVertices[p].hy()));
-        }
-        m_polygonsForPath.push_back(createPolygon(tmp));
-
-        // borders indica quali lati sono in comune e quindi bisogna lasciare lo spazio , inizializzo tutto a 0
-        vector<bool> borders;
-        borders.resize(m_polygonsForPath.at(cont)->edges().size(), false);
-
-        // metto a 1 i lati che hanno adiacenza
-        for (size_t i = 0; i < m_adj[cont].size(); i++)
-        {
-            if (m_adj[cont][i][0] != -1 && m_adj[cont][i][1] != -1)
-            {
-
-                CGAL::Segment_2<K> seg(m_perimeterVertices[m_adj[cont][i][0]], m_perimeterVertices[m_adj[cont][i][1]]);
-
-                for (size_t j = 0; j < m_polygonsForPath.at(cont)->edges().size(); j++)
-                {
-
-                    if ((seg.source() == m_polygonsForPath.at(cont)->edge(j).source() && seg.target() == m_polygonsForPath.at(cont)->edge(j).target()) || (seg.source() == m_polygonsForPath.at(cont)->edge(j).target() && seg.target() == m_polygonsForPath.at(cont)->edge(j).source()))
-                    {
-                        borders[j] = 1;
-                    }
-
-                }
-            }
-        }
-
-        vector<K::Point_2> intersections = generateGridForOnePolygon(cont, borders);
-        // scegli a quale punto unire
-
-        m_intersections.push_back(generateGridForOnePolygon(cont, borders));
-        cont++;
-    }
-
-    m_pathS.push_back(generatePathForOnePolygon(m_intersections.at(0), 0)); // parto dal punto 0 ==> volendo si può cambiare
-    m_Helper.plotPathForConvexPolygon(m_pathS.at(0) /*, m_polygonsForPath.at(0) */);
+void CoveragePathCreator::generatePathForSubpolygons(){
+      m_pathS.push_back(generatePathForOnePolygon(m_intersections.at(0), 0)); // parto dal punto 0 ==> volendo si può cambiare
+    m_Helper.plotPathForConvexPolygon(m_pathS.at(0));
 
     for (size_t i = 1; i < m_intersections.size(); i++)
     { // per ogni poligono  (il numero poligoni potrei metterlo in una variabile)
@@ -898,12 +848,12 @@ void CoveragePathCreator::cover()
                                CGAL::squared_distance(last_point, m_intersections.at(i).at(n - 1)));
 
         m_pathS.push_back(generatePathForOnePolygon(m_intersections.at(i), ind));
-        m_Helper.plotPathForConvexPolygon(m_pathS.at(i) /*, m_polygonsForPath.at(i) */);
+        m_Helper.plotPathForConvexPolygon(m_pathS.at(i));
     }
+}
 
-
-    // unisco i path
-
+/*******************************************************/
+void CoveragePathCreator::joinAndLinkPaths(){
     // Parto inserendo nel path il perimetro (m_firstVertex dovrebbe essere il source del lato 0 , quindi dovrebbe partire e tornare lì)
     for (size_t i = 0; i < m_simplyfiedPerimeter->edges().size(); i++)
     {
@@ -1000,21 +950,11 @@ void CoveragePathCreator::cover()
             }                
         }
     }
+}
+/*******************************************************/
 
 
-    // m_finalPath è il path finale in segment
-
-    // // inserendo prima il perimetro
-    // for (size_t i = 0; i < m_simplyfiedPerimeter->edges().size(); i++)
-    // {
-    //     vector<K::Point_2> v = divideSegment(m_simplyfiedPerimeter->edge(i), 0.2);
-    //     for (size_t j = 0; j < v.size() - 1; j++)
-    //     { // il -1 è per non passare due volte sul punto finale del lato perché è lo stesso del primo punto del successivo
-    //         m_pathToReturn.push_back(v.at(j));
-    //     }
-    // }
-
-    // l'ultimo punto di questo sarà il source di approximatePolygon->edge(0) , da qui dovrebbe partire il path (oppure bisogna scegliere il primo lato su cui girare in base a questo )
+void CoveragePathCreator::createPathToReturn() {
     for (size_t i = 0; i < m_finalPath.size(); i++)
     {
         vector<K::Point_2> v = divideSegment(m_finalPath.at(i), 0.2);
@@ -1023,6 +963,68 @@ void CoveragePathCreator::cover()
             m_pathToReturn.push_back(v.at(j));
         }
     }
+}
+
+/*******************************************************/
+
+void CoveragePathCreator::cover()
+{
+
+    // vector di appoggio
+    vector<Polygon> partitionPolys_new;
+    for (const Polygon &poly : m_partitionPolys)
+    {
+        partitionPolys_new.push_back(poly);
+    }
+
+    int cont = 0;
+    for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
+    {
+
+        Polygon poly = partitionPolys_new.at(m_polygonsSorted.at(pol_i));
+
+        vector<K::Point_2> tmp;
+        for (Point p : poly.container())
+        {
+            tmp.push_back(K::Point_2(m_perimeterVertices[p].hx(), m_perimeterVertices[p].hy()));
+        }
+        m_polygonsForPath.push_back(createPolygon(tmp));
+
+        // borders indica quali lati sono in comune e quindi bisogna lasciare lo spazio , inizializzo tutto a 0
+        vector<bool> borders;
+        borders.resize(m_polygonsForPath.at(cont)->edges().size(), false);
+
+        // metto a 1 i lati che hanno adiacenza
+        for (size_t i = 0; i < m_adj[cont].size(); i++)
+        {
+            if (m_adj[cont][i][0] != -1 && m_adj[cont][i][1] != -1)
+            {
+
+                CGAL::Segment_2<K> seg(m_perimeterVertices[m_adj[cont][i][0]], m_perimeterVertices[m_adj[cont][i][1]]);
+
+                for (size_t j = 0; j < m_polygonsForPath.at(cont)->edges().size(); j++)
+                {
+
+                    if ((seg.source() == m_polygonsForPath.at(cont)->edge(j).source() && seg.target() == m_polygonsForPath.at(cont)->edge(j).target()) || (seg.source() == m_polygonsForPath.at(cont)->edge(j).target() && seg.target() == m_polygonsForPath.at(cont)->edge(j).source()))
+                    {
+                        borders[j] = 1;
+                    }
+
+                }
+            }
+        }
+
+        vector<K::Point_2> intersections = generateGridForOnePolygon(cont, borders);
+        // scegli a quale punto unire
+
+        m_intersections.push_back(generateGridForOnePolygon(cont, borders));
+        cont++;
+    }
+
+    generatePathForSubpolygons();
+    joinAndLinkPaths();
+    createPathToReturn();
+    
 }
 
 /*******************************************************/

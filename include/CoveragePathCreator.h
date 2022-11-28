@@ -249,7 +249,7 @@ class CoveragePathCreator {
          * @param end arrivo 
          * @return vector<int> ordinato : alla posizione 0 c'è start , alla 1 il successivo , e così via fino ad end 
          */
-        vector<int> findMinRoute(int start, int end, vector<int>& precedent);
+        vector<int> findMinRoute(int start, int end);
 
         /**
          * @brief restituisce l'indice i del minimo valore di dist t.c. !visited[i]
@@ -292,12 +292,33 @@ class CoveragePathCreator {
          */
         void createAdjWeigthMatrix();
 
+        /**
+         * @brief genera per ogni sottopoligono il suo path e li inserisce in m_paths.
+         * m_paths[i] è il path del sottopoligono i , dove i è la sua posizione nell'ordine di percorrenza. 
+         * 
+         */
+        void generatePathForSubpolygons();
+
+        /**
+         * @brief collega i path dei sottopoligoni , aggiungendovi il perimetro e il collegamento col punto iniziale 
+         * 
+         */
+        void joinAndLinkPaths();
+
 
         /**
          * @brief inizia l'algoritmo di copertura del perimetro iniziale, chiamando poi tutte le altre funzioni 
          * 
          */
         void cover();
+
+
+
+        /**
+         * @brief crea il path composto da coppie di punti 
+         * 
+         */
+        void createPathToReturn(); 
 
 
         
