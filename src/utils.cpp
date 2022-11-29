@@ -2,9 +2,6 @@
 
 using namespace std; 
 
-//qua non devo mai usare CGAL?
-
-
 vector<pair<float,float>> readFromFile(string name){
     string filename("../" + name);
     ifstream input_file(filename);
@@ -60,12 +57,12 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 /*************************************/
 
 
-void printInfo() {
-    cout << "0 -> optimal convex partition" << endl;
-    cout << "1 -> monotone partition" << endl;
-    cout << "2 -> approx convex partition" << endl;
-    cout << "3 -> greene approx convex partition" << endl;
-}
+// void printInfo() {
+//     cout << "0 -> optimal convex partition" << endl;
+//     cout << "1 -> monotone partition" << endl;
+//     cout << "2 -> approx convex partition" << endl;
+//     cout << "3 -> greene approx convex partition" << endl;
+// }
 
 
 
@@ -171,54 +168,10 @@ int indexOf(vector<int> v, int x) {
 }
 
 
-/*************************************/
-// K::Point_2* intersect_polygon_segment(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Segment_2<K> segment) {
-    
-//     static K::Point_2 a[2];
-//     int cont = 0;
-
-//     for (size_t i = 0 ; i < polygon->edges().size();  i++) {
-      
-//         const auto inter = CGAL::intersection(segment, polygon->edge(i));
-//         // if (!inter) {
-//         //     cout << "no inter whit edge " << i  << endl;
-//         // }
-//         if (inter){
-//             K::Point_2 tmp;
-//             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
-//                 a[0] = polygon->edge(i).target();
-//                 a[1] = polygon->edge(i).source();
-//                 return a;
-//             }    
-//             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
-//                 a[cont] = *p;
-//                 cont++;
-//                 if (cont == 2) {
-//                     return a;
-//                 }
-//             }
-//             else {
-//                 cout << "Error" << endl;
-//             }
-//         }
-//     }
-//     if (cont == 0) {
-//         a[0] = K::Point_2(-1,-1);
-//         a[1] = a[0];
-//     }
-//     if (cont == 1) {
-//         a[1] = K::Point_2(-1,-1);
-//     } 
-//     return a;  
-
-// }
-
-
-
 
 /*************************************/
-//divido il poligono perpendicolarmente alla direzione di sweep con ampiezza la larghezza del robot 
-vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepDistance) {
+
+vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
     //creazione del path 
     vector<K::Point_2> path;
 
@@ -230,7 +183,7 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float initialSweepD
 
     //calcolo la distanza tra le righe 
     float length = sqrt(v.squared_length());
-    float mySweepDistance = initialSweepDistance;
+    float mySweepDistance = distance;
     // float distance = sqrt(CGAL::squared_distance(sweepDirection, point));
     float num_lines = length/mySweepDistance; 
     if (num_lines != (int)num_lines) {

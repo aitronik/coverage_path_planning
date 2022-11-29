@@ -390,7 +390,6 @@ vector<int> CoveragePathCreator::findMinRoute(int start)
 // trova il percorso che trova la strada tra start ed end minimizzando la distanza
 vector<int> CoveragePathCreator::findMinRoute(int start, int end) {
 
-    // cout << "da " << start << "a " << end << endl;
     // penso non sia possibile che non si possa andare da start ad end , sia perché parte di un poligono, che perché se siamo arrivati fino a chiamare questa funzione ,
     // il percorso minimo è già stato calcolato una volta
 
@@ -589,35 +588,36 @@ tuple<CGAL::Segment_2<K>, K::Point_2> CoveragePathCreator::findSweepDirection(sh
 /*******************************************************/
 
 // restituisce un vector di linee che creano una griglia sul poliigono
-vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> sweepDirection, K::Point_2 point)
+vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point)
 {
 
     vector<CGAL::Line_2<K>> grid;
 
-    CGAL::Line_2<K> ortogonal = sweepDirection.supporting_line().perpendicular(point); // linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono
+    CGAL::Line_2<K> ortogonal = parallelEdge.supporting_line().perpendicular(point); // linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono
 
-    auto projection = CGAL::intersection(ortogonal, sweepDirection.supporting_line()); // punto di proiezione del punto più lontano sul lato della direzione ==> è per forza un punto si ?
+    auto projection = CGAL::intersection(ortogonal, parallelEdge.supporting_line()); // punto di proiezione del punto più lontano sul lato della direzione ==> è per forza un punto si ?
 
     const K::Point_2 *p = boost::get<K::Point_2>(&*projection);
     CGAL::Segment_2<K> h(*p, point);
 
     vector<K::Point_2> inters = divideSegment(h, m_sweepDistance);
 
-    // genero una linea con direzione sweepDirection.direction e che passa per il punto i-esimo
+    // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
     for (size_t i = 0; i < inters.size(); i++)
     {
-        grid.push_back(CGAL::Line_2<K>(inters.at(i), sweepDirection.direction()));
+        grid.push_back(CGAL::Line_2<K>(inters.at(i), parallelEdge.direction()));
     }
 
     return grid;
 }
 
+
+
+
 /*******************************************************/
-
-// ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
-vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(int cont, vector<bool> &borders)
-{
-
+shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(int cont, vector<bool> &borders) {  
+    
+    
     borders.resize(borders.size());
     vector<K::Point_2> vertices;
 
@@ -683,11 +683,20 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(int cont, vect
             }
         }
     }
+    return polygon_new;
+}
 
-    // plot poligono ridotto per test
-    // m_Helper.plotCoveredPerimeter(polygon_new);
 
-    auto [edge, point] = findSweepDirection(polygon_new); // questo dovrebbe funzionare bene
+/*******************************************************/
+
+// ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
+vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(int cont, vector<bool> &borders)
+{
+    //riduzione sottopoligono in corrispondenza delle adiacenze 
+    shared_ptr<CGAL::Polygon_2<K>> polygon_new = reduceSubPolygon(cont, borders);
+    //trovo la direzione di spazzata 
+    auto [edge, point] = findSweepDirection(polygon_new);
+
     // edge è il lato parallelo alla direzione di spazzata
     // point è il punto più lontano a quel lato
 
@@ -750,8 +759,7 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(int cont, vect
 }
 
 /*******************************************************/
-vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector<K::Point_2> intersections, int start)
-{ // start è il punto da cui partire
+vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector<K::Point_2> intersections, int start) {
 
     // start deve essere uno tra 0,1,n-1,n
     vector<CGAL::Segment_2<K>> path;
@@ -967,15 +975,16 @@ void CoveragePathCreator::createPathToReturn() {
 
 /*******************************************************/
 
-void CoveragePathCreator::cover()
-{
-
-    // vector di appoggio
+void CoveragePathCreator::generateGridsForSubpolygons(){
+    
+    
+    // creazione di un vettore di appoggio
     vector<Polygon> partitionPolys_new;
     for (const Polygon &poly : m_partitionPolys)
     {
         partitionPolys_new.push_back(poly);
     }
+
 
     int cont = 0;
     for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
@@ -1015,17 +1024,28 @@ void CoveragePathCreator::cover()
         }
 
         vector<K::Point_2> intersections = generateGridForOnePolygon(cont, borders);
-        // scegli a quale punto unire
-
         m_intersections.push_back(generateGridForOnePolygon(cont, borders));
         cont++;
     }
+}
 
+
+
+
+
+/*******************************************************/
+
+void CoveragePathCreator::cover()
+{
+
+    generateGridsForSubpolygons(); 
     generatePathForSubpolygons();
     joinAndLinkPaths();
     createPathToReturn();
     
 }
+
+
 
 /*******************************************************/
 vector<pair<float, float>> CoveragePathCreator::getFinalPath()
@@ -1040,13 +1060,9 @@ vector<pair<float, float>> CoveragePathCreator::getFinalPath()
 }
 
 /*******************************************************/
-bool CoveragePathCreator::run()
-{
 
-    // plot perimetro
-    m_Helper.plotPerimeter(m_perimeter);
-
-    // approssimazione poligono
+// approssimazione poligono
+void CoveragePathCreator::simplifyPerimeter(){
     PS::Squared_distance_cost cost;
     CGAL::Polygon_2<K> approx = PS::simplify(*m_perimeter, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
     m_simplyfiedPerimeter = make_shared<CGAL::Polygon_2<K>>(approx);
@@ -1057,6 +1073,19 @@ bool CoveragePathCreator::run()
     {
         m_perimeterVertices.push_back(m_simplyfiedPerimeter->vertex(i));
     }
+}
+
+
+
+/*******************************************************/
+bool CoveragePathCreator::run()
+{
+
+    // plot perimetro iniziale
+    m_Helper.plotPerimeter(m_perimeter);
+
+    //approssimazione perimetro
+    simplifyPerimeter();
 
     // plot nuovo perimetro
     m_Helper.updatePerimeterImage(m_simplyfiedPerimeter);

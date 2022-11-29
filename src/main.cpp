@@ -10,7 +10,6 @@
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
-//il robot fa due volte il giro del perimetro
 
 using namespace std;
 
@@ -19,7 +18,7 @@ int main(int argc, char* argv[]) {
     //argomenti linea di comando
     if (argc < 4) { 
         cout << "Argument Error" << endl;
-        printInfo();
+        // printInfo();
         return 1;
     }
     string filename = argv[1];

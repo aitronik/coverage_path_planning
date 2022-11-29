@@ -212,11 +212,11 @@ class CoveragePathCreator {
 
         /**
          * @brief crea la griglia di rette parallele a sweepDirection
-         * @param sweepDirection segmento direzionato con la direzione di sweep 
+         * @param parallelEdge lato del poligono parallelo alla direzione di spazzata  
          * @param point punto più lontano dal segmento 
          * @return vector<CGAL::Line_2<K>> 
          */
-        vector<CGAL::Line_2<K>> createGrid(CGAL::Segment_2<K> sweepDirection, K::Point_2 point);
+        vector<CGAL::Line_2<K>> createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point);
 
         /**
          * @brief ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
@@ -319,6 +319,27 @@ class CoveragePathCreator {
          * 
          */
         void createPathToReturn(); 
+
+
+        /**
+         * @brief Riduce i sottopoligoni in corrispondenza delle adiacenze. 
+         * crea per ogni sottopoligono una griglia composta dai punti che saranno le "curve" del path
+         * 
+         */
+        void generateGridsForSubpolygons();
+
+        /**
+         * @brief approssima il perimetro iniziale riducendone i vertici a seconda della sweepDistance
+         * 
+         */
+        void simplifyPerimeter();
+
+
+        /**
+         * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
+         * 
+         */
+        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(int cont, vector<bool> &borders);
 
 
         
