@@ -138,6 +138,8 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
 }
 
 
+
+
 /***********************************/
 
 void CoveragePlotHelper::plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> path) {
@@ -221,6 +223,19 @@ void CoveragePlotHelper::updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new
 void CoveragePlotHelper::plotPoint(K::Point_2 point) {
     cout << "CoveragePlotHelper: plotPoint" << endl;
     cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(point.hx()), pixelFromMetres(point.hy())) , 2, cv::Scalar(255,0,0), 2 ); 
+    cv::namedWindow("FinalPath", 1);    
+    cv::imshow("FinalPath" , m_perimeterImage);
+    cv::waitKey(0);    
+}
+
+/***********************************/
+void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
+    double a = line.a(); 
+    double b = line.b(); 
+    double c = line.c(); 
+    
+    cv::line(m_perimeterImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
+        cv::Scalar(0, 0, 255), 1, 8, 0   );
     cv::namedWindow("FinalPath", 1);    
     cv::imshow("FinalPath" , m_perimeterImage);
     cv::waitKey(0);    

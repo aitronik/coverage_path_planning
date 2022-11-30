@@ -44,7 +44,7 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 // void printInfo();
 
 /**
- * @brief calcola angolo tra due vettori in radianti (controllare che siano radianti )
+ * @brief calcola il coseno dell'angolo tra due vettori in radianti (controllare che siano radianti )
  * @param v 
  * @param w 
  * @return double 
@@ -73,6 +73,18 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
  */
 K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
 
+
+
+/**
+ * @brief 
+ * 
+ * @param poly 
+ * @param line 
+ * @return vector<K::Point_2> 
+ */
+pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2<K>> polygon,int edgeIndex);
+
+
 /**
  * @brief restituisce l'indice del vector a cui corrisponde il valore x
  * 
@@ -89,3 +101,15 @@ int indexOf(vector<int> v, int x);
  * @return vector<K::Point_2> 
  */
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
+
+
+/**
+ * @brief 
+ * 
+ * @param a 
+ * @param b 
+ * @param c 
+ * @return true 
+ * @return false 
+ */
+bool isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c);

@@ -73,6 +73,13 @@ class CoveragePathCreator {
          */
         Polygon_list m_partitionPolys;
 
+
+        /**
+         * @brief serve solo nel caso della mia decomposizione 
+         * 
+         */
+        vector<shared_ptr<CGAL::Polygon_2<K>>> m_decompositionPolygons; 
+
         /**
          * @brief intersezioni tra le griglia e i sottopoligoni. m_intersections[i][j] è la j-esima intersezione tra la i-esima griglia e l'i-esimo sottopoligono
          * 
@@ -341,6 +348,36 @@ class CoveragePathCreator {
          */
         shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(int cont, vector<bool> &borders);
 
+        /**
+         * @brief 
+         * 
+         * @param perimeter 
+         * @return vector<shared_ptr<CGAL::Polygon_2<K>>> 
+         */
+        vector<shared_ptr<CGAL::Polygon_2<K>>> my_decomposition(shared_ptr<CGAL::Polygon_2<K>> perimeter);
+
+        /**
+         * @brief 
+         * 
+         * @param poly 
+         * @param newEdge 
+         * @return vector<CGAL::Polygon_2<K>> 
+         */
+        vector<shared_ptr<CGAL::Polygon_2<K>>> cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startEdge, int endEdge);
+
+
+        /**
+         * @brief 
+         * 
+         * @param perimeter 
+         * @return size_t 
+         */
+        size_t isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter); 
+        // /**
+        //  * @brief estituisce l'indice del lato che contiene p 
+        //  * 
+        //  */
+        // int getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter); 
 
         
 };

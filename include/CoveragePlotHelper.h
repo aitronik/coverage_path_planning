@@ -68,6 +68,9 @@ class CoveragePlotHelper {
          */
         void plotPoint(K::Point_2 point); 
 
+        void plotLineForTest(CGAL::Line_2<K> line);
+
+
     private: 
 
         /**
@@ -107,5 +110,7 @@ class CoveragePlotHelper {
          * @param perimeter_vertices vertici del poligono da stampare 
          */
         void calculateResolution(vector<K::Point_2>& perimeter_vertices);
+
+
         
 };
