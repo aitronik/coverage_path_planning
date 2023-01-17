@@ -55,89 +55,78 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
 /*******************************************************/
 
 //divide in due un poligono tramite un nuovo segmento che parte da un vertice del poligono 
-vector<shared_ptr<CGAL::Polygon_2<K>>> CoveragePathCreator::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startEdge , int endEdge) {
+vector<shared_ptr<CGAL::Polygon_2<K>>> CoveragePathCreator::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startVertex , int endEdge) {
     
 
-
-    // m_Helper.plotPoint(newEdge.source()); 
-    // m_Helper.plotPoint(newEdge.target());
-
-    // cout << "startEdge: " << startEdge << " endEdge: " << endEdge << endl;
     size_t N = poly->edges().size();
     
     vector<shared_ptr<CGAL::Polygon_2<K>>> decomposition; 
     vector<K::Point_2> points1; 
     vector<K::Point_2> points2; 
+    int cont; 
 
     //endEdge è l'indice del lato su cui sta il target del lato nuovo 
     //startEdge dove sta il source, il source è già un vertice di poly 
     //divido i vertici+il vertice nuovo in points1 e points2, vertici di un sottopoligono e vertici dell'altro 
 
     //newEdge->target è l'unico punto che non fa già parte dei vertici di poly
-    if (startEdge == endEdge) { //non fa nulla 
+
+    if (startVertex == endEdge || startVertex == (endEdge+1)%N || startVertex == (endEdge-1+N)%N )  { //non fa nulla 
         decomposition.push_back(poly); 
         return decomposition; 
     }
-    if (startEdge < endEdge) {
-        
+
+    else if (startVertex < endEdge) {
         //points1
-        for (int i = startEdge ; i < endEdge ; i++) {
+        points1.push_back(newEdge.source()); 
+        for (int i = startVertex ; i < endEdge ; i++) {
             points1.push_back(poly->edge(i).target());
         }
         points1.push_back(newEdge.target());
+
+
         //points2
         points2.push_back(newEdge.target()); 
-        int cont = endEdge;
-        for (int i = 0; i <= (endEdge-startEdge); i++) {
+        cont = endEdge;
+        while (cont != startVertex) {
             points2.push_back(poly->edge(cont).target());
-            cont = (cont+1)%(N); 
+            cont = (cont+1)%(N);            
+
         }
-        // for (int i = (endEdge+1)%N; i <= startEdge ; i = (i+1)%(N-1)) {
-        //     cout << i << endEdgel;
-        //     points2.push_back(poly->edge(i).target()); //in questo modo dovrei comprendere anche newEdge->source()
-        // }
-
-
-        // cout << "POINTS1" << endl;
-        // for (int k = 0; k < points1.size(); k++) {
-        //     cout << points1.at(k) << endl;
-        // }
-
-        // cout << "POINTS2" << endl;
-        // for (int k = 0; k < points2.size(); k++) {
-        //     cout << points2.at(k) << endl;
-        // }
-
-
     }   
+
     else {
         //points1
-        // points1.push_back(poly->edge(startEdge).target());
-        for (int i = startEdge+1; i <= endEdge; i=(i+1)%(N)) { //end->source lo devo mettere 
-            points1.push_back(poly->edge(i).source());  //poly->edge(startEdge+1).source() è il target di poly->edge(startEdge) ==> il source di newEdge
+        
+        cont = startVertex%N; 
+        while (cont != endEdge+1) {
+            points1.push_back(poly->edge(cont).source());
+            cont = (cont+1)%N;
         }
         points1.push_back(newEdge.target());
 
         //points2
         points2.push_back(newEdge.target()); 
-        for (int i = endEdge; i <= startEdge; i++) {
+        for (int i = endEdge; i < startVertex; i++) {
             points2.push_back(poly->edge(i).target()); 
-        }
-
-        cout << "POINTS1" << endl;
-        for (int k = 0; k < points1.size(); k++) {
-            cout << points1.at(k) << endl;
-        }
-
-        cout << "POINTS2" << endl;
-        for (int k = 0; k < points2.size(); k++) {
-            cout << points2.at(k) << endl;
         }
     }
 
     decomposition.push_back(createPolygon(points1)); 
     decomposition.push_back(createPolygon(points2));
 
+    cout << "POINTS1" << endl;
+    for (int k = 0; k < points1.size(); k++) {
+                // m_Helper.plotPoint(points1.at(k)); 
+
+        cout << points1.at(k) << endl;
+    }
+
+    cout << "POINTS2" << endl;
+    for (int k = 0; k < points2.size(); k++) {
+        cout << points2.at(k) << endl;
+    }
+
     return decomposition; 
 }
 
@@ -145,85 +134,125 @@ vector<shared_ptr<CGAL::Polygon_2<K>>> CoveragePathCreator::cutPolygon(shared_pt
 
 
 /*******************************************************/
-// //restituisce l'indice del lato che contiene p 
-// int CoveragePathCreator::getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter ) {
-//     m_Helper.plotPoint(p);
-//     cout << "coordinate p: " << p.hx() << ", " << p.hy() << endl;
-//     int edge = -1;
-//     for (size_t i = 0; i < perimeter->edges().size(); i++ ) {
-//         // cout << i << ": " << perimeter->edge(i).source().hx() << " " << perimeter->edge(i).source().hy() << endl;
-//         // cout << i << ": " << perimeter->edge(i).target().hx() << " " << perimeter->edge(i).target().hy() << endl;
 
-//         if (perimeter->edge(i).supporting_line().has_on(p)) {
-//             if (perimeter->edge(i).collinear_has_on(p)){
-//                 edge = i;
-//                 CGAL::Line_2<K> line = perimeter->edge(edge).supporting_line(); 
-//                 m_Helper.plotLineForTest(line); 
-//                 std::cout << "trovato segmento a " << i << endl;
-//                 break;
-//             }
-//         }
-//     }
-//     return edge;    
-// }
+
+//dato l'indice di un vertice CONCAVO calcola il segmento con cui tagliare il poligono 
+pair<CGAL::Segment_2<K>, int> CoveragePathCreator::calculateCutter(shared_ptr<CGAL::Polygon_2<K>> perimeter, int &startingVertex) {
+    
+
+    size_t N = perimeter->vertices().size(); 
+
+    //posso creare il nuovo lato come prolungamento di uno o dell'altro lato che comprendono quel vertice 
+    //scelgo quello che renderebbe il nuovo segmento più corto  
+    pair<vector<K::Point_2>, int> resultIntersection1 = intersect_polygon_line_2(perimeter, startingVertex);
+    pair<vector<K::Point_2>, int> resultIntersection2 = intersect_polygon_line_2(perimeter, (startingVertex-1+N)%N);
+
+    float d1,d2;
+
+    //devo anche capire se il più vicino è il source o il target 
+    d1 = CGAL::squared_distance(perimeter->edge(startingVertex).source(), resultIntersection1.first.at(0)); 
+    d2 = CGAL::squared_distance(perimeter->edge((startingVertex-1+N)%N).target(), resultIntersection2.first.at(0)); 
+
+    
+    CGAL::Segment_2<K> cutter;
+    int indexIntersectionEdge; 
+
+    if (d1 <= d2) {
+        cutter = CGAL::Segment_2<K> (perimeter->edge(startingVertex).source(), resultIntersection1.first.at(0));
+        indexIntersectionEdge = resultIntersection1.second;
+    }
+    else {
+        cutter = CGAL::Segment_2<K> (perimeter->edge((startingVertex-1+N)%N).target(), resultIntersection2.first.at(0)); 
+        indexIntersectionEdge = resultIntersection2.second;
+    }
+ 
+    return make_pair(cutter, indexIntersectionEdge); 
+
+}
+
 
 
 /*******************************************************/
+
+
 
 vector<shared_ptr<CGAL::Polygon_2<K>>> CoveragePathCreator::my_decomposition(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
     
 
     vector<shared_ptr<CGAL::Polygon_2<K>>> decomposition;
-    // int cont = 0;
-    // CGAL::Line_2<K> line;
-    int concavity = isConcave(perimeter); 
-    if (concavity == -1) {
-        cout << "my_decomposition error" << endl;
-    }
-    //per ora chiamo isConcave una sola volta, poi dentro un ciclo 
+    vector<shared_ptr<CGAL::Polygon_2<K>>> tmp_decomposition; //sono i due sottopoligoni in cui viene diviso un sottopoligono 
+    shared_ptr<CGAL::Polygon_2<K>> toCut; 
 
-    //intersezione di uno dei lati corrispondenti dall'altra parte
-    pair<vector<K::Point_2>, int> resultIntersection = intersect_polygon_line_2(perimeter, concavity);
-    
-
-    float d1,d2; 
-    d1 = CGAL::squared_distance(perimeter->edge(concavity).source(), resultIntersection.first.at(0)); 
-    d2 = CGAL::squared_distance(perimeter->edge(concavity).target(), resultIntersection.first.at(0)); 
-
-
-    if (resultIntersection.first.size() > 0) {
+    int concavity = isConcave(perimeter); //indice del vertice della concavità 
    
-        CGAL::Segment_2<K> cutter;
-        if (d1 < d2) {
-            cutter = CGAL::Segment_2<K> (perimeter->edge(concavity).source(), resultIntersection.first.at(0));
-        }
-        else {
-            cutter = CGAL::Segment_2<K> (perimeter->edge(concavity).target(), resultIntersection.first.at(0));
+    if (concavity != -1) { //altrimenti è già convesso 
+
+        pair<CGAL::Segment_2<K>, int> cutter = calculateCutter(perimeter, concavity);
+        decomposition = cutPolygon(perimeter, cutter.first, concavity, cutter.second);
+        
+        // ////
+        // return decomposition;
+        // ////     
+        
+        bool allSubPolygonsConvex = false; 
+        while (!allSubPolygonsConvex) {
+
+            allSubPolygonsConvex = true;
+
+            for (size_t i = 0; i < decomposition.size(); i++) {
+                
+                concavity = isConcave(decomposition.at(i)); 
+
+                if (concavity != -1){
+                    allSubPolygonsConvex = false; 
+                    toCut = decomposition.at(i); //memorizzo il poligono da tagliare prima di rimuoverlo dal vector
+      
+                    decomposition.erase(decomposition.begin()+i); 
+
+                    cutter = calculateCutter(toCut, concavity); 
+                    tmp_decomposition = cutPolygon(toCut, cutter.first, concavity, cutter.second); 
+                    for (size_t j = 0; j < tmp_decomposition.size(); j++ ) {
+                        decomposition.push_back(tmp_decomposition.at(j)); 
+                    }
+                    tmp_decomposition.clear(); 
+                }
+
+            }
         }
 
-        decomposition = cutPolygon(perimeter, cutter, concavity, resultIntersection.second);
-        return decomposition; //lo stoppo al primo taglio per adesso 
+        return decomposition; 
     }
 
-    decomposition.push_back(perimeter);
-    
-    return decomposition; 
+    else { //già convesso 
 
+        decomposition.push_back(perimeter);
+        return decomposition; 
+
+    }
 }
 
 
 /*******************************************************/
 
-//restituisce il primo indice (del vertice) dove si trova una concavità 
+//restituisce il primo indice (del vertice) dove si trova una concavità . -1 se il poligono è convesso
 size_t CoveragePathCreator::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
     vector<bool> orientations;
     size_t N = perimeter->vertices().size();
+    int index; //indice del primo punto di concavità
     for (size_t i = 0; i < N ; i++) {
-        orientations.push_back(isLeft(perimeter->vertex( (i-1)%N), perimeter->vertex(i) , perimeter->vertex( (i+1)%N) ) );
+        orientations.push_back(isLeft(perimeter->vertex((i-1+N)%N), perimeter->vertex(i) , perimeter->vertex( (i+1)%N) ) );
     }
+
+    cout <<"ORIENTATION" << endl; 
+    for (int i = 0; i < orientations.size();i++) {
+        cout << orientations.at(i) << endl;
+    }
+
+
+
     // controlla quale è la maggioranza (più positivi o più negativi ) e quali sono girati al contrario 
-    bool morePositive = true; 
-    int numPositives, numNegatives = 0; 
+    int numPositives = 0; 
+    int numNegatives = 0; 
     for (size_t i = 0; i < N; i++) {
         if (orientations.at(i)) {
             numPositives++; 
@@ -232,21 +261,27 @@ size_t CoveragePathCreator::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) 
             numNegatives++; 
         }
     }
+
     if (numPositives >= numNegatives) { //cerco il primo negativo 
         for (size_t i = 0; i < N; i++) {
             if (!orientations.at(i)) {
-                return i;
+                index = i;
+                break;
             }
         }
     }  
     else { //cerco il primo positivo 
         for (size_t i = 0; i < N; i++) {
             if (orientations.at(i)) {
-                return i;
+                index = i; 
+                break;
             }
         }
     }
-    return -1;
+    if (numPositives == 0 || numNegatives == 0) {  //ovvero è convesso 
+        return -1; 
+    }
+    return index; 
 }
 
 
@@ -1295,9 +1330,11 @@ bool CoveragePathCreator::run()
     // decomposizione
     if (m_decompositionType == 4) {
         m_decompositionPolygons = my_decomposition(m_simplyfiedPerimeter); 
-        for (size_t i = 0; i < m_decompositionPolygons.size(); i++) {
-            m_Helper.plotPerimeter(m_decompositionPolygons.at(i));
-        }
+        m_Helper.plotPerimeter(m_decompositionPolygons.at(0));
+        // for (size_t i = 0; i < m_decompositionPolygons.size(); i++) {
+        //     m_Helper.plotPerimeter(m_decompositionPolygons.at(i));
+        //     cv::waitKey(0);
+        // }
         return true;
     }
     
@@ -1329,7 +1366,8 @@ bool CoveragePathCreator::run()
 
     // creazione dei path per ogni sottopoligoni e unione
     cover();
-
+    
+    m_Helper.plotFinalPath(m_pathToReturn); 
     cv::waitKey(0);
 
     return true;

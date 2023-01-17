@@ -10,6 +10,9 @@
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
+//la decomposizione 4 è ancora distaccata da tutto il resto, che va sistemato appositamente 
+//la mia decomposizione funziona correttamente per divisione in due , dà problemi quando c'è più di una concavità, vedi mydecompositiontest4.txt
+//capire 
 
 using namespace std;
 

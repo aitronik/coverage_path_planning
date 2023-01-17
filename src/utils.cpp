@@ -76,7 +76,8 @@ double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
     double len1, len2;
     len1 = sqrt(v.squared_length());
     len2 = sqrt(w.squared_length());
-    return theta/ (len1*len2);
+    // cout << theta/ (len1*len2) << endl;
+    return (theta/ (len1*len2));
 
 }
 
@@ -109,8 +110,35 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
     return (vertex_i != -1);
 }
 
+/*************************************/ 
+//il secondo elemento del pair è l'indice del lato  in cui c'è l'intersezione
+pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
 
+    CGAL::Line_2<K> line = polygon->edge(edgeIndex).supporting_line();
+    size_t N = polygon->edges().size(); 
+    int indexIntersection = -1;
 
+    vector<K::Point_2> a;
+    for (size_t i = 0 ; i < polygon->edges().size() ;  i++) {
+
+        if ( i !=edgeIndex && i != (edgeIndex+1)%(N) &&  i != (edgeIndex-1+N)%(N) ) {
+            const auto inter = CGAL::intersection(line, polygon->edge(i));
+        
+            if (inter){
+                if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento niente , è il lato stesso 
+                cout << "trovato intersezione con segmento " << endl;
+                }
+                else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){  //se si intersecano in un punto 
+                    a.push_back(*p);
+                    indexIntersection = i; 
+                    break;
+                }
+            }
+        }
+    }
+
+    return make_pair(a,indexIntersection);
+}
 
 
 /*************************************/
@@ -124,11 +152,9 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     for (size_t i = 0 ; i < polygon->edges().size();  i++) {
       
         const auto inter = CGAL::intersection(line, polygon->edge(i));
-        // if (!inter) {
-        //     cout << "no inter whit edge " << i  << endl;
-        // }
+
         if (inter){
-            K::Point_2 tmp;
+            // K::Point_2 tmp;
             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
                 a[0] = polygon->edge(i).target();
                 a[1] = polygon->edge(i).source();
@@ -210,3 +236,11 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
     return path;
 }
 
+
+/*************************************/
+
+bool isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene 0
+     return ((b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx())) >= 0;
+}
+
+/*************************************/

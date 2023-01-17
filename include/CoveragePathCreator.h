@@ -379,5 +379,13 @@ class CoveragePathCreator {
         //  */
         // int getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter); 
 
+        /**
+         * @brief 
+         * 
+         * @param perimeter 
+         * @param startingVertex 
+         * @return CGAL::Segment_2<K> 
+         */
+        pair<CGAL::Segment_2<K>, int> calculateCutter(shared_ptr<CGAL::Polygon_2<K>> perimeter, int &startingVertex);         
         
 };

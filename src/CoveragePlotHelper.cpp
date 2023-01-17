@@ -86,12 +86,13 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly) {
         }
         if (i == points.size()-1 ) last = point;
         cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);
+        // cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
            
         p_old = point;
     }
 
     cv::line(m_perimeterImage, last, first, cv::Scalar(0,0,0), 2, 8, 0);
-
+    
     cv::namedWindow("Perimeter", 1);
     cv::imshow("Perimeter", m_perimeterImage);
     cv::waitKey(0);    
