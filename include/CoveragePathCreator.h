@@ -11,6 +11,7 @@
 #include <CGAL/Polyline_simplification_2/simplify.h>
 #include "utils.hpp"
 #include "CoveragePlotHelper.h"
+#include "MyDecomposition.h"
 
 namespace PS = CGAL::Polyline_simplification_2;
 typedef PS::Stop_above_cost_threshold Stop;
@@ -169,6 +170,12 @@ class CoveragePathCreator {
          * 
          */
         CoveragePlotHelper m_Helper;
+
+        /**
+         * @brief 
+         * 
+         */
+        MyDecomposition m_decomposer; 
 
         /**
          * @brief vertice iniziale del path (primo vertice dato in input)
@@ -348,44 +355,53 @@ class CoveragePathCreator {
          */
         shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(int cont, vector<bool> &borders);
 
-        /**
-         * @brief 
-         * 
-         * @param perimeter 
-         * @return vector<shared_ptr<CGAL::Polygon_2<K>>> 
-         */
-        vector<shared_ptr<CGAL::Polygon_2<K>>> my_decomposition(shared_ptr<CGAL::Polygon_2<K>> perimeter);
-
-        /**
-         * @brief 
-         * 
-         * @param poly 
-         * @param newEdge 
-         * @return vector<CGAL::Polygon_2<K>> 
-         */
-        vector<shared_ptr<CGAL::Polygon_2<K>>> cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startEdge, int endEdge);
-
-
-        /**
-         * @brief 
-         * 
-         * @param perimeter 
-         * @return size_t 
-         */
-        size_t isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter); 
         // /**
-        //  * @brief estituisce l'indice del lato che contiene p 
+        //  * @brief restituisce la posizione nel vector del primo poligono concavo e l'indice del vertice della convacità trovata , -1 il primo se sono tutti convessi 
         //  * 
+        //  * @param decomposition 
+        //  * @return pair<size_t, int> 
         //  */
-        // int getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter); 
+        // pair<int, int> allSubPolygonsConvex (vector<shared_ptr<CGAL::Polygon_2<K>>> decomposition);
+        
+        
+        // /**
+        //  * @brief 
+        //  * 
+        //  * @param perimeter 
+        //  * @return vector<shared_ptr<CGAL::Polygon_2<K>>> 
+        //  */
+        // vector<shared_ptr<CGAL::Polygon_2<K>>> my_decomposition(shared_ptr<CGAL::Polygon_2<K>> perimeter);
 
-        /**
-         * @brief 
-         * 
-         * @param perimeter 
-         * @param startingVertex 
-         * @return CGAL::Segment_2<K> 
-         */
-        pair<CGAL::Segment_2<K>, int> calculateCutter(shared_ptr<CGAL::Polygon_2<K>> perimeter, int &startingVertex);         
+        // /**
+        //  * @brief 
+        //  * 
+        //  * @param poly 
+        //  * @param newEdge 
+        //  * @return vector<CGAL::Polygon_2<K>> 
+        //  */
+        // vector<shared_ptr<CGAL::Polygon_2<K>>> cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startEdge, int endEdge);
+
+
+        // /**
+        //  * @brief 
+        //  * 
+        //  * @param perimeter 
+        //  * @return size_t 
+        //  */
+        // size_t isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter); 
+        // // /**
+        // //  * @brief estituisce l'indice del lato che contiene p 
+        // //  * 
+        // //  */
+        // // int getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter); 
+
+        // /**
+        //  * @brief 
+        //  * 
+        //  * @param perimeter 
+        //  * @param startingVertex 
+        //  * @return CGAL::Segment_2<K> 
+        //  */
+        // pair<CGAL::Segment_2<K>, int> calculateCutter(shared_ptr<CGAL::Polygon_2<K>> perimeter, int &startingVertex);         
         
 };

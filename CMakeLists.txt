@@ -20,7 +20,7 @@ find_package( Boost REQUIRED )
 
 include_directories(include)
 
-add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp)
+add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/MyDecomposition.cpp)
 ament_export_targets(export_lib_coverage_path HAS_LIBRARY_TARGET) 
 
 # Link the executable to CGAL and third-party libraries
@@ -37,7 +37,7 @@ install(
 ament_export_libraries(lib_coverage_path)
 
 
-#add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
+#add_executable( coverage_path main.cpp generatorPath.cpp utils.cpp mydecomposition.cpp )
 add_executable(coverage_path src/main.cpp)
 target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES})
 

@@ -239,8 +239,5 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
 
 /*************************************/
 
-bool isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene 0
-     return ((b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx())) >= 0;
-}
 
-/*************************************/
+

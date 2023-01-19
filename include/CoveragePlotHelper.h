@@ -70,6 +70,9 @@ class CoveragePlotHelper {
 
         void plotLineForTest(CGAL::Line_2<K> line);
 
+        void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly);
+
+
 
     private: 
 
@@ -84,6 +87,12 @@ class CoveragePlotHelper {
          * 
          */
         cv::Mat m_image_decomposition;
+
+        /**
+         * @brief 
+         * 
+         */
+        cv::Mat m_testImage; 
 
         /**
          * @brief nome della decomposizione

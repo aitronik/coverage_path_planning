@@ -22,6 +22,7 @@ typedef CGAL::Partition_traits_2<K, CGAL::Pointer_property_map<K::Point_2>::type
 typedef Partition_traits_2::Point_2 Point;
 typedef Partition_traits_2::Polygon_2 Polygon;  // a polygon of INDICES
 typedef std::list<Polygon> Polygon_list;
+// typedef Traits::Point_2 Point_2; //non ho molto chiaro cosa cambi tra questi e i Point
 
 
 using namespace std;
@@ -102,14 +103,3 @@ int indexOf(vector<int> v, int x);
  */
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
 
-
-/**
- * @brief 
- * 
- * @param a 
- * @param b 
- * @param c 
- * @return true 
- * @return false 
- */
-bool isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c);

@@ -18,10 +18,11 @@ bool CoveragePlotHelper::init(vector<K::Point_2>& perimeter_vertices){
 
     m_perimeterImage = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
     m_image_decomposition = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
+    m_testImage = cv::Mat(1000, 1000, CV_8UC3, cv::Scalar(255,255,255));
 
     calculateResolution(perimeter_vertices);
 
-    if (m_perimeterImage.empty() || m_image_decomposition.empty()) {
+    if (m_perimeterImage.empty() || m_image_decomposition.empty() || m_testImage.empty() ) {
         cout << "CoveragePlothHelper: Could not open or find the image" << endl;
         return false;
     }
@@ -86,7 +87,7 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly) {
         }
         if (i == points.size()-1 ) last = point;
         cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);
-        // cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+        cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
            
         p_old = point;
     }
@@ -100,10 +101,42 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly) {
 }
 
 /***********************************/
+
+void CoveragePlotHelper::plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly) {
+    
+    //trasformo i point di cgal in points di opencv
+    vector<K::Point_2> points;
+    for(const K::Point_2& pt : poly->vertices()) points.push_back(pt);
+ 
+    
+    //creo points di opencv ==> trasformando da metri a pixel
+    cv::Point p_old;
+    cv::Point first;
+    cv::Point last;
+    for (size_t i = 0; i < points.size(); i++) {
+        cv::Point point ( pixelFromMetres(points.at(i).hx()) , pixelFromMetres(points.at(i).hy()) );
+        if (i == 0) {
+            p_old = point;
+            first = point;
+        }
+        if (i == points.size()-1 ) last = point;
+        cv::line(m_testImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);           
+        p_old = point;
+    }
+
+    cv::line(m_testImage, last, first, cv::Scalar(0,0,0), 2, 8, 0);
+    
+    cv::namedWindow("Test", 1);
+    cv::imshow("Test", m_testImage);
+    cv::waitKey(0);    
+
+}
+
+/***********************************/
 //stampa il sottopoligono e un numero che indica la sua posizione nell'ordinamento 
 void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name) {
     
-    cout << "CoveragePlotHelper: plotSubPolygon" << endl;
+    // cout << "CoveragePlotHelper: plotSubPolygon" << endl;
     cv::Point p_old;
     cv::Point first;
     cv::Point last;
@@ -130,7 +163,7 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
     p_label /= (int)cont;
 
     cv::line(m_image_decomposition, last, first, cv::Scalar(0,0,0), 2, 8, 0); 
-    cv::putText(m_image_decomposition, std::to_string(num) , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+    // cv::putText(m_image_decomposition, std::to_string(num) , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
 
     cv::namedWindow(m_decompositionName, 1); 
     cv::imshow(m_decompositionName, m_image_decomposition);
@@ -145,7 +178,7 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
 
 void CoveragePlotHelper::plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> path) {
     
-    cout << "CoveragePlotHelper: plotPathForConvexPolygon" << endl;
+    // cout << "CoveragePlotHelper: plotPathForConvexPolygon" << endl;
     size_t k = 0; 
     while (k < path.size()) {
         K::Point_2 p = path.at(k).source(); 
@@ -163,7 +196,7 @@ void CoveragePlotHelper::plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> pat
 /***********************************/
 void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint, K::Point_2 start) {
     
-    cout << "CoveragePlotHelper: plotFinalPath" << endl;
+    // cout << "CoveragePlotHelper: plotFinalPath" << endl;
     for (size_t i = 0; i < path.size(); i++) {
         K::Point_2 p = path.at(i).source();
         K::Point_2 q = path.at(i).target(); 
@@ -191,7 +224,7 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
 /***********************************/
 void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path) {
 
-    cout<< "CoveragePlotHelper: plotPartialPath"<< endl;
+    // cout<< "CoveragePlotHelper: plotPartialPath"<< endl;
     
     for (size_t i = 0; i < path.size(); i++) {
         K::Point_2 p = path.at(i).source();
@@ -222,7 +255,7 @@ void CoveragePlotHelper::updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new
 /***********************************/
 
 void CoveragePlotHelper::plotPoint(K::Point_2 point) {
-    cout << "CoveragePlotHelper: plotPoint" << endl;
+    // cout << "CoveragePlotHelper: plotPoint" << endl;
     cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(point.hx()), pixelFromMetres(point.hy())) , 2, cv::Scalar(255,0,0), 2 ); 
     cv::namedWindow("FinalPath", 1);    
     cv::imshow("FinalPath" , m_perimeterImage);
@@ -235,9 +268,9 @@ void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
     double b = line.b(); 
     double c = line.c(); 
     
-    cv::line(m_perimeterImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
+    cv::line(m_testImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
         cv::Scalar(0, 0, 255), 1, 8, 0   );
-    cv::namedWindow("FinalPath", 1);    
-    cv::imshow("FinalPath" , m_perimeterImage);
+    cv::namedWindow("Test", 1);    
+    cv::imshow("Test" , m_testImage);
     cv::waitKey(0);    
 }
