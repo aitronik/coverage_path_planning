@@ -23,6 +23,7 @@ class CoveragePathCreator {
       CoveragePathCreator();
 
       ~CoveragePathCreator();
+
       /**
        * @brief
        * 
@@ -51,51 +52,50 @@ class CoveragePathCreator {
     private:
   
         /**
-         * @brief vertici del poligono iniziale (vengono aggiornati dopo la semplificazione del perimetro)
+         * @brief vertici del poligono iniziale 
          * 
          */
-        vector<K::Point_2> m_perimeterVertices; 
+        vector<K::Point_2> m_initialPerimeterVertices; 
 
         /**
-         * @brief perimetro , poligono iniziale 
+         * @brief 
          * 
          */
-        shared_ptr<CGAL::Polygon_2<K>> m_perimeter;
+        vector<K::Point_2> m_simplyfiedVertices;
 
         /**
-         * @brief perimetro dopo la semploificazione 
+         * @brief nuovi vertici dopo la decomposizione (possono essere aumentati)
          * 
          */
-        shared_ptr<CGAL::Polygon_2<K>> m_simplyfiedPerimeter;
+        vector<K::Point_2> m_decomposedVertices;
 
         /**
-         * @brief lista di sottopoligoni dopo la decomposizione 
+         * @brief poligono iniziale
          * 
          */
-        Polygon_list m_partitionPolys;
-
+        shared_ptr<CGAL::Polygon_2<K>> m_initialPolygon;
 
         /**
-         * @brief serve solo nel caso della mia decomposizione 
+         * @brief perimetro dopo la semplificazione 
          * 
          */
-        vector<shared_ptr<CGAL::Polygon_2<K>>> m_decompositionPolygons; 
+        shared_ptr<CGAL::Polygon_2<K>> m_simplyfiedPolygon;
 
         /**
-         * @brief intersezioni tra le griglia e i sottopoligoni. m_intersections[i][j] è la j-esima intersezione tra la i-esima griglia e l'i-esimo sottopoligono
+         * @brief lista di sottopoligoni dopo la decomposizione (non ordinati)
          * 
          */
-        vector<vector<K::Point_2>> m_intersections;
+        Polygon_list m_decomposedPolysOfIndices;
 
         /**
-         * @brief vector di polygoni per cui costruire il path, ordinati secondo tsp
+         * @brief 
          * 
          */
-        vector<shared_ptr<CGAL::Polygon_2<K>>> m_polygonsForPath; 
-
-        /**
-         * @brief matrice N*N*2 di adiacenza dei sottopoligoni. m_adj[i][j][0] e m_adj[i][j][1] sono i due vertici dell'adiacenza tra i e j. Se sono entrambi -1 
-         * i e j non sono adiacenti. 
+        int m_NumerOfDecomposedSubPolygon; 
+         
+         /**
+         * @brief matrice N*N*2 di adiacenza dei sottopoligoni in ordine di decomposizione (non per il path). m_adj[i][j][0] e m_adj[i][j][1] sono i due vertici dell'adiacenza 
+         * tra i e j. Se sono entrambi -1 i e j non sono adiacenti. 
          * 
          */
         vector<vector<vector<int>>> m_adj; 
@@ -103,10 +103,22 @@ class CoveragePathCreator {
         /**
          * @brief matrice N*N. Alla posizione (i,j) c'è il costo minimo del tragitto tra il sottopoligono i e il sottopoligono j .
          * Costo =  numero di sottopoligoni da attraversare  
-         * 
+         * (non è ordinata)
          */
         vector<vector<float>> m_adjWeigthMatrix; 
 
+        /**
+         * @brief intersezioni tra le griglia e i sottopoligoni. m_intersections[i][j] è la j-esima intersezione tra la i-esima griglia e l'i-esimo sottopoligono
+         * 
+         * m_intersections è ordinato rispetto all'ordine di percorrenza 
+         */
+        vector<vector<K::Point_2>> m_intersections;
+
+        /**
+         * @brief vector di polygoni per cui costruire il path, ordinati secondo tsp
+         * 
+         */
+        vector<shared_ptr<CGAL::Polygon_2<K>>> m_ordinatedSubpolygonsForPath; 
 
         /**
          * @brief m_polygonsSorted[i] è il numero del polygono da attraversare come i-esimo nell'ordinamento   
@@ -238,7 +250,7 @@ class CoveragePathCreator {
          * @param borders borders[i] == true se il lato i del sottopoligono cont ha un'adiacenza e va ristretta
          * @return vector<CGAL::Segment_2<K>> 
          */
-        vector<K::Point_2> generateGridForOnePolygon(int cont , vector<bool>& borders);
+        vector<K::Point_2> generateGridForOnePolygon(shared_ptr<CGAL::Polygon_2<K>> polygon , vector<bool>& borders);
 
         /**
          * @brief genera il path per un sottopoligono 
@@ -353,7 +365,7 @@ class CoveragePathCreator {
          * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
          * 
          */
-        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(int cont, vector<bool> &borders);
+        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
 
         // /**
         //  * @brief restituisce la posizione nel vector del primo poligono concavo e l'indice del vertice della convacità trovata , -1 il primo se sono tutti convessi 

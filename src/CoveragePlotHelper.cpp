@@ -1,5 +1,8 @@
 #include "CoveragePlotHelper.h"
 
+//rivedere la conversione metri-pixel, se i metri sono tanti tanti non va ? 
+
+
 CoveragePlotHelper::CoveragePlotHelper(){
 
 }
@@ -87,7 +90,7 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly) {
         }
         if (i == points.size()-1 ) last = point;
         cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);
-        cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+        // cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
            
         p_old = point;
     }
@@ -208,14 +211,14 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
     for (size_t i = 0; i < pointsToPrint.size(); i++) {
         if (pointsToPrint.at(i) == start) {
             cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
-            3, cv::Scalar(255,0,0), 3 ); 
+            2, cv::Scalar(255,0,0), 3 ); 
         }
-        else {
-            cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
-                2, cv::Scalar(0,255,0), 1 ); 
-        }
+        // else {
+        //     cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(pointsToPrint.at(i).hx()) ,  pixelFromMetres(pointsToPrint.at(i).hy())),
+        //         1, cv::Scalar(0,255,0), 1 ); 
+        // }
     }   
-    cv::namedWindow("FinalPath", 1);    
+    // cv::namedWindow("FinalPath", 1);    
     cv::imshow("FinalPath" , m_perimeterImage);
     cv::waitKey(0);    
 
@@ -264,13 +267,26 @@ void CoveragePlotHelper::plotPoint(K::Point_2 point) {
 
 /***********************************/
 void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
+
+    cout << "plotLineForTest(CGAL::Line_2<K> line) " << endl; 
     double a = line.a(); 
     double b = line.b(); 
     double c = line.c(); 
-    
-    cv::line(m_testImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
+    cout << a << " " <<b << " " << c << endl;
+    if (a == 0 ) {
+         cv::line(m_testImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(1), pixelFromMetres(-(c/b))),   
         cv::Scalar(0, 0, 255), 1, 8, 0   );
+    }
+    else if (b == 0) {
+         cv::line(m_testImage, cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1)),   
+        cv::Scalar(0, 0, 255), 1, 8, 0   );
+    }
+    else {
+        cv::line(m_testImage, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
+            cv::Scalar(0, 0, 255), 1, 8, 0   );
+    }
     cv::namedWindow("Test", 1);    
     cv::imshow("Test" , m_testImage);
-    cv::waitKey(0);    
+    cv::waitKey(0);  
+
 }

@@ -12,6 +12,7 @@
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
 //rivedere distanza che lascio nelle adiacenze  
 //SEGMENTATION FAULT IN REDUCE SUB POLYGON -> NON TROVA PARALLEL 
+//rivedere il firstVertex, deve potersi scegliere? 
 
 using namespace std;
 
@@ -26,7 +27,6 @@ int main(int argc, char* argv[]) {
     string filename = argv[1];
     
     //leggo input 
-    // vector<K::Point_2> points = readFromFile(filename);
     vector<pair<float,float>> points = readFromFile(filename);
 
 
@@ -40,12 +40,6 @@ int main(int argc, char* argv[]) {
     coverage_path_creator.run();
 
     points = coverage_path_creator.getFinalPath(); 
-    
-    // //stampo punti ottenuti 
-    // cout << "PATH:" << endl; 
-    // for (size_t i = 0; i < points.size(); i++ ) {
-    //     cout << points.at(i).first << ", " << points.at(i).second << endl;
-    // }
 
     return 0;
 }
