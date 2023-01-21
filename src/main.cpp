@@ -11,8 +11,9 @@
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
 //rivedere distanza che lascio nelle adiacenze  
-//SEGMENTATION FAULT IN REDUCE SUB POLYGON -> NON TROVA PARALLEL 
-//rivedere il firstVertex, deve potersi scegliere? 
+//dovrei fare una prova senza fare il primo giro sul perimetro perché  penso che alcune strisciate manchino 
+//rivedere il firstVertex, deve potersi scegliere?  E ==> 
+// ==> fare in modo che il punto da cui inizia il path nel primo poligono sia il più vicino a initialVertex
 
 using namespace std;
 

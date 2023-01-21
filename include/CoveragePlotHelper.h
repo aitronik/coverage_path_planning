@@ -66,7 +66,7 @@ class CoveragePlotHelper {
          * @brief stampa su "FinalPath" in blu un singolo punto 
          * @param point 
          */
-        void plotPoint(K::Point_2 point); 
+        void plotPoint(K::Point_2 point, char color); 
 
         void plotLineForTest(CGAL::Line_2<K> line);
 

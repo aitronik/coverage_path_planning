@@ -27,6 +27,7 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
     m_initialPolygon = createPolygon(m_initialPerimeterVertices);
     m_decompositionType = decompositionType;
     m_sweepDistance = sweepDistance;
+    // m_numberOfTurnes = 0;
 
     // tipo di decomosizione
     if (m_decompositionType != 0 && m_decompositionType != 1 && m_decompositionType != 2 && m_decompositionType != 3 && m_decompositionType != 4)
@@ -597,8 +598,7 @@ tuple<CGAL::Segment_2<K>, K::Point_2> CoveragePathCreator::findSweepDirection(sh
 /*******************************************************/
 
 // restituisce un vector di linee che creano una griglia sul poliigono
-vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point)
-{
+vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point) {
 
     vector<CGAL::Line_2<K>> grid;
 
@@ -619,6 +619,7 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
     {
         grid.push_back(CGAL::Line_2<K>(inters.at(i), parallelEdge.direction()));
     }
+
 
     return grid;
 }
@@ -649,9 +650,8 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
             // if (false) {// 
 
             // se il lato da ridurre non è "parallelo a uno dei due lati a lui adiacenti"
-            if (!MyDecomposition::isParallel(reduced_polygon, i)) {
+            if (isCollinear(reduced_polygon, i) == -1 ) {
                 
-                cout << "non parallelo" << endl;
                 CGAL::Segment_2<K> corr = reduced_polygon->edge(i); // lato corrente
 
                 CGAL::Line_2<K> perp(corr);
@@ -686,21 +686,20 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
 
                 K::Point_2 p = corr.source() + ((v / (sqrt(v.squared_length()))) * offset);
                 CGAL::Line_2<K> new_line(p, corr.direction());
+
                 K::Point_2 *a = intersect_polygon_line(reduced_polygon, new_line);
-
-
+                // cout << a[0] << " " << a[1] << endl;
                 for (K::Point_2 &p : reduced_polygon->container()) {
                     if (p == reduced_polygon->edge(i).source() || p == reduced_polygon->edge(i).target()) {
                        
                         if (CGAL::squared_distance(p, a[0]) < CGAL::squared_distance(p, a[1])) {
                             p = a[0];
-                            // cout << "a[0]" << std::endl; 
                         }
                         else {
                             p = a[1];
-                            // cout << "a[1]" << std::endl; 
 
                         }
+                        // printPointCoordinates(p);
                     }
                 }
             }
@@ -719,7 +718,8 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
     //riduzione sottopoligono in corrispondenza delle adiacenze 
     shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = reduceSubPolygon(polygon, borders);
 
-    m_Helper.plotPerimeter(restrictedPolygon);
+    //stampo poligono ristretto
+    // m_Helper.plotPerimeter(restrictedPolygon);
 
     //trovo la direzione di spazzata 
     auto [edge, point] = findSweepDirection(restrictedPolygon);
@@ -736,7 +736,6 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
     for (size_t i = 0; i < grid.size(); i++)
     {
 
-        // cout << "cerco intersezione con linea " << i << endl;
         K::Point_2 *a = intersect_polygon_line(restrictedPolygon, grid.at(i));
 
         // o non interseca oppure interseca solo in un punto
@@ -746,18 +745,17 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
         }
         else
         {
-            if (a[0] != a[1])
-            { // non inserisco quando ho due punti coincidenti
+            if (a[0] != a[1]) // non inserisco quando ho due punti coincidenti ==> va bene questo ? 
+            { 
                 intersections.push_back(a[0]);
                 intersections.push_back(a[1]);
             }
         }
     }
 
-    intersections.resize(intersections.size());
     // il primo il secondo , l'ultimo e il penultimo sono i 4 punti da cui si può partire
 
-    // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx
+    // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx)
     for (size_t i = 0; i < intersections.size(); i = i + 2)
     {
 
@@ -789,6 +787,7 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 /*******************************************************/
 vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector<K::Point_2> intersections, int start) {
 
+    cout << "generatePathForOnePolygon()" << endl;
     // start deve essere uno tra 0,1,n-1,n
     vector<CGAL::Segment_2<K>> path;
 
@@ -798,11 +797,18 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
 
         if (!reverted)
         {
+            // cout << "non reverted" << endl;
+            // m_Helper.plotPoint(intersections[0], 'g'); 
+            // m_Helper.plotPoint(intersections[1], 'r'); 
+
             CGAL::Segment_2<K> initial_segment(intersections[0], intersections[1]);
             path.push_back(initial_segment);
         }
         else
         {
+            // cout << " reverted" << endl;
+            // m_Helper.plotPoint(intersections[1], 'g'); 
+            // m_Helper.plotPoint(intersections[0], 'r'); 
             CGAL::Segment_2<K> initial_segment(intersections[1], intersections[0]);
             path.push_back(initial_segment);
         }
@@ -864,6 +870,30 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
         }
     }
 
+    //non so perché ci siano punti duplicati, andrebbe risolto in altro modo 
+    for (size_t i = 0; i < path.size(); i++) {
+        if (areEqual(path.at(i).source(), path.at(i).target())) {
+            path.erase(path.begin()+i);
+            // CGAL::Segment_2<K> to_insert;
+            // if (i == 0) {
+            //     to_insert = CGAL::Segment_2<K>(path.at(0).source(), path.at(1).source());
+            //     path.erase(path.begin()+i); 
+            //     path.insert(path.begin()+i, to_insert);                
+            // }
+            // else if (i == path.size()-1) {
+            //     to_insert = CGAL::Segment_2<K>(path.at(i-1).target(), path.at(i).target()); 
+            //     path.erase(path.begin()+i); 
+            //     path.insert(path.begin()+i, to_insert);   
+            // }
+            // else { //lo
+            // }
+        }
+    }
+
+    // m_Helper.plotPoint(path.at(path.size()-1).target(), 'g'); //stampo il punto dove finisce il path
+    m_Helper.plotPoint(path.at(0).source(), 'g' ); 
+    m_Helper.plotPoint(path.at(0).target(), 'r'); 
+
     return path; // l'ultimo target del path è il punto dove finisce
 }
 
@@ -900,7 +930,7 @@ void CoveragePathCreator::joinAndLinkPaths(){
         m_finalPath.push_back(m_simplyfiedPolygon->edge(i));
     }
 
-    m_Helper.plotPoint(m_firstVertex);
+    m_Helper.plotPoint(m_firstVertex, 'b');
     m_Helper.plotPartialPath(m_finalPath); // blu il perimetro 
     // poi collego il punto iniziale al punto da cui si parte del primo sottopoligono
     m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS.at(0).at(0).source()));
@@ -1035,10 +1065,10 @@ void CoveragePathCreator::generateGridsForSubpolygons(){
 
         for (size_t i = 0; i < m_adj[polygonIndex].size(); i++) { //per ogni altro poligono
 
-            if (m_adj[polygonIndex][i][0] != -1 || m_adj[polygonIndex][i][1] != -1) { //se è adiacente al poligono polygonIndex
+            if (m_adj[polygonIndex][i][0] != -1 && m_adj[polygonIndex][i][1] != -1) { //se è adiacente al poligono polygonIndex
                 
                 CGAL::Segment_2<K> seg(m_decomposedVertices.at(m_adj[polygonIndex][i][0]), m_decomposedVertices.at(m_adj[polygonIndex][i][1]));
-                
+
                 //cerco quale lato del poligono k corrisponde all'adiacenza 
                 for (size_t j = 0; j < current->edges().size(); j++) {                    
 
@@ -1073,14 +1103,29 @@ void CoveragePathCreator::cover() {
 
 
 /*******************************************************/
-vector<pair<float, float>> CoveragePathCreator::getFinalPath()
-{
+vector<pair<float, float>> CoveragePathCreator::getFinalPath() {
+
     vector<pair<float, float>> result;
+  
     for (size_t i = 0; i < m_pathToReturn.size(); i++)
     {
         pair<float, float> p(m_pathToReturn.at(i).hx(), m_pathToReturn.at(i).hy());
         result.push_back(p);
     }
+
+    
+    //test ottimizzazione
+    float timeTurning = 1;
+    int numberOfTurns = (int)(m_finalPath.size()-1);
+    cout << "Numero di curve : " <<  numberOfTurns << endl;
+    float speedRobot = 1;
+    float lunghezza = 0;
+    for (size_t i = 0 ; i < m_pathToReturn.size()-1; i++) {
+        lunghezza = lunghezza + sqrt(CGAL::squared_distance(m_pathToReturn.at(i), m_pathToReturn.at(i+1)));
+    }
+    cout << "Lunghezza percorso: " << lunghezza << endl;
+    cout << "Tempo complessivo: " << lunghezza/speedRobot + numberOfTurns/timeTurning << endl;
+
     return result;
 }
 

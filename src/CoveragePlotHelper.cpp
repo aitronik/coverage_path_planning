@@ -257,9 +257,19 @@ void CoveragePlotHelper::updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new
 
 /***********************************/
 
-void CoveragePlotHelper::plotPoint(K::Point_2 point) {
+void CoveragePlotHelper::plotPoint(K::Point_2 point, char color) {
     // cout << "CoveragePlotHelper: plotPoint" << endl;
-    cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(point.hx()), pixelFromMetres(point.hy())) , 2, cv::Scalar(255,0,0), 2 ); 
+    cv::Scalar c;
+    if (color == 'g') {
+        c = cv::Scalar(0,255,0); //giallo
+    }
+    else if (color == 'r'){
+        c = cv::Scalar(0,0,255);
+    }
+    else {
+        c = cv::Scalar(255,0,0);
+    }
+    cv::circle(m_perimeterImage, cv::Point(pixelFromMetres(point.hx()), pixelFromMetres(point.hy())) , 2, c, 2 ); 
     cv::namedWindow("FinalPath", 1);    
     cv::imshow("FinalPath" , m_perimeterImage);
     cv::waitKey(0);    

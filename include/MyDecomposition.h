@@ -27,15 +27,6 @@ class MyDecomposition {
             pair<Polygon_list, vector<K::Point_2>> getDecomposition(); 
              
             
-            /**
-             * @brief 
-             * 
-             * @param polygon 
-             * @param edgeIndex 
-             * @return true 
-             * @return false 
-             */
-            static bool isParallel(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex); 
 
 
       private:
@@ -96,14 +87,5 @@ class MyDecomposition {
              */
             void cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly/*, Polygon indexededPoly*/, CGAL::Segment_2<K> newEdge, int startVertex , int endEdge);
 
-             /**
-             * @brief 
-             * 
-             * @param a 
-             * @param b 
-             * @param c 
-             * @return true 
-             * @return false 
-             */
-            static int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c); //forse non serve più static
+    
 };

@@ -139,6 +139,12 @@ class CoveragePathCreator {
          */
         vector<CGAL::Segment_2<K>> m_finalPath;
       
+        // /**
+        //  * @brief numero di curve delle strisciate
+        //  * 
+        //  */
+        // int m_numberOfTurnes; 
+
 
         /**
          * @brief path per il return composto da punti a distanza 0.2 

@@ -121,45 +121,6 @@ Polygon MyDecomposition::getIthIndexedPolygon(size_t i) {
 }
 /*******************************************************/
 
-bool MyDecomposition::isParallel(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
-    
-    bool to_return;
-    size_t N = polygon->edges().size(); 
-
-    if ( isLeft( polygon->edge((edgeIndex-1)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
-        to_return = true; 
-    }
-    else if (isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) == 0 ){
-        to_return = true; 
-
-    }
-    else {
-        to_return = false;
-    }
-    return to_return;
-}
-
-/*******************************************************/
-int MyDecomposition::isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
-    
-    float k = (b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx());
-
-    if ( k > 0.00000001) {
-        return 1;
-    }
-    else if( k < -0.00000001){
-        return -1;
-    } 
-    else{
-        return 0;
-    }
-
-}
-
-
-/*******************************************************/
-
-
 
 //dato l'indice di un vertice CONCAVO calcola il segmento con cui tagliare il poligono 
 pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::Polygon_2<K>> poly, int &startingVertex) {

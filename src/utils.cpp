@@ -154,10 +154,24 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
         const auto inter = CGAL::intersection(line, polygon->edge(i));
 
         if (inter){
-            // K::Point_2 tmp;
+
             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
+                
+                int is_collinear = isCollinear(polygon,i);
+
+                cout << is_collinear << endl;
+                // if (is_collinear != -1 && is_collinear > i){
+                //     a[0] = polygon->edge(is_collinear).target();
+                //     a[1] = polygon->edge(i).source();
+                // }
+                // else if(is_collinear != -1 && is_collinear < i) {
+                //     a[0] = polygon->edge(i).target();
+                //     a[1] = polygon->edge(is_collinear).source();
+                // }
+                // else {
                 a[0] = polygon->edge(i).target();
                 a[1] = polygon->edge(i).source();
+                // }
                 return a;
             }    
             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
@@ -240,4 +254,54 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
 /*************************************/
 
 
+int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
+    
+    int to_return;
+    size_t N = polygon->edges().size(); 
 
+    if ( isLeft( polygon->edge((edgeIndex-1)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
+        to_return = (int)((edgeIndex-1)%N); 
+    }
+    else if (isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) == 0 ){
+        to_return = (int)((edgeIndex+1)%N); 
+    }
+    else {
+        to_return = -1;
+    }
+    return to_return;
+}
+
+/*******************************************************/
+int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
+    
+    float k = (b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx());
+
+    if ( k > 0.00000001) {
+        return 1;
+    }
+    else if( k < -0.00000001){
+        return -1;
+    } 
+    else{
+        return 0;
+    }
+
+}
+
+
+/*******************************************************/
+
+void printPointCoordinates(K::Point_2 p) {
+    cout << p.hx() << ", " << p.hy() << endl; 
+}
+
+
+/*******************************************************/
+
+bool areEqual(K::Point_2 a, K::Point_2 b) {
+    bool to_ret = false;
+    if (a.hx() == b.hx() && a.hy() == b.hy()) {
+        to_ret = true;
+    }
+    return to_ret;
+}

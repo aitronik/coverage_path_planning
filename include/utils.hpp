@@ -103,3 +103,40 @@ int indexOf(vector<int> v, int x);
  */
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
 
+/**
+ * @brief 
+ * 
+ * @param a 
+ * @param b 
+ * @param c 
+ * @return true 
+ * @return false 
+ */
+ int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c); 
+
+/**
+ * @brief restituisce -1 se il lato edgeIndex del poligono polygon non è collineare con nessuno dei due lati adiacenti, 
+ * altrimenti restituisce l'indice del lato con cui è collineare 
+ * @param polygon 
+ * @param edgeIndex 
+ * @return index of collinear edge 
+ * @return -1 
+ */
+int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex); 
+
+/**
+ * @brief 
+ * 
+ * @param p 
+ */
+void printPointCoordinates(K::Point_2 p); 
+
+/**
+ * @brief 
+ * 
+ * @param a 
+ * @param b 
+ * @return true 
+ * @return false 
+ */
+bool areEqual(K::Point_2 a, K::Point_2 b);
