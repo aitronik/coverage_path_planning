@@ -42,12 +42,14 @@ class CoveragePlotHelper {
         void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> path);
 
         /**
-         * @brief stampa il path finale su un'immagine "FinalPath" evidenziando i punti in cui viene diviso e il punto di partenza
+         * @brief 
+         * 
          * @param path 
          * @param pointsToPrint 
          * @param start 
+         * @param sweepDistance 
          */
-        void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint,  K::Point_2 start);
+        void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint,  K::Point_2 start, float sweepDistance);
 
         /**
          * @brief stampa su "FinalPath" una parte del path finale 

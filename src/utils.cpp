@@ -148,30 +148,75 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
 
     static K::Point_2 a[2];
     int cont = 0;
+    size_t N = polygon->edges().size(); 
 
-    for (size_t i = 0 ; i < polygon->edges().size();  i++) {
-      
+    for (size_t i = 0 ; i < N;  i++) {
+        
+        // //cerco se c'è un lato adiacente collineare 
+        // int is_collinear = isCollinear(polygon, i); 
+        // if (is_collinear != -1) {
+        //     //casi particolari
+        //     if (i == 0 && is_collinear == N-1) {
+        //         a[0] = polygon->edge(i).target(); 
+        //         a[1] = polygon->edge(is_collinear).source(); 
+        //     }
+        //     if (i == N-1 && is_collinear == 0) {
+        //         a[0] = polygon->edge(is_collinear).target(); 
+        //         a[1] = polygon->edge(i).source();
+        //     }
+        //     //casi standard
+        //     if (is_collinear > i) {
+        //         a[0] = polygon->edge(is_collinear).target();
+        //         a[1] = polygon->edge(i).source();
+        //     }
+        //     if (is_collinear < i) {
+        //         a[0] = polygon->edge(i).target();
+        //         a[1] = polygon->edge(is_collinear).source();
+        //     }
+
         const auto inter = CGAL::intersection(line, polygon->edge(i));
 
         if (inter){
 
             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
                 
-                int is_collinear = isCollinear(polygon,i);
 
-                cout << is_collinear << endl;
-                // if (is_collinear != -1 && is_collinear > i){
-                //     a[0] = polygon->edge(is_collinear).target();
-                //     a[1] = polygon->edge(i).source();
-                // }
-                // else if(is_collinear != -1 && is_collinear < i) {
-                //     a[0] = polygon->edge(i).target();
-                //     a[1] = polygon->edge(is_collinear).source();
-                // }
-                // else {
-                a[0] = polygon->edge(i).target();
-                a[1] = polygon->edge(i).source();
-                // }
+                //cerco se c'è un lato adiacente collineare 
+                int is_collinear = isCollinear(polygon,i); // se è -1 non esiste
+
+                // cout << is_collinear << endl;
+                
+                if (is_collinear != -1) {
+                    
+                    //casi particolari
+                    if (i == 0 && is_collinear == N-1) {
+                        a[0] = polygon->edge(i).target(); 
+                        a[1] = polygon->edge(is_collinear).source(); 
+                        return a;
+                    }
+                    if (i == N-1 && is_collinear == 0) {
+                        a[0] = polygon->edge(is_collinear).target(); 
+                        a[1] = polygon->edge(i).source();
+                        return a;
+                    }
+
+                    //casi standard
+                    if (is_collinear > i) {
+                        a[0] = polygon->edge(is_collinear).target();
+                        a[1] = polygon->edge(i).source();
+                        return a; 
+                    }
+                    if (is_collinear < i) {
+                        a[0] = polygon->edge(i).target();
+                        a[1] = polygon->edge(is_collinear).source();
+                        return a; 
+                    }
+                }
+
+                else {
+                    a[0] = polygon->edge(i).target();
+                    a[1] = polygon->edge(i).source();
+                }
                 return a;
             }    
             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
@@ -212,6 +257,7 @@ int indexOf(vector<int> v, int x) {
 /*************************************/
 
 vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
+
     //creazione del path 
     vector<K::Point_2> path;
 
@@ -224,19 +270,17 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
     //calcolo la distanza tra le righe 
     float length = sqrt(v.squared_length());
     float mySweepDistance = distance;
-    // float distance = sqrt(CGAL::squared_distance(sweepDirection, point));
-    float num_lines = length/mySweepDistance; 
-    if (num_lines != (int)num_lines) {
-        num_lines = (int)num_lines++;
-        mySweepDistance = length/num_lines;
-    }
 
     if (length <= mySweepDistance || mySweepDistance == 0) {
         path.push_back(segment.source());
         path.push_back(segment.target());
         return path;
     }
-   
+
+
+    int num_lines = std::ceil(length/mySweepDistance);      
+    mySweepDistance = length/num_lines;
+    
 
     K::Point_2 next = source;
     int i = 1;
@@ -259,8 +303,11 @@ int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
     int to_return;
     size_t N = polygon->edges().size(); 
 
+    // cout << isLeft( polygon->edge((edgeIndex-1)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) << endl; 
+    // cout << isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) << endl;
     if ( isLeft( polygon->edge((edgeIndex-1)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
         to_return = (int)((edgeIndex-1)%N); 
+
     }
     else if (isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) == 0 ){
         to_return = (int)((edgeIndex+1)%N); 
@@ -268,6 +315,7 @@ int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
     else {
         to_return = -1;
     }
+    cout << "To Return " << to_return << endl;
     return to_return;
 }
 
@@ -305,3 +353,32 @@ bool areEqual(K::Point_2 a, K::Point_2 b) {
     }
     return to_ret;
 }
+
+/*******************************************************/
+
+// bool check_inside(Point pt, Point *pgn_begin, Point *pgn_end, K traits) {
+
+//     bool to_ret;
+
+//     switch(CGAL::bounded_side_2(pgn_begin, pgn_end,pt, traits)) {
+
+//         case CGAL::ON_BOUNDED_SIDE :
+//             to_ret = true; 
+//             break;
+//         //   cout << " is inside the polygon.\n";
+//         case CGAL::ON_BOUNDARY:
+//             to_ret = true;
+//             break;
+//         //   cout << " is on the polygon boundary.\n";
+//         case CGAL::ON_UNBOUNDED_SIDE:
+//         //   cout << " is outside the polygon.\n";
+//             to_ret = false; 
+//             break;
+//         default:
+//             to_ret = false; 
+//             cout << "Utils: Check_inside ERROR" << endl;
+//             break;
+//     }
+
+//     return to_ret;
+// }

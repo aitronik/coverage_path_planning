@@ -11,9 +11,15 @@
 //sistemare gli shared ptr
 //algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
 //rivedere distanza che lascio nelle adiacenze  
-//dovrei fare una prova senza fare il primo giro sul perimetro perché  penso che alcune strisciate manchino 
 //rivedere il firstVertex, deve potersi scegliere?  E ==> 
 // ==> fare in modo che il punto da cui inizia il path nel primo poligono sia il più vicino a initialVertex
+//quando il un "trapezio" il lato opposto a quello parallelo allo sweepLine non è parallelo a quel lato non viene integrato nel path 
+//e non viene pulito ==> lo posso risolvere solo incorporando il giro sul perimetro? 
+//non so come controllare che il segmento - collegamento tra due path non passi fuori dal perimetro
+
+//intero superiore preso come scelta di numero strisciate 
+//quando non ci sono intersezioni prendi il centro invece che il primo  vertice
+
 
 using namespace std;
 

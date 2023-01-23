@@ -140,3 +140,15 @@ void printPointCoordinates(K::Point_2 p);
  * @return false 
  */
 bool areEqual(K::Point_2 a, K::Point_2 b);
+
+// /**
+//  * @brief 
+//  * 
+//  * @param pt 
+//  * @param pgn_begin 
+//  * @param pgn_end 
+//  * @param traits 
+//  * @return true 
+//  * @return false 
+//  */
+// bool check_inside(Point pt, Point *pgn_begin, Point *pgn_end, K traits);
