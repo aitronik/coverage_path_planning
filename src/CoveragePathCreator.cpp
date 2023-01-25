@@ -624,11 +624,11 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
 
 vector<int> CoveragePathCreator::isToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {
     
-    size_t B = borders.size();
+    int B = borders.size();
     vector<int> to_ret;
     to_ret.resize(B); 
-    
-    for (size_t i = 0; i < B; i++) {
+
+    for (int i = 0; i < B; i++) {
 
         int k = isCollinear(polygon, i); 
 
@@ -667,17 +667,36 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         perp = perp.perpendicular(corr.source()); // perpendicolare al lato
         CGAL::Vector_2<K> v = perp.to_vector();
 
+        bool isCollinear = false;
         if (borders[i] != -2 && borders[i] != -1) { //il lato i è collineare con il lato borders[i]
             
+            isCollinear = true; 
+
             int index1, index2; 
 
             //controllare se sono compresi tutti i casi corretti
-            if (  (i == B-1 && borders[i] == 0) || (borders[i] < i  && i != 0 ) ) {
-                index1 = ((i-2)%B); 
+            if (i == 0 && borders[i] == B-1) {
+                index1 = ((i-2+B)%B); 
                 index2 = (i+1)%B;
+                // corr = reduced_polygon->edge(B-1); //tra i due collineari prendo come corrente sempre quello precedente in senso orario in modo che l'approssimazione dell'angolo sia sempre la solita 
+                // perp = CGAL::Line_2<K>(corr); 
+                // perp = perp.perpendicular(corr.source()); 
+                // v = perp.to_vector();
             }
-            else if ( (i == 0 && borders[i] == B-1 ) || (borders[i] > i && i != B-1)  )  {
-                index1 = (i-1)%B;
+            else if (i == B-1 && borders[i] == 0) {
+                index1 = (i-1+B)%B;
+                index2 = (i+2)%B; 
+            }
+            else if ( borders[i] < i  && i != 0 ) {
+                index1 = ((i-2+B)%B); 
+                index2 = (i+1)%B;
+                // corr = reduced_polygon->edge(B-1);
+                // perp = CGAL::Line_2<K>(corr); 
+                // perp = perp.perpendicular(corr.source()); 
+                // v = perp.to_vector();
+            }
+            else if ( borders[i] > i ) {
+                index1 = (i-1+B)%B;
                 index2 = (i+2)%B; 
             }
             else {
@@ -706,8 +725,8 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         }
 
         K::Point_2 p = corr.source() + ((v / (sqrt(v.squared_length()))) * offset);
-
         K::Point_2 q = corr.target() + ((v / (sqrt(v.squared_length()))) * offset); 
+        
         for (K::Point_2 &j : reduced_polygon->container() ) {
             if (j == corr.source() ) {
                 j = p; 
@@ -722,7 +741,6 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         // }
         // m_Helper.plotPerimeter(reduced_polygon);
     }
-
     return reduced_polygon;
 
 }

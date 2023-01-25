@@ -76,7 +76,11 @@ double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
     double len1, len2;
     len1 = sqrt(v.squared_length());
     len2 = sqrt(w.squared_length());
-    // cout << theta/ (len1*len2) << endl;
+
+    // cout << "theta: " << theta << endl; 
+    // cout << "len1: " << len1 << endl; 
+    // cout << "len2: " << len2 << endl;
+
     return (theta/ (len1*len2));
 
 }
@@ -85,7 +89,6 @@ double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
 
 /*************************************/
-
 
 //suppongo che i punti in comune non possano essere più di due
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
@@ -111,6 +114,7 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 }
 
 /*************************************/ 
+
 //il secondo elemento del pair è l'indice del lato  in cui c'è l'intersezione
 pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
 
@@ -158,15 +162,8 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
 
             if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
                 
-
-                // if ( (areEqual (s->source(),polygon->edge(i).source() ) && areEqual(s->target(), polygon->edge(i).target()) )|| 
-                //     ( areEqual(s->source(), polygon->edge(i).target() ) && areEqual(s->target(), polygon->edge(i).source())  ) ) {
-                //         cout << "sono uguali" << endl; 
-                //     } 
-
                 //cerco se c'è un lato adiacente collineare 
                 int is_collinear = isCollinear(polygon,i); // se è -1 non esiste
-                cout << "is collinear" << is_collinear <<  endl;
                 
                 if (is_collinear != -1) {
                     
@@ -223,6 +220,7 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
     return a;  
 }
 /*************************************/
+
 //restituisce l'indice di v nel quale c'è l'elemento x // -1 se non lo trova 
 int indexOf(vector<int> v, int x) {
     for (size_t i = 0; i < v.size(); i++) {
@@ -280,14 +278,14 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
 
 /*************************************/
 
-
 int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
     
     int to_return;
     int N = polygon->edges().size(); 
 
-    if ( isLeft( polygon->edge((edgeIndex-1)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
-        to_return = (edgeIndex-1)%N; 
+
+    if ( isLeft( polygon->edge((edgeIndex-1+N)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
+        to_return = (edgeIndex-1+N)%N; 
 
     }
     else if (isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) == 0 ){
@@ -299,7 +297,9 @@ int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
     return to_return;
 }
 
+
 /*******************************************************/
+
 int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
     
     float k = (b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx());
