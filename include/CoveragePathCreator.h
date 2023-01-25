@@ -138,14 +138,7 @@ class CoveragePathCreator {
          * 
          */
         vector<CGAL::Segment_2<K>> m_finalPath;
-      
-        // /**
-        //  * @brief numero di curve delle strisciate
-        //  * 
-        //  */
-        // int m_numberOfTurnes; 
-
-
+  
         /**
          * @brief path per il return composto da punti a distanza 0.2 
          * 
@@ -366,60 +359,28 @@ class CoveragePathCreator {
          */
         void simplifyPerimeter();
 
-
         /**
-         * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
+         * @brief  restituisce un vector i cui elementi rappresentano se il lato i esimo deve essere ridotto
          * 
+         * @param polygon 
+         * @param borders 
+         * @return vector<int> -1 se non deve essere ridotto, 0 se deve essere ridottoin base all'angolo, 1 se deve essere ridotto in quanto bordo esterno (1/2 sweepDistance?)
          */
-        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
+        vector<int> isToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
+     
+        /**
+         * @brief riduce un sottopoligono secondo il vector borders
+         * 
+         * @param polygon 
+         * @param edges 
+         * @return shared_ptr<CGAL::Polygon_2<K>> 
+         */
+        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &edges );
 
         // /**
-        //  * @brief restituisce la posizione nel vector del primo poligono concavo e l'indice del vertice della convacità trovata , -1 il primo se sono tutti convessi 
+        //  * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
         //  * 
-        //  * @param decomposition 
-        //  * @return pair<size_t, int> 
         //  */
-        // pair<int, int> allSubPolygonsConvex (vector<shared_ptr<CGAL::Polygon_2<K>>> decomposition);
-        
-        
-        // /**
-        //  * @brief 
-        //  * 
-        //  * @param perimeter 
-        //  * @return vector<shared_ptr<CGAL::Polygon_2<K>>> 
-        //  */
-        // vector<shared_ptr<CGAL::Polygon_2<K>>> my_decomposition(shared_ptr<CGAL::Polygon_2<K>> perimeter);
-
-        // /**
-        //  * @brief 
-        //  * 
-        //  * @param poly 
-        //  * @param newEdge 
-        //  * @return vector<CGAL::Polygon_2<K>> 
-        //  */
-        // vector<shared_ptr<CGAL::Polygon_2<K>>> cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, CGAL::Segment_2<K> newEdge, int startEdge, int endEdge);
-
-
-        // /**
-        //  * @brief 
-        //  * 
-        //  * @param perimeter 
-        //  * @return size_t 
-        //  */
-        // size_t isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter); 
-        // // /**
-        // //  * @brief estituisce l'indice del lato che contiene p 
-        // //  * 
-        // //  */
-        // // int getEdge(K::Point_2 p , shared_ptr<CGAL::Polygon_2<K>> perimeter); 
-
-        // /**
-        //  * @brief 
-        //  * 
-        //  * @param perimeter 
-        //  * @param startingVertex 
-        //  * @return CGAL::Segment_2<K> 
-        //  */
-        // pair<CGAL::Segment_2<K>, int> calculateCutter(shared_ptr<CGAL::Polygon_2<K>> perimeter, int &startingVertex);         
-        
+        // shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
+       
 };

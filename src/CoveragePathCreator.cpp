@@ -612,100 +612,201 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
     vector<K::Point_2> inters = divideSegment(h, m_sweepDistance);
 
     // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
-    for (size_t i = 0; i < inters.size(); i++)
-    {
+    for (size_t i = 0; i < inters.size(); i++) {
         grid.push_back(CGAL::Line_2<K>(inters.at(i), parallelEdge.direction()));
     }
-
-    // for (size_t i = 0; i < grid.size(); i++) {
-    //     m_Helper.plotLineForTest(grid.at(i));
-    // }
 
     return grid;
 }
 
 
+/*******************************************************/
+
+vector<int> CoveragePathCreator::isToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {
+    
+    size_t B = borders.size();
+    vector<int> to_ret;
+    to_ret.resize(B); 
+    
+    for (size_t i = 0; i < B; i++) {
+
+        int k = isCollinear(polygon, i); 
+
+        if (k != -1) { //se è collineare riduco
+            to_ret[i] = k ;
+        }
+        else if (borders[i]) {
+            to_ret[i] = -1; //se non è collineare ma è c'è un'adiacenza => non riduco
+        }
+        else {
+            to_ret[i] = -2;//non c'è adiacenza ==> riduco di metà sweepDistance (o 1/3?) 
+        }
+   
+    }
+
+    return to_ret; 
+}
+
+/*******************************************************/
+shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &edges ) {
+    
+    cout << "reduceSubPolygon(), " << endl;
+  
+    vector<int> borders = isToReduce(polygon, edges); 
+    int B = borders.size();
+    vector<K::Point_2> vertices;
+    shared_ptr<CGAL::Polygon_2<K>> reduced_polygon = polygon;
+
+    double offset; //di quanto riduco 
+    double angle1, angle2; //non possono venire 180 gradi perché lo ho escluso con isToReduce 
+
+    for (int i = 0; i < B; i++) {
+
+        CGAL::Segment_2<K> corr = reduced_polygon->edge(i); // lato corrente
+        CGAL::Line_2<K> perp(corr);
+        perp = perp.perpendicular(corr.source()); // perpendicolare al lato
+        CGAL::Vector_2<K> v = perp.to_vector();
+
+        if (borders[i] != -2 && borders[i] != -1) { //il lato i è collineare con il lato borders[i]
+            
+            int index1, index2; 
+
+            //controllare se sono compresi tutti i casi corretti
+            if (  (i == B-1 && borders[i] == 0) || (borders[i] < i  && i != 0 ) ) {
+                index1 = ((i-2)%B); 
+                index2 = (i+1)%B;
+            }
+            else if ( (i == 0 && borders[i] == B-1 ) || (borders[i] > i && i != B-1)  )  {
+                index1 = (i-1)%B;
+                index2 = (i+2)%B; 
+            }
+            else {
+                cout << "reduceSubPolygon ERROR" << endl;
+            }
+
+            angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(index1).to_vector()); 
+            angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(index2).to_vector()); 
+            
+            angle1 = acos(angle1);
+            angle2 = acos(angle2);
+            
+            angle1 = sin(angle1);
+            angle2 = sin(angle2);
+            
+            angle1 = min(angle1, angle2);
+
+            offset = (m_sweepDistance / 2) * angle1;
+        
+        }
+        else if (borders[i] == -2) {
+            offset = (m_sweepDistance/2); 
+        }
+        else {
+            continue; 
+        }
+
+        K::Point_2 p = corr.source() + ((v / (sqrt(v.squared_length()))) * offset);
+
+        K::Point_2 q = corr.target() + ((v / (sqrt(v.squared_length()))) * offset); 
+        for (K::Point_2 &j : reduced_polygon->container() ) {
+            if (j == corr.source() ) {
+                j = p; 
+            }
+            else if (j == corr.target()) {
+                j = q;
+            }
+        }
+
+        // for (size_t i = 0; i < B; i++) {
+        //     m_Helper.plotPoint(reduced_polygon->vertex(i), 'r');
+        // }
+        // m_Helper.plotPerimeter(reduced_polygon);
+    }
+
+    return reduced_polygon;
+
+}
 
 
 /*******************************************************/
-shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {  
+// shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {  
     
-    cout << "reduceSubPolygon(), " << endl;
+    // cout << "reduceSubPolygon(), " << endl;
 
-    size_t B = borders.size();
+    // size_t B = borders.size();
     
-    vector<K::Point_2> vertices;
+    // vector<K::Point_2> vertices;
 
-    shared_ptr<CGAL::Polygon_2<K>> reduced_polygon = polygon;
-    // shared_ptr<CGAL::Polygon_2<K>> reduced_polygon = make_shared<CGAL::Polygon_2<K>>(*pol);
+    // shared_ptr<CGAL::Polygon_2<K>> reduced_polygon = polygon;
+    // // shared_ptr<CGAL::Polygon_2<K>> reduced_polygon = make_shared<CGAL::Polygon_2<K>>(*pol);
 
-    // se ci sono adiacenze
-    // creo un nuovo poligono con i lati spostati
-    for (size_t i = 0; i < B; i++) {
+    // // se ci sono adiacenze
+    // // creo un nuovo poligono con i lati spostati
+    // for (size_t i = 0; i < B; i++) {
 
-        if (borders.at(i) != 0)
-        { // lascio uno spazio diverso nelle adiacenze
+    //     if (borders.at(i) != 0)
+    //     { // lascio uno spazio diverso nelle adiacenze
             
-            //se l'adiacenza è solo parte di un lato e non un lato intero non lascio spazio <=> è parallela al lato precedente o al successivo
-            // if (false) {// 
+    //         //se l'adiacenza è solo parte di un lato e non un lato intero non lascio spazio <=> è parallela al lato precedente o al successivo
+    //         // if (false) {// 
 
-            // se il lato da ridurre non è "parallelo a uno dei due lati a lui adiacenti"
-            if (isCollinear(reduced_polygon, i) == -1 ) {
+    //         // se il lato da ridurre non è "parallelo a uno dei due lati a lui adiacenti"
+    //         if (isCollinear(reduced_polygon, i) == -1 ) {
                 
-                CGAL::Segment_2<K> corr = reduced_polygon->edge(i); // lato corrente
+    //             CGAL::Segment_2<K> corr = reduced_polygon->edge(i); // lato corrente
 
-                CGAL::Line_2<K> perp(corr);
-                perp = perp.perpendicular(corr.source()); // perpendicolare al lato
-                CGAL::Vector_2<K> v = perp.to_vector();
+    //             CGAL::Line_2<K> perp(corr);
+    //             perp = perp.perpendicular(corr.source()); // perpendicolare al lato
+    //             CGAL::Vector_2<K> v = perp.to_vector();
 
-                double angle1, angle2; //non possono venire 180 gradi perché lo ho escluso prima 
+    //             double angle1, angle2; //non possono venire 180 gradi perché lo ho escluso prima 
 
-                if (i == 0)
-                {
-                    angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(B - 1).to_vector());
-                    angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i + 1).to_vector());
-                }
-                else if (i == B - 1)
-                {
-                    angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i - 1).to_vector());
-                    angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(0).to_vector());
-                }
-                else
-                {
-                    angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i - 1).to_vector());
-                    angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i + 1).to_vector());
-                }
-                angle1 = acos(angle1);
-                angle2 = acos(angle2);
-                angle1 = sin(angle1);
-                angle2 = sin(angle2);
-                angle1 = min(angle1, angle2);
+    //             if (i == 0)
+    //             {
+    //                 angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(B - 1).to_vector());
+    //                 angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i + 1).to_vector());
+    //             }
+    //             else if (i == B - 1)
+    //             {
+    //                 angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i - 1).to_vector());
+    //                 angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(0).to_vector());
+    //             }
+    //             else
+    //             {
+    //                 angle1 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i - 1).to_vector());
+    //                 angle2 = calculateAngle(corr.to_vector(), reduced_polygon->edge(i + 1).to_vector());
+    //             }
+    //             angle1 = acos(angle1);
+    //             angle2 = acos(angle2);
+    //             angle1 = sin(angle1);
+    //             angle2 = sin(angle2);
+    //             angle1 = min(angle1, angle2);
 
-                double offset = (m_sweepDistance / 2) * angle1;
+    //             double offset = (m_sweepDistance / 2) * angle1;
 
 
-                K::Point_2 p = corr.source() + ((v / (sqrt(v.squared_length()))) * offset);
-                CGAL::Line_2<K> new_line(p, corr.direction());
+    //             K::Point_2 p = corr.source() + ((v / (sqrt(v.squared_length()))) * offset);
+    //             CGAL::Line_2<K> new_line(p, corr.direction());
 
-                K::Point_2 *a = intersect_polygon_line(reduced_polygon, new_line);
-                // cout << a[0] << " " << a[1] << endl;
-                for (K::Point_2 &p : reduced_polygon->container()) {
-                    if (p == reduced_polygon->edge(i).source() || p == reduced_polygon->edge(i).target()) {
+    //             K::Point_2 *a = intersect_polygon_line(reduced_polygon, new_line);
+    //             // cout << a[0] << " " << a[1] << endl;
+    //             for (K::Point_2 &p : reduced_polygon->container()) {
+    //                 if (p == reduced_polygon->edge(i).source() || p == reduced_polygon->edge(i).target()) {
                        
-                        if (CGAL::squared_distance(p, a[0]) < CGAL::squared_distance(p, a[1])) {
-                            p = a[0];
-                        }
-                        else {
-                            p = a[1];
+    //                     if (CGAL::squared_distance(p, a[0]) < CGAL::squared_distance(p, a[1])) {
+    //                         p = a[0];
+    //                     }
+    //                     else {
+    //                         p = a[1];
 
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return reduced_polygon;
-}
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // return reduced_polygon;
+//}
 
 
 /*******************************************************/
@@ -734,8 +835,12 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 
     for (size_t i = 0; i < grid.size(); i++)
     {
-
         K::Point_2 *a = intersect_polygon_line(restrictedPolygon, grid.at(i));
+ 
+        if (i == 0) {
+            m_Helper.plotPoint(a[0], 'r'); 
+            m_Helper.plotPoint(a[1], 'r'); 
+        }
 
         // o non interseca oppure interseca solo in un punto
         if (a[0].hx() == -1 || a[1].hx() == -1) {
@@ -744,10 +849,10 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
         else {
             if (a[0] != a[1]) // non inserisco quando ho due punti coincidenti
             { 
-                if (i == 0) {
-                    m_Helper.plotPoint(a[0], 'g'); 
-                    m_Helper.plotPoint(a[1], 'g'); 
-                }
+                // if (i == 0) {
+                //     m_Helper.plotPoint(a[0], 'g'); 
+                //     m_Helper.plotPoint(a[1], 'g'); 
+                // }
                 intersections.push_back(a[0]);
                 intersections.push_back(a[1]);
             }
@@ -1159,8 +1264,7 @@ void CoveragePathCreator::simplifyPerimeter(){
 
 
 /*******************************************************/
-bool CoveragePathCreator::run()
-{
+bool CoveragePathCreator::run() {
 
     // plot perimetro iniziale
     m_Helper.plotPerimeter(m_initialPolygon);

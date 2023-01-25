@@ -17,8 +17,12 @@
 //e non viene pulito ==> lo posso risolvere solo incorporando il giro sul perimetro? 
 //non so come controllare che il segmento - collegamento tra due path non passi fuori dal perimetro
 
-//intero superiore preso come scelta di numero strisciate 
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
+//manca una strisciata nel path
+//sistemare plotting
+//riduzione poligono va fatta al ccontrario (nelle adiacenze : restringo dove isCOllinear, non restringo altrimenti  )
+//togliere offset/2 alla lunghezza di un segmento prima di dividerlo in parti uguali , nel caso in cui l'ultimo punto sia un unico e non due (tipo vertice triangolo)
+//controlla tutti i %
 
 
 using namespace std;
