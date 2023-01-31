@@ -265,7 +265,7 @@ class CoveragePathCreator {
          * @param start sottopoligono di partenza 
          * @return vector<int> 
          */
-        vector<int> findMinRoute(int start);
+        vector<int> findMinRouteTo(int start);
 
 
         /**
@@ -274,7 +274,7 @@ class CoveragePathCreator {
          * @param end arrivo 
          * @return vector<int> ordinato : alla posizione 0 c'è start , alla 1 il successivo , e così via fino ad end 
          */
-        vector<int> findMinRoute(int start, int end);
+        vector<int> findMinRouteBetween(int start, int end);
 
         /**
          * @brief restituisce l'indice i del minimo valore di dist t.c. !visited[i]
@@ -377,6 +377,13 @@ class CoveragePathCreator {
          */
         shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &edges );
 
+        /**
+         * @brief 
+         * 
+         * @param polygon 
+         * @return shared_ptr<CGAL::Polygon_2<K>> 
+         */
+        shared_ptr<CGAL::Polygon_2<K>> eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon);
         // /**
         //  * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
         //  * 

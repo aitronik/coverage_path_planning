@@ -9,19 +9,22 @@
 
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
-//algoritmo per minimizzare i costi degli spostamenti tra i poligoni 
-//rivedere distanza che lascio nelle adiacenze  
-//rivedere il firstVertex, deve potersi scegliere?  E ==> 
-// ==> fare in modo che il punto da cui inizia il path nel primo poligono sia il più vicino a initialVertex
+//rivedere il firstVertex, deve potersi scegliere?  
 //quando il un "trapezio" il lato opposto a quello parallelo allo sweepLine non è parallelo a quel lato non viene integrato nel path 
-//e non viene pulito ==> lo posso risolvere solo incorporando il giro sul perimetro? 
-//non so come controllare che il segmento - collegamento tra due path non passi fuori dal perimetro
-
+//e non viene pulito
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
-//manca una strisciata nel path
-//sistemare plotting
-//riduzione poligono va fatta al ccontrario (nelle adiacenze : restringo dove isCOllinear, non restringo altrimenti  )
-//togliere offset/2 alla lunghezza di un segmento prima di dividerlo in parti uguali , nel caso in cui l'ultimo punto sia un unico e non due (tipo vertice triangolo)
+//in questo momento il collegamento tra due path di sottopoligoni si collega prima a un vertice di collegamento e poi all'altro, 
+//ma non funziona bene questa cosa ==> modificare i collegamenti tra i path
+//come controllare che il segmento - collegamento tra due path non passi fuori dal perimetro?
+//mydecompositiontest2 continua a non andare 
+//manca una strisciata a volte ==> riguardare come trova il punto a max distanza, forse non è divideSegment che si perde un punto, ma proprio dall'inizio 
+
+
+//BUG 
+//input 1.5
+//star 
+
+
 
 
 using namespace std;

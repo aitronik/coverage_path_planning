@@ -20,10 +20,13 @@ class CoveragePlotHelper {
         bool init(vector<K::Point_2>& perimeter_vertices);
 
         /**
-         * @brief stampa un poligono in nero su un'immagine denominata "Perimeter"
+         * @brief stampa in nero perimetro di un poligono su sfondo bianco
+         * 
          * @param poly 
+         * @param imageName nome dell'immagine
+         * @param printIndexes se è true, vengono stampati gli indici dei vertici
          */
-        void plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly);
+        void plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
 
 
         /**
@@ -36,8 +39,9 @@ class CoveragePlotHelper {
         void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name);
 
         /**
-         * @brief stampa il path di un singolo poligono sull'immagine della decomposizione 
+         * @brief 
          * 
+         * @param path 
          */
         void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> path);
 
@@ -54,8 +58,9 @@ class CoveragePlotHelper {
         /**
          * @brief stampa su "FinalPath" una parte del path finale 
          * @param path 
+         * @param cont se != -1 stampa cont in corrispondenza dell'ultimo punto del path 
          */
-        void plotPartialPath(vector<CGAL::Segment_2<K>> path);
+        void plotPartialPath(vector<CGAL::Segment_2<K>> path, int cont);
 
 
         /**
@@ -67,12 +72,13 @@ class CoveragePlotHelper {
         /**
          * @brief stampa su "FinalPath" in blu un singolo punto 
          * @param point 
+         * @param cont se cont != -1 , stampa il numero in corrispondenza del punto 
          */
-        void plotPoint(K::Point_2 point, char color); 
+        void plotPoint(K::Point_2 point, char color, int cont); 
 
-        void plotLineForTest(CGAL::Line_2<K> line);
+        void plotLineForTest(CGAL::Line_2<K> line, string imageName);
 
-        void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly);
+        void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
 
 
 

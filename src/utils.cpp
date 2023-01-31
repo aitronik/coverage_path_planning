@@ -262,11 +262,10 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
     mySweepDistance = length/num_lines;
     
 
-    K::Point_2 next = source;
-    int i = 0;
+    K::Point_2 next = source; 
     
+    int i = 0;
     while (segment.collinear_has_on(next)) {
-        // path.push_back(next);
         next = source + ( (v/length)  * mySweepDistance * i);  //  v/length dovrebbe essere il vettore direzione 
         path.push_back(next); 
         i++;
@@ -280,7 +279,7 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
 
 int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
     
-    int to_return;
+ int to_return;
     int N = polygon->edges().size(); 
 
 
@@ -298,17 +297,44 @@ int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
 }
 
 
+
+
+
+//MI PIACEVA PIù COSì MA HO PROBLEMI     
+//     int to_return; 
+//     int N = polygon->edges().size(); 
+//     CGAL::Segment_2<K> current = polygon->edge(edgeIndex); 
+//     CGAL::Segment_2<K> next = polygon->edge((edgeIndex+1)%N); 
+//     CGAL::Segment_2<K> precedent = polygon->edge((edgeIndex+N-1)%N); 
+
+//     //controllo con il successivo 
+//     if (CGAL::parallel(current, next)) { //sono paralleli basta per determinare la adiacenza e collinearità (sono lati di poligoni)
+//         to_return = (edgeIndex+1)%N; 
+//     }
+//     else if (CGAL::parallel(current, precedent)) {
+//         to_return = (edgeIndex+N-1)%N; 
+//     }
+//     else {
+//         to_return = -1; 
+//     }
+
+//     return to_return; 
+// }
+
 /*******************************************************/
 
 int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
     
-    float k = (b.hx() - a.hx())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.hx() - a.hx());
+
+    float k = (b.x() - a.x())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.x() - a.x());
 
     if ( k > 0.00000001) {
         return 1;
+        // return k;
     }
     else if( k < -0.00000001){
         return -1;
+        // return k;
     } 
     else{
         return 0;
@@ -320,7 +346,7 @@ int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 vi
 /*******************************************************/
 
 void printPointCoordinates(K::Point_2 p) {
-    cout << p.hx() << ", " << p.hy() << endl; 
+    cout << p.x() << ", " << p.hy() << endl; 
 }
 
 
@@ -328,7 +354,7 @@ void printPointCoordinates(K::Point_2 p) {
 
 bool areEqual(K::Point_2 a, K::Point_2 b) {
     bool to_ret = false;
-    if (a.hx() == b.hx() && a.hy() == b.hy()) {
+    if (a.x() == b.x() && a.hy() == b.hy()) {
         to_ret = true;
     }
     return to_ret;

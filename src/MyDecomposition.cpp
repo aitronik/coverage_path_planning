@@ -25,14 +25,6 @@ bool MyDecomposition::init(shared_ptr<CGAL::Polygon_2<K>> poly) {
     //inserisco il poligono iniziale nella lista di poligoni di indici 
     m_indexedPolygons.push_back(initial);
 
-    // //stampa indici per test 
-    // for (const Polygon &pol : m_indexedPolygons) {
-    //     cout << "poligono iniziale"<< endl;
-    //     for (size_t i = 0; i < pol.size(); i++) {
-    //         cout << pol.vertex(i) << endl;
-    //     }
-    // }
-
     return true;
 }
 
@@ -63,20 +55,13 @@ void MyDecomposition::run(){
             pair<int, int> p = allSubPolygonsConvex();
             
             if (p.first == -1) {// sono tutti convessi 
-            allConvex = true;
+                allConvex = true;
             }
             else {
 
             toCut = m_decomposition.at(p.first);
-            // cout << "taglio il poligono " << p.first << " in " << p.second << endl;
-
-            // //trovo elemento corrispondente nella Polygonlist
-            // indexedToCut = getIthIndexedPolygon(p.first);
-
-            // std::cout << m_decomposition.size() << std::endl;
-            // std::cout << m_indexedPolygons.size() << std::endl;
-             
-             
+          
+   
             //rimuovo dal vector il poligono da tagliare
             m_decomposition.erase(m_decomposition.begin() + p.first);
             //rimuovo dalla lista il corrispondente poligono di indici
@@ -88,16 +73,8 @@ void MyDecomposition::run(){
             cutter = calculateCutter(toCut , p.second);
 
             //taglio il poligono 
-            /*,tmp_decompositionIdexes*/cutPolygon(toCut, cutter.first , p.second, cutter.second); 
-
-            // //inserisco le due parti nel vector 
-            // for (size_t j = 0; j < tmp_decomposition.size(); j++ ) { 
-            //     m_decomposition.push_back(tmp_decomposition.at(j)); 
-            //       //decompositionIndexes.pushBack(tmp_decompositionIdexes)
-            // }                    
-            // }
+            cutPolygon(toCut, cutter.first , p.second, cutter.second); 
       }
-      //sono tutti convessi 
     }
 }
 
@@ -105,6 +82,8 @@ void MyDecomposition::run(){
 
 //trovo elemento corrispondente nella Polygonlist
 Polygon MyDecomposition::getIthIndexedPolygon(size_t i) {
+
+    cout << "MyDecomposition: getIthIndexedPolygon()" << endl; 
     //si può ottenere più velocemente l'i-esimo elemento di una lista? 
     size_t cont = 0;
     Polygon toReturn;
@@ -125,6 +104,7 @@ Polygon MyDecomposition::getIthIndexedPolygon(size_t i) {
 //dato l'indice di un vertice CONCAVO calcola il segmento con cui tagliare il poligono 
 pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::Polygon_2<K>> poly, int &startingVertex) {
     
+    cout << "MyDecomposition: calculateCutter()" << endl; 
 
     size_t N = poly->vertices().size(); 
 
@@ -152,6 +132,7 @@ pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::
         indexIntersectionEdge = resultIntersection2.second;
     }
  
+
     return make_pair(cutter, indexIntersectionEdge); 
 
 }
@@ -161,6 +142,8 @@ pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::
 
 //restituisce il primo indice (del vertice) dove si trova una concavità . -1 se il poligono è convesso
 size_t MyDecomposition::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
+
+    cout << "MyDecomposition: isConcave()" << endl; 
     vector<int> orientations;
     size_t N = perimeter->vertices().size();
     int index; //indice del primo punto di concavità
@@ -168,11 +151,6 @@ size_t MyDecomposition::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
         int k = isLeft(perimeter->vertex((i-1+N)%N), perimeter->vertex(i) , perimeter->vertex( (i+1)%N) );
         orientations.push_back(k);
     }
-
-    // cout <<"ORIENTATION" << endl; 
-    // for (size_t i = 0; i < orientations.size();i++) {
-    //     cout << orientations.at(i) << endl;
-    // }
 
     // controlla quale è la maggioranza (più positivi o più negativi ) e quali sono girati al contrario 
     int numPositives = 0; 
@@ -216,6 +194,8 @@ size_t MyDecomposition::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
 //restituisce la posizione nel vector del primo poligono concavo e l'indice del vertice della convacità trovata , -1 il primo se sono tutti convessi 
 pair<int, int> MyDecomposition::allSubPolygonsConvex () {
     
+    cout << "MyDecomposition: allSubPolygonsConvex()" << endl; 
+
     int concavity;
     for (size_t i = 0; i < m_decomposition.size(); i++ ) {
         concavity = isConcave(m_decomposition.at(i));
@@ -231,6 +211,9 @@ pair<int, int> MyDecomposition::allSubPolygonsConvex () {
 /*******************************************************/
 //trova l'indice di p in m_vertices , -1 se non lo trova
 int MyDecomposition::findIndex(K::Point_2 p) {
+
+    cout << "MyDecomposition: findIndex()" << endl; 
+
     for (size_t i = 0; i < m_vertices.size(); i++) {
         if (p == m_vertices.at(i)) {
             return (int)i;
@@ -245,6 +228,9 @@ int MyDecomposition::findIndex(K::Point_2 p) {
 //sia poly che il corrispondente polugono di indici sono già stati rimossi rispettivamente dal vector e dalla lista
 void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon indexededPoly,*/  CGAL::Segment_2<K> newEdge, int startVertex , int endEdge) {
     
+    cout << "MyDecomposition: cutPolygon()" << endl; 
+
+    // m_Helper.plotPerimeter(poly, "testcutting", 1); 
 
     size_t N = poly->edges().size();
     
@@ -262,9 +248,8 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     Polygon indexedPoly2; 
     int index;
 
-    // cout << "start: " << startVertex << " end: " << endEdge << endl;    
 
-    if (startVertex == endEdge || startVertex == (endEdge+1)%N || startVertex == (endEdge-1+N)%N )  { //non fa nulla 
+    if (startVertex == endEdge || startVertex == (endEdge+1)%N /*|| startVertex == (endEdge-1+N)%N */ )  { //non fa nulla 
         m_decomposition.push_back(poly); 
         for (size_t i = 0; i < poly->vertices().size(); i++ ){
             index = findIndex(poly->vertex(i)); 
@@ -281,7 +266,7 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     }
 
 
-    else if (startVertex < endEdge) {
+   else if (startVertex < endEdge) {
         //points1
         points1.push_back(newEdge.source()); 
         for (int i = startVertex ; i < endEdge ; i++) {
@@ -315,11 +300,14 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
         }
     }
 
-    //newEdge.target() è il vertice nuovo quindi lo devo inserire in m_vertices 
+    
+     //newEdge.target() è il vertice nuovo quindi lo devo inserire in m_vertices 
     m_vertices.push_back(newEdge.target()); 
 
 
+    // aggiorno gli indici
     for (size_t i = 0; i < points1.size(); i++ ){
+
         index = findIndex(points1.at(i)); 
         if (index == -1) {
             cout << "MyDecomposition: cutPolygon error" << endl;
@@ -341,6 +329,7 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
         }
     }
     
+
     //inserisco poligoni decomposti 
     m_decomposition.push_back(createPolygon(points1)); 
     m_decomposition.push_back(createPolygon(points2));
@@ -349,26 +338,6 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     m_indexedPolygons.push_back(indexedPoly1); 
     m_indexedPolygons.push_back(indexedPoly2);
 
-
-    // //stampa indici per test 
-    // int k =0; 
-    // for (const Polygon &pol : m_indexedPolygons) {
-    //     cout << "poligono " << k << endl;
-    //     for (size_t i = 0; i < pol.size(); i++) {
-    //         cout << pol.vertex(i) << endl;
-    //     }
-    //     k++;
-    // }
-    
-    // cout << "POINTS1" << endl;
-    // for (int k = 0; k < points1.size(); k++) {
-    //             // m_Helper.plotPoint(points1.at(k)); 
-
-    //     cout << points1.at(k) << endl;
-    // }
-
-    // cout << "POINTS2" << endl;
-    // for (int k = 0; k < points2.size(); k++) {
-    //     cout << points2.at(k) << endl;
-    // }
 }
+
+

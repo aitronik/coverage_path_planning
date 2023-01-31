@@ -7,7 +7,13 @@
 // #include <CGAL/property_map.h>
 // #include <CGAL/intersections.h>
 #include "utils.hpp"
-// #include "CoveragePlotHelper.h"
+#include "CoveragePlotHelper.h"
+
+
+// //POI TOGLI 
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/imgproc.hpp>
+// #include <opencv2/highgui.hpp>
 
 class MyDecomposition {
 
@@ -86,6 +92,9 @@ class MyDecomposition {
              * @param endEdge 
              */
             void cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly/*, Polygon indexededPoly*/, CGAL::Segment_2<K> newEdge, int startVertex , int endEdge);
+            
+            //POI TOGLI 
+            CoveragePlotHelper m_Helper;
 
     
 };
