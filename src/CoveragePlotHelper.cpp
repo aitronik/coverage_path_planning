@@ -143,7 +143,7 @@ void CoveragePlotHelper::plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> pol
 
 /***********************************/
 //stampa il sottopoligono e un numero che indica la sua posizione nell'ordinamento 
-void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name) {
+void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points,  string decomposition_name, bool putText, string polName) {
     
     // cout << "CoveragePlotHelper: plotSubPolygon" << endl;
     cv::Point p_old;
@@ -172,8 +172,9 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
     p_label /= (int)cont;
 
     cv::line(m_image_decomposition, last, first, cv::Scalar(0,0,0), 2, 8, 0); 
-    // cv::putText(m_image_decomposition, std::to_string(num) , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
-
+    if (putText) {
+        cv::putText(m_image_decomposition, polName , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+    }
     cv::namedWindow(m_decompositionName, 1); 
     cv::imshow(m_decompositionName, m_image_decomposition);
     cv::waitKey(0);    
@@ -265,11 +266,11 @@ void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path, int co
 /***********************************/
 
 //stampa il nuovo perimetro e aggiorna il perimetro da disegnare
-void CoveragePlotHelper::updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly) {
+void CoveragePlotHelper::updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly, bool printIndexes) {
     
     cv::Mat new_image(1000,1000, CV_8UC3, cv::Scalar(255,255,255)); 
     m_perimeterImage = new_image; 
-    plotPerimeter(new_poly, "Simplifyed Perimeter", 0); 
+    plotPerimeter(new_poly, "Simplifyed Perimeter", printIndexes); 
 
 }
 
@@ -324,4 +325,11 @@ void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line, string imageName)
     cv::imshow(imageName , m_testImage);
     cv::waitKey(0);  
 
+}
+
+/***********************************/
+void CoveragePlotHelper::clearAllImages() {
+    m_perimeterImage = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
+    m_image_decomposition = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
+    m_testImage = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
 }

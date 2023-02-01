@@ -79,12 +79,11 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
 /**
  * @brief 
  * 
- * @param poly 
- * @param line 
- * @return vector<K::Point_2> 
+ * @param polygon 
+ * @param edgeIndex 
+ * @return pair<K::Point_2,int> 
  */
-pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2<K>> polygon,int edgeIndex);
-
+pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex, int vertexIndex);
 
 /**
  * @brief restituisce l'indice del vector a cui corrisponde il valore x
@@ -141,14 +140,11 @@ void printPointCoordinates(K::Point_2 p);
  */
 bool areEqual(K::Point_2 a, K::Point_2 b);
 
-// /**
-//  * @brief 
-//  * 
-//  * @param pt 
-//  * @param pgn_begin 
-//  * @param pgn_end 
-//  * @param traits 
-//  * @return true 
-//  * @return false 
-//  */
-// bool check_inside(Point pt, Point *pgn_begin, Point *pgn_end, K traits);
+/**
+ * @brief 
+ * 
+ * @param p 
+ * @param points 
+ * @return K::Point_2 
+ */
+K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points);

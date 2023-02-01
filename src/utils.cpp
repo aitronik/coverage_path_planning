@@ -57,18 +57,6 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 /*************************************/
 
 
-// void printInfo() {
-//     cout << "0 -> optimal convex partition" << endl;
-//     cout << "1 -> monotone partition" << endl;
-//     cout << "2 -> approx convex partition" << endl;
-//     cout << "3 -> greene approx convex partition" << endl;
-// }
-
-
-
-
-/*************************************/
-
 
 double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
@@ -116,15 +104,15 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 /*************************************/ 
 
 //il secondo elemento del pair è l'indice del lato  in cui c'è l'intersezione
-pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
+pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex, int vertexIndex) {
 
     CGAL::Line_2<K> line = polygon->edge(edgeIndex).supporting_line();
     size_t N = polygon->edges().size(); 
-    int indexIntersection = -1;
-
-    vector<K::Point_2> a;
+    
+    vector<int> indexIntersections;
+    vector<K::Point_2> points;
     for (size_t i = 0 ; i < polygon->edges().size() ;  i++) {
-
+        // non confrontarlo con te stesso, precedente e successivo
         if ( i !=edgeIndex && i != (edgeIndex+1)%(N) &&  i != (edgeIndex-1+N)%(N) ) {
             const auto inter = CGAL::intersection(line, polygon->edge(i));
         
@@ -133,15 +121,31 @@ pair<vector<K::Point_2>,int> intersect_polygon_line_2(shared_ptr<CGAL::Polygon_2
                 cout << "trovato intersezione con segmento " << endl;
                 }
                 else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){  //se si intersecano in un punto 
-                    a.push_back(*p);
-                    indexIntersection = i; 
-                    break;
+                    points.push_back(*p);
+                    indexIntersections.push_back(i); 
                 }
             }
         }
     }
 
-    return make_pair(a,indexIntersection);
+   
+    K::Point_2 vertex =  polygon->vertex(vertexIndex);
+    K::Point_2 closestPoint(-1,-1);
+    int index_intersection = -1;
+    float minDistance = MAXFLOAT;  
+    for (size_t i = 0; i < points.size(); i++){
+        // prendo il più vicino al vertex
+        const float dist = CGAL::squared_distance(points[i], vertex);
+        if ( dist < minDistance ) {
+            closestPoint = points[i]; 
+            index_intersection = indexIntersections[i]; 
+            minDistance = dist;
+        }
+    
+    }
+
+
+    return make_pair(closestPoint, index_intersection);
 }
 
 
@@ -188,7 +192,7 @@ K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL:
                     if (is_collinear < i) {
                         a[0] = polygon->edge(i).target();
                         a[1] = polygon->edge(is_collinear).source();
-                        return a; 
+                        return a;  
                     }
                 }
 
@@ -229,7 +233,6 @@ int indexOf(vector<int> v, int x) {
         }
     }
     return -1;
-
 }
 
 
@@ -298,41 +301,20 @@ int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
 
 
 
-
-
-//MI PIACEVA PIù COSì MA HO PROBLEMI     
-//     int to_return; 
-//     int N = polygon->edges().size(); 
-//     CGAL::Segment_2<K> current = polygon->edge(edgeIndex); 
-//     CGAL::Segment_2<K> next = polygon->edge((edgeIndex+1)%N); 
-//     CGAL::Segment_2<K> precedent = polygon->edge((edgeIndex+N-1)%N); 
-
-//     //controllo con il successivo 
-//     if (CGAL::parallel(current, next)) { //sono paralleli basta per determinare la adiacenza e collinearità (sono lati di poligoni)
-//         to_return = (edgeIndex+1)%N; 
-//     }
-//     else if (CGAL::parallel(current, precedent)) {
-//         to_return = (edgeIndex+N-1)%N; 
-//     }
-//     else {
-//         to_return = -1; 
-//     }
-
-//     return to_return; 
-// }
-
 /*******************************************************/
 
 int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
     
 
     float k = (b.x() - a.x())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.x() - a.x());
+    // cout << a << "\t" << b << "\t" << c << endl;
+    // cout << "k" << k << endl;
 
-    if ( k > 0.00000001) {
+    if ( k > 0.000001) {
         return 1;
         // return k;
     }
-    else if( k < -0.00000001){
+    else if( k < -0.000001){
         return -1;
         // return k;
     } 
@@ -358,6 +340,21 @@ bool areEqual(K::Point_2 a, K::Point_2 b) {
         to_ret = true;
     }
     return to_ret;
+}
+
+/*******************************************************/
+
+K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points) {
+    
+    float minDistance = MAXFLOAT; 
+    K::Point_2 nearest = points[0]; 
+    for (size_t i = 0; i < points.size(); i++) {
+        if (CGAL::squared_distance(p, points[i]) < minDistance) {
+            minDistance = CGAL::squared_distance(p, points[i]); 
+            nearest = points[i]; 
+        }
+    }
+    return nearest; 
 }
 
 /*******************************************************/

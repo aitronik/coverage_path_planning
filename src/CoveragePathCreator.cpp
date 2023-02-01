@@ -482,24 +482,28 @@ bool CoveragePathCreator::orderSubPolygons()
 
     cout << "orderSubPolygons()" << endl; 
 
-    // cerco qual è il poligono start, ovvero quello di cui fa parte il primo punto
     bool found = false;
     int start = -1;
-    for (const Polygon &poly : m_decomposedPolysOfIndices)
-    {
-        if (found != false)
-        { // già trovato uno
-            break;
-        }
-        start++;
-        for (size_t j = 0; j < poly.vertices().size(); j++)
-        {
-            if (m_decomposedVertices[poly.vertex(j)] == m_firstVertex)
-            {
-                found = true;
+    // cerco qual è il poligono start, ovvero quello che contiene il vertice più vicino allo startingPoint
+    //m_decomposedVertices sono i vertici dopo la decomposizione 
+    K::Point_2 nearest = nearestPoint(m_startingPoint, m_decomposedVertices);
+    //modifico il firstVertex
+    m_firstVertex = nearest; 
+    //cerco a quale sottopoligono fa parte 
+    // for (const Polygon &poly : m_decomposedPolysOfIndices) {
+
+    // }
+    for (const Polygon &poly : m_decomposedPolysOfIndices) {
+        if (!found) {
+            start++; 
+            for (size_t k : poly.container()) {
+                if (m_decomposedVertices[k] == nearest) {
+                    found = true; 
+                }
             }
         }
     }
+    
 
     createAdjWeigthMatrix();
     vector<int> route = findMinRouteTo(start); // route è il vector dei precedenti -> all'indice i c'è il precedente del poligono i
@@ -929,16 +933,21 @@ void CoveragePathCreator::joinAndLinkPaths(){
     
     int cont = 0; //serve come contatore per il plot con i numeri per seguire il percorso (+1 per ogni inizio e ogni fine di singolo path)
     
-    // Parto inserendo nel path il perimetro (m_firstVertex dovrebbe essere il source del lato 0 , quindi dovrebbe partire e tornare lì)
+    //collego startingPoint con firstVertex 
+    m_finalPath.push_back(CGAL::Segment_2<K>(m_startingPoint, m_firstVertex)); 
+
+    //plot del punto di partenza 
+    m_Helper.plotPoint(m_startingPoint, 'b', cont); 
+    
+    //Inserisco nel path il perimetro (dovrebbe partire e tornare in m_firstVertex)
     for (size_t i = 0; i < m_simplyfiedPolygon->edges().size(); i++) {
         m_finalPath.push_back(m_simplyfiedPolygon->edge(i));
     }
-
-    //plot del punto di partenza 
-    m_Helper.plotPoint(m_firstVertex, 'b', cont);
     cont++; 
 
-    // m_Helper.plotPartialPath(m_finalPath); 
+    //plot prima parte 
+    m_Helper.plotPartialPath(m_finalPath, cont);
+    cont++;  
 
     // poi collego il punto iniziale al punto da cui si parte del primo sottopoligono
     m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS.at(0).at(0).source()));
@@ -966,8 +975,11 @@ void CoveragePathCreator::joinAndLinkPaths(){
 
             vector<int> route = findMinRouteBetween(m_polygonsSorted[i], m_polygonsSorted[i+1]);
 
-            
+            // cout << "percorso tra il poligono " << m_polygonsSorted[i] << " e " << m_polygonsSorted[i+1] << endl;   
+
             for ( size_t j = 0; j < route.size()-1; j++) {
+
+                // cout << route[j] << endl; 
 
                 if ((m_adj[route[j]][route[j+1]][0] == -1 && m_adj[route[j]][route[j+1]][1] == -1)) { // non sono adiacenti
                     cout << "CoveragePathCreator::cover error" << endl;
@@ -996,26 +1008,26 @@ void CoveragePathCreator::joinAndLinkPaths(){
 
 
                 //se non sono già collegati
-                if (! ( areEqual(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_decomposedVertices[m_adj[route[j]][route[j+1]][index]] ) )) {
+                if (! ( m_pathS.at(i).at(m_pathS.at(i).size() - 1).target() == m_decomposedVertices[m_adj[route[j]][route[j+1]][index]])) {
                     
                     segment_new = CGAL::Segment_2<K>(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_decomposedVertices[m_adj[route[j]][route[j+1]][index]]);
-                    //DEVO CONTROLLARE QUI se passa fuori dal perimetro ?? 
                   
-                    m_finalPath.push_back(segment_new); // inserisco il primo pezzo
+                    m_finalPath.push_back(segment_new); // inserisco il primo collegamento : dal target del path i-esimo al vertice di collegamento 
                     m_Helper.plotPartialPath(m_finalPath, cont);
                     cont++; 
                 }
-
-                if (m_decomposedVertices[m_adj[route[j]][route[j+1]][index]] == m_pathS.at(i+1).at(0).source()) {
-                    continue; 
+                else {
+                    continue;
                 }
 
+                //dal collegamento al surce del path i+1 esimo 
                 segment_new = CGAL::Segment_2<K>(m_decomposedVertices[m_adj[route[j]][route[j+1]][index]], m_pathS.at(i+1).at(0).source());
                 m_finalPath.push_back(segment_new); // inserisco il secondo pezzo
                 m_Helper.plotPartialPath(m_finalPath, cont);
                 cont++; 
 
-            }                
+            }           
+            cout << route[route.size()-1];      
         }
     }
 }
@@ -1038,14 +1050,13 @@ void CoveragePathCreator::createPathToReturn() {
 
 /*******************************************************/
 
-shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon) {
+void CoveragePathCreator::eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon, vector<bool> &isAdjacent) {
     
     cout << "eliminateExcessPoints()" << endl;
 
 //     //se il poligono è tutto in riga , devo considerarlo passandoci sopra una volta 
 //     size_t N = polygon->vertices().size(); 
 //     vector<K::Point_2> points; 
-
 //     for (size_t i = 0 ; i < N ; i++) {
 //         int collinear = isCollinear(polygon, i); 
 //         if (!(collinear == (i-1+N)%N ) ){ //inserisco il punto sia se non è collineare con nulla, ma anche se è collineare con il successivo, è il successivo che non inserisco 
@@ -1058,27 +1069,41 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::eliminateExcessPoints(shared
 //     return createPolygon(points);
 // }
 
+    // cout << "IS ADIACENT BEFORE" << endl;
+    // for (int i = 0; i < isAdjacent.size(); i++) {
+    //     cout << isAdjacent[i] << endl; 
+    // } 
 
-    size_t N = polygon->vertices().size(); 
-    vector<K::Point_2> points; 
-    for (size_t i = 0; i < N; i++) {
-        if ( ! (isLeft(polygon->vertex( (i-1+N)%N), polygon->vertex(i), polygon->vertex((i+1)%N)) == 0 ) ) {
-            points.push_back(polygon->vertex(i));
-        }
-        else {
-            if (polygon->vertices().size() == 3) { //se il poligono erano solo 3 punti in linea ==> inserisco i due estremi 
-                points.push_back(polygon->vertex((i-1+N)%N)); 
-                points.push_back(polygon->vertex((i+1)%N)); 
-                break;
-            }   
-            else {
-                cout << "non inserito" << endl;
+    // m_Helper.plotPoint(polygon->vertex(0), 'b', -1); 
+        
+    for (int i = 0; i < polygon->vertices().size(); i++) {
+        size_t N = polygon->vertices().size(); 
+  //      CGAL::Segment_2<K> seg(polygon->vertex((i-1+N)%N),polygon->vertex((i+1)%N));
+        // m_Helper.plotPoint(polygon->vertex(i), 'r', -1); 
+        
+//        if (seg.has_on(polygon->vertex(i))){
+        if ((isLeft(polygon->vertex( (i-1+N)%N), polygon->vertex(i), polygon->vertex((i+1)%N)) == 0 )){
+            // remove vertex i  
+            // m_Helper.plotPoint(polygon->vertex(i), 'g', -1); 
+            
+            auto it = polygon->vertices_begin() + i;
+            polygon->erase(it);
+            bool removedEdgeisAdjacent = isAdjacent[i];
+            if (!removedEdgeisAdjacent){
+               isAdjacent[(i-1+N)%N] = removedEdgeisAdjacent;
             }
+
+            auto it2 = isAdjacent.begin()+i; 
+            isAdjacent.erase(it2); 
+            i--;
         }
     }
-    shared_ptr<CGAL::Polygon_2<K>> pol = createPolygon(points);
 
-    return createPolygon(points);
+    // for (int i = 0; i < polygon->vertices().size(); i++ ) {
+    //     m_Helper.plotPoint(polygon->vertex(i), 'r', -1); 
+    // }
+
+    return;
 }
 
 /*******************************************************/
@@ -1119,14 +1144,7 @@ void CoveragePathCreator::generateGridsForSubpolygons(){
         //estraggo ordinatamente i sottopolugoni (ordine di spazzata)
         polygonIndex = m_polygonsSorted.at(k); 
         shared_ptr<CGAL::Polygon_2<K>> curr = m_ordinatedSubpolygonsForPath.at(k); 
-    
-        //eliminazione dei punti in eccesso dai sottopoligoni 
-        PS::Squared_distance_cost cost;
-        CGAL::Polygon_2<K> approx = PS::simplify(*curr, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
-        curr =  make_shared<CGAL::Polygon_2<K>>(approx);
-        curr = eliminateExcessPoints(curr);  //serve sia simplify che eliminateExcessPoints , non so perché, 
-        // forse perché simplify non elimina mai il vertex(0)
-        
+       
 
         // borders indica quali lati sono in comune e quindi bisogna lasciare lo spazio , inizializzo tutto a false
         vector<bool> isEdgeAdjacent(curr->edges().size(), false);   
@@ -1141,16 +1159,27 @@ void CoveragePathCreator::generateGridsForSubpolygons(){
                 for (size_t j = 0; j < curr->edges().size(); j++) {                    
                     CGAL::Segment_2<K> edge = curr->edge(j); 
 
-                    //controllo se l'adiacenza è uguale a edge ==> true
-                    if (areEqual(seg.source(), edge.source()) && areEqual(seg.target(), edge.target() ) ||
-                      areEqual(seg.source(), edge.target()) && areEqual(seg.target(), edge.source())  ) {
+                    //controllo se l'adiacenza è uguale a seg ==> true
+                    // if (
+                    if (seg.has_on(edge.source()) && seg.has_on(edge.target())){
                         isEdgeAdjacent[j] = true;
                     }
+                    //     (areEqual(seg.source(), edge.source()) && 
+                    //      areEqual(seg.target(), edge.target())) ||
+                    //     (areEqual(seg.source(), edge.target()) && 
+                    //      areEqual(seg.target(), edge.source()))
+                          
+                    //     ) {
+                    //     isEdgeAdjacent[j] = true;
+                    // }
                 }
 
             }
         }
 
+           //eliminazione dei punti in eccesso dai sottopoligoni 
+    
+        eliminateExcessPoints(curr,isEdgeAdjacent);  
         m_intersections.push_back(generateGridForOnePolygon(curr, isEdgeAdjacent));       
 
     }
@@ -1211,6 +1240,13 @@ void CoveragePathCreator::simplifyPerimeter(){
     PS::Squared_distance_cost cost;
     CGAL::Polygon_2<K> approx = PS::simplify(*m_initialPolygon, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
     m_simplyfiedPolygon = make_shared<CGAL::Polygon_2<K>>(approx);
+    K::Point_2 firstVertexOld = m_simplyfiedPolygon->vertex(0); 
+    m_simplyfiedPolygon->erase(m_simplyfiedPolygon->vertices_begin()); //tolgo il vertice iniziale 
+    //lo metto come ultimo 
+    m_simplyfiedPolygon->push_back(firstVertexOld); 
+    //approssimo nuovamente 
+    approx = PS::simplify(*m_simplyfiedPolygon, cost, Stop((m_sweepDistance / 2) * (m_sweepDistance / 2)));
+    m_simplyfiedPolygon = make_shared<CGAL::Polygon_2<K>>(approx);
 
     // salvo i nuovi vertici
     for (size_t i = 0; i < m_simplyfiedPolygon->vertices().size(); i++)
@@ -1226,13 +1262,16 @@ void CoveragePathCreator::simplifyPerimeter(){
 bool CoveragePathCreator::run() {
 
     // plot perimetro iniziale
-    m_Helper.plotPerimeter(m_initialPolygon, "Perimeter", 0);
+    m_Helper.plotPerimeter(m_initialPolygon, "Perimeter", false);
+
+    //punto di partenza del robot 
+    m_startingPoint = m_initialPerimeterVertices[0]; 
 
     //approssimazione perimetro
     simplifyPerimeter();
-    
+
     //aggiornamento del'immagine del perimetro in Coverage Plot Helper
-    m_Helper.updatePerimeterImage(m_simplyfiedPolygon);
+    m_Helper.updatePerimeterImage(m_simplyfiedPolygon, false);
 
     //decomposizione in sottopoligoni convessi 
 
@@ -1241,8 +1280,10 @@ bool CoveragePathCreator::run() {
         return false;
     }
 
-    //questa cosa si può cambiare 
-    m_firstVertex = m_decomposedVertices.at(0);
+    //m_firstVertex deve essere il più vicino al punto di partenza del robot tra i vertici del poligono decomposto 
+    m_firstVertex = nearestPoint(m_startingPoint, m_decomposedVertices); 
+    
+    // m_firstVertex = m_decomposedVertices.at(0);
 
     // creazione matrice di adiacenza dei sottopoligoni
     createAdjMatrix();
@@ -1261,8 +1302,8 @@ bool CoveragePathCreator::run() {
     }
     for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
     {
-        Polygon poly = partitionPolys_new.at(m_polygonsSorted.at(pol_i));
-        m_Helper.plotSubPolygon(poly, m_decomposedVertices, pol_i, m_decompositionName);
+        Polygon poly = partitionPolys_new.at(m_polygonsSorted[pol_i]);
+        m_Helper.plotSubPolygon(poly, m_decomposedVertices, m_decompositionName, 1, to_string(m_polygonsSorted[pol_i]) );
     }
 
     // creazione dei path per ogni sottopoligoni e unione

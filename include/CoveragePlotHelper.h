@@ -33,10 +33,11 @@ class CoveragePlotHelper {
          * @brief stampa un sottopoligono numerato "num" , in nero su un'immagine denominata con decomposition_name
          * @param poly poligono da stampare 
          * @param points vertici 
-         * @param num numero del poligono nell'ordinamento 
+         * @param putText se true, vengono aggiunti i nomi 
+         * @param polName nome da stampare sul poligono 
          * @param decomposition_name nome della decomposizione
          */
-        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name);
+        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, string decomposition_name, bool putText, string polName);
 
         /**
          * @brief 
@@ -67,7 +68,7 @@ class CoveragePlotHelper {
          * @brief stampa un perimetro sull'immagine "Perimeter" e aggiorna m_perimeterImage
          * @param new_poly 
          */
-        void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly);
+        void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly, bool printIndexes);
 
         /**
          * @brief stampa su "FinalPath" in blu un singolo punto 
@@ -80,6 +81,7 @@ class CoveragePlotHelper {
 
         void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
 
+        void clearAllImages(); 
 
 
     private: 

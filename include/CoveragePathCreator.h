@@ -192,6 +192,12 @@ class CoveragePathCreator {
          * @brief vertice iniziale del path (primo vertice dato in input)
          * 
          */
+        K::Point_2 m_startingPoint;
+
+        /**
+         * @brief vertice del poligono decomposto preso come punto di partenza ( il più vicino allo startingPoint)  
+         * 
+         */
         K::Point_2 m_firstVertex;
 
 
@@ -380,10 +386,11 @@ class CoveragePathCreator {
         /**
          * @brief 
          * 
-         * @param polygon 
-         * @return shared_ptr<CGAL::Polygon_2<K>> 
+         * @param polygon
+         * @param isAdjacent 
+         * @return void
          */
-        shared_ptr<CGAL::Polygon_2<K>> eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon);
+        void eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon, vector<bool> &isAdjacent);
         // /**
         //  * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
         //  * 

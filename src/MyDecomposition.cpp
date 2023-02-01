@@ -25,6 +25,8 @@ bool MyDecomposition::init(shared_ptr<CGAL::Polygon_2<K>> poly) {
     //inserisco il poligono iniziale nella lista di poligoni di indici 
     m_indexedPolygons.push_back(initial);
 
+    m_Helper.init(m_vertices); 
+
     return true;
 }
 
@@ -110,25 +112,26 @@ pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::
 
     //posso creare il nuovo lato come prolungamento di uno o dell'altro lato che comprendono quel vertice 
     //scelgo quello che renderebbe il nuovo segmento più corto  
-    pair<vector<K::Point_2>, int> resultIntersection1 = intersect_polygon_line_2(poly, startingVertex);
-    pair<vector<K::Point_2>, int> resultIntersection2 = intersect_polygon_line_2(poly, (startingVertex-1+N)%N);
+    pair<K::Point_2, int> resultIntersection1 = intersect_concave_polygon_at_index(poly, startingVertex,         startingVertex);
+    pair<K::Point_2, int> resultIntersection2 = intersect_concave_polygon_at_index(poly, (startingVertex-1+N)%N, startingVertex);
+
 
     float d1,d2;
 
     //devo anche capire se il più vicino è il source o il target 
-    d1 = CGAL::squared_distance(poly->edge(startingVertex).source(), resultIntersection1.first.at(0)); 
-    d2 = CGAL::squared_distance(poly->edge((startingVertex-1+N)%N).target(), resultIntersection2.first.at(0)); 
+    d1 = CGAL::squared_distance(poly->edge(startingVertex).source(), resultIntersection1.first); 
+    d2 = CGAL::squared_distance(poly->edge((startingVertex-1+N)%N).target(), resultIntersection2.first); 
 
     
     CGAL::Segment_2<K> cutter;
     int indexIntersectionEdge; 
 
     if (d1 <= d2) {
-        cutter = CGAL::Segment_2<K> (poly->edge(startingVertex).source(), resultIntersection1.first.at(0));
+        cutter = CGAL::Segment_2<K> (poly->edge(startingVertex).source(), resultIntersection1.first);
         indexIntersectionEdge = resultIntersection1.second;
     }
     else {
-        cutter = CGAL::Segment_2<K> (poly->edge((startingVertex-1+N)%N).target(), resultIntersection2.first.at(0)); 
+        cutter = CGAL::Segment_2<K> (poly->edge((startingVertex-1+N)%N).target(), resultIntersection2.first); 
         indexIntersectionEdge = resultIntersection2.second;
     }
  
@@ -185,6 +188,7 @@ size_t MyDecomposition::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
     if (numPositives == 0 || numNegatives == 0) {  //ovvero è convesso 
         index = -1;
     }
+
     return index; 
 }
 
@@ -228,13 +232,11 @@ int MyDecomposition::findIndex(K::Point_2 p) {
 //sia poly che il corrispondente polugono di indici sono già stati rimossi rispettivamente dal vector e dalla lista
 void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon indexededPoly,*/  CGAL::Segment_2<K> newEdge, int startVertex , int endEdge) {
     
-    cout << "MyDecomposition: cutPolygon()" << endl; 
 
-    // m_Helper.plotPerimeter(poly, "testcutting", 1); 
+    cout << "MyDecomposition: cutPolygon()" << endl; 
 
     size_t N = poly->edges().size();
     
-//     vector<shared_ptr<CGAL::Polygon_2<K>>> decomposition; 
     vector<K::Point_2> points1; 
     vector<K::Point_2> points2; 
     int cont; 
@@ -247,7 +249,6 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     Polygon indexedPoly1; 
     Polygon indexedPoly2; 
     int index;
-
 
     if (startVertex == endEdge || startVertex == (endEdge+1)%N /*|| startVertex == (endEdge-1+N)%N */ )  { //non fa nulla 
         m_decomposition.push_back(poly); 
@@ -300,13 +301,14 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
         }
     }
 
-    
-     //newEdge.target() è il vertice nuovo quindi lo devo inserire in m_vertices 
+
     m_vertices.push_back(newEdge.target()); 
 
 
     // aggiorno gli indici
     for (size_t i = 0; i < points1.size(); i++ ){
+
+        // m_Helper.plotPoint(points1.at(i), 'g', -1 );
 
         index = findIndex(points1.at(i)); 
         if (index == -1) {
@@ -319,6 +321,10 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     }
 
     for (size_t i = 0; i < points2.size(); i++ ){
+
+        // m_Helper.plotPoint(points2.at(i), 'r', -1 );
+
+
         index = findIndex(points2.at(i)); 
         if (index == -1) {
             cout << "MyDecomposition: cutPolygon error" << endl;
@@ -328,7 +334,6 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
             indexedPoly2.push_back(index);
         }
     }
-    
 
     //inserisco poligoni decomposti 
     m_decomposition.push_back(createPolygon(points1)); 

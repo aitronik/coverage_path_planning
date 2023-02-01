@@ -9,22 +9,13 @@
 
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
-//rivedere il firstVertex, deve potersi scegliere?  
+//controllare punto iniziale e collegamenti iniziali 
 //quando il un "trapezio" il lato opposto a quello parallelo allo sweepLine non è parallelo a quel lato non viene integrato nel path 
 //e non viene pulito
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
 //in questo momento il collegamento tra due path di sottopoligoni si collega prima a un vertice di collegamento e poi all'altro, 
 //ma non funziona bene questa cosa ==> modificare i collegamenti tra i path
-//come controllare che il segmento - collegamento tra due path non passi fuori dal perimetro?
-//mydecompositiontest2 continua a non andare 
 //manca una strisciata a volte ==> riguardare come trova il punto a max distanza, forse non è divideSegment che si perde un punto, ma proprio dall'inizio 
-
-
-//BUG 
-//input 1.5
-//star 
-
-
 
 
 using namespace std;
