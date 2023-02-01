@@ -3,7 +3,7 @@
 using namespace std; 
 
 vector<pair<float,float>> readFromFile(string name){
-    string filename("../" + name);
+    string filename(name);
     ifstream input_file(filename);
     vector<string> lines;
     string line;
