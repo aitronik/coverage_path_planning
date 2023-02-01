@@ -16,3 +16,10 @@ sudo apt install libcgal-dev
 - `cmake ..`
 - `sudo make install`
 - `sudo ldconfig`
+
+### Operations for debugging
+
+rm -r build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build .
