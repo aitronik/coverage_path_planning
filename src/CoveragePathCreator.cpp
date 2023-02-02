@@ -1024,16 +1024,16 @@ void CoveragePathCreator::joinAndLinkPaths(){
     //RIPRENDI DA QUA 
 
     // poi collego il punto iniziale al punto da cui si parte del primo sottopoligono
-    m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS.at(0).at(0).source()));
+    m_finalPath.push_back(CGAL::Segment_2<K>(m_firstVertex, m_pathS[0][0].source()));
     m_Helper.plotPartialPath(m_finalPath, cont);
     cont++; 
 
     // poi tutti i path dei sottopoligoni
     for (size_t i = 0; i < m_pathS.size(); i++)
     {
-        for (size_t j = 0; j < m_pathS.at(i).size(); j++)
+        for (size_t j = 0; j < m_pathS[i].size(); j++)
         {
-            m_finalPath.push_back(m_pathS.at(i).at(j));
+            m_finalPath.push_back(m_pathS[i][j]);
         }
         m_Helper.plotPartialPath(m_finalPath, -1); //disegna le strisciate, 
 
@@ -1050,8 +1050,8 @@ void CoveragePathCreator::joinAndLinkPaths(){
             vector<int> route = findMinRouteBetween(m_polygonsSorted[i], m_polygonsSorted[i+1]);
 
             // cout << "percorso tra il poligono " << m_polygonsSorted[i] << " e " << m_polygonsSorted[i+1] << endl;   
-
-            for ( size_t j = 0; j < route.size()-1; j++) {
+           
+            for (size_t j  = 0; j < route.size()-1; j++) {
 
                 // cout << route[j] << endl; 
 
@@ -1061,14 +1061,14 @@ void CoveragePathCreator::joinAndLinkPaths(){
                 }
                 
                 // scelgo il punto dell'adiacenza a distanza minima
-                distance1 = CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
+                distance1 = CGAL::squared_distance(m_pathS[i][m_pathS[i].size() - 1].target(),
                                                         m_decomposedVertices[m_adj[route[j]][route[j+1]][0] ]  ) +
-                                    CGAL::squared_distance(m_decomposedVertices[m_adj[route[j]][route[j+1]][0]], m_pathS.at(i+1).at(0).source());
+                                    CGAL::squared_distance(m_decomposedVertices[m_adj[route[j]][route[j+1]][0]], m_pathS[i+1][0].source());
                 
 
-                distance2 = CGAL::squared_distance(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(),
+                distance2 = CGAL::squared_distance(m_pathS[i][m_pathS[i].size() - 1].target(),
                                                         m_decomposedVertices[m_adj[route[j]][route[j+1]][1]] ) +
-                                CGAL::squared_distance(m_decomposedVertices[m_adj[route[j]][route[j+1]][1]], m_pathS.at(i+1).at(0).source());
+                                CGAL::squared_distance(m_decomposedVertices[m_adj[route[j]][route[j+1]][1]], m_pathS[i+1][0].source());
 
 
                 if (distance1 <= distance2)
@@ -1080,28 +1080,23 @@ void CoveragePathCreator::joinAndLinkPaths(){
                     index = 1;
                 }
 
-
                 //se non sono già collegati
-                if (! ( m_pathS.at(i).at(m_pathS.at(i).size() - 1).target() == m_decomposedVertices[m_adj[route[j]][route[j+1]][index]])) {
+                if (! ( m_finalPath.at(m_finalPath.size()-1).target() == m_decomposedVertices[m_adj[route[j]][route[j+1]][index]])) {
                     
-                    segment_new = CGAL::Segment_2<K>(m_pathS.at(i).at(m_pathS.at(i).size() - 1).target(), m_decomposedVertices[m_adj[route[j]][route[j+1]][index]]);
+                    segment_new = CGAL::Segment_2<K>( m_finalPath.at(m_finalPath.size()-1).target() , m_decomposedVertices[m_adj[route[j]][route[j+1]][index]]);
                   
                     m_finalPath.push_back(segment_new); // inserisco il primo collegamento : dal target del path i-esimo al vertice di collegamento 
                     m_Helper.plotPartialPath(m_finalPath, cont);
                     cont++; 
                 }
-                else {
-                    continue;
-                }
-
-                //dal collegamento al surce del path i+1 esimo 
-                segment_new = CGAL::Segment_2<K>(m_decomposedVertices[m_adj[route[j]][route[j+1]][index]], m_pathS.at(i+1).at(0).source());
-                m_finalPath.push_back(segment_new); // inserisco il secondo pezzo
-                m_Helper.plotPartialPath(m_finalPath, cont);
-                cont++; 
-
             }           
-            cout << route[route.size()-1];      
+            
+            //unisco con il source del path i+1 esimo 
+            segment_new = CGAL::Segment_2<K>( m_finalPath[m_finalPath.size()-1].target(), m_pathS[i+1][0].source());
+            m_finalPath.push_back(segment_new); // inserisco il secondo pezzo
+            m_Helper.plotPartialPath(m_finalPath, cont);
+            cont++; 
+
         }
     }
 }
