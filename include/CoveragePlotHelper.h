@@ -33,11 +33,13 @@ class CoveragePlotHelper {
          * @brief stampa un sottopoligono numerato "num" , in nero su un'immagine denominata con decomposition_name
          * @param poly poligono da stampare 
          * @param points vertici 
-         * @param putText se true, vengono aggiunti i nomi 
+         * @param putPolygonText se true, vengono aggiunti i nomi dentro i sottopoligoni 
          * @param polName nome da stampare sul poligono 
          * @param decomposition_name nome della decomposizione
+         * @param putVertexText se true, vengono aggiunti gli indici ai vertici 
+         * 
          */
-        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, string decomposition_name, bool putText, string polName);
+        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, string decomposition_name, bool putPolygonText, string polName, bool putVertexText);
 
         /**
          * @brief 

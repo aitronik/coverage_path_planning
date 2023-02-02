@@ -17,6 +17,8 @@
 //ma non funziona bene questa cosa ==> modificare i collegamenti tra i path
 //manca una strisciata a volte ==> riguardare come trova il punto a max distanza, forse non è divideSegment che si perde un punto, ma proprio dall'inizio 
 
+//  ./coverage_path ../test/mydecompositiontest2.txt 1 2
+
 
 using namespace std;
 

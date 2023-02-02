@@ -308,12 +308,9 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     // aggiorno gli indici
     for (size_t i = 0; i < points1.size(); i++ ){
 
-        // m_Helper.plotPoint(points1.at(i), 'g', -1 );
-
         index = findIndex(points1.at(i)); 
         if (index == -1) {
             cout << "MyDecomposition: cutPolygon error" << endl;
-            //qua ci metto un return? 
         }
         else {
             indexedPoly1.push_back(index);
@@ -322,13 +319,10 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
 
     for (size_t i = 0; i < points2.size(); i++ ){
 
-        // m_Helper.plotPoint(points2.at(i), 'r', -1 );
-
 
         index = findIndex(points2.at(i)); 
         if (index == -1) {
             cout << "MyDecomposition: cutPolygon error" << endl;
-            //qua ci metto un return? 
         }
         else {
             indexedPoly2.push_back(index);

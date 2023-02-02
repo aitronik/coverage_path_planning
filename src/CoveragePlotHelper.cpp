@@ -143,7 +143,7 @@ void CoveragePlotHelper::plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> pol
 
 /***********************************/
 //stampa il sottopoligono e un numero che indica la sua posizione nell'ordinamento 
-void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points,  string decomposition_name, bool putText, string polName) {
+void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points,  string decomposition_name, bool putPolygonText, string polName, bool putVertexText) {
     
     // cout << "CoveragePlotHelper: plotSubPolygon" << endl;
     cv::Point p_old;
@@ -153,8 +153,13 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
     m_decompositionName = decomposition_name;
     size_t sz = poly.container().size();
     cv::Point p_label;
+    int vertexIndex = 0; 
     for (Point p: poly.container()) {
         cv::Point point ( pixelFromMetres(points[p].x()), pixelFromMetres(points[p].hy()) );
+        if (putVertexText) {
+            cv::putText(m_image_decomposition, to_string(vertexIndex), point, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255), 2);
+            vertexIndex++; 
+        }
         p_label += point;
         if (cont == 0) {
             p_old = point;
@@ -172,7 +177,7 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
     p_label /= (int)cont;
 
     cv::line(m_image_decomposition, last, first, cv::Scalar(0,0,0), 2, 8, 0); 
-    if (putText) {
+    if (putPolygonText) {
         cv::putText(m_image_decomposition, polName , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
     }
     cv::namedWindow(m_decompositionName, 1); 
