@@ -31,7 +31,7 @@
 #include "utils.hpp"
 #include "CoveragePathCreator.h"
 #include "CoveragePlotHelper.h"
-#include "PathContouring.h"
+#include "PolygonCreator.h"
 #include "pathPoints.h"
 #include "print.h"
 
@@ -148,16 +148,17 @@ int main(int argc, char* argv[]) {
     }
 
     /*Contouring class*/
-    PathContouring pc;
+    PolygonCreator pc;
     float fake_offset = 0.001;
     float contour_offset = 0.1;
     float area_threshold = 0.03;
     float perimeter_offset = 0.5;
+    bool apply_contouring = true;
 
-    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset);
+    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring);
 
-    pc.returnFinalContour(path_cgal);
-    CGAL::Polygon_with_holes_2<K> perimeter_contour = pc.returnFinalPerimeter(perimeter_cgal, banned_areas_cgal);
+    pc.createPolygonFromPath(path_cgal);
+    CGAL::Polygon_with_holes_2<K> perimeter_contour = pc.createPolygon(perimeter_cgal, banned_areas_cgal);
 
     /*Test*/
     TEST(Perimeter, ContourDistance){

@@ -1,11 +1,12 @@
-#include "PathContouring.h"
+#include "PolygonCreator.h"
 
-PathContouring::PathContouring(){
+PolygonCreator::PolygonCreator(){
 
     scale_footprint = 0.001;
     contour_offset = 0;
     perimeter_offset = 0;
     areaThreshold = 0;
+    apply_contouring = true;
 
     initialPathImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
     polygonsImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
@@ -17,18 +18,19 @@ PathContouring::PathContouring(){
 
 /*************************************/
 
-PathContouring::~PathContouring(){
+PolygonCreator::~PolygonCreator(){
 
 }
 
 /*************************************/
 
-bool PathContouring::init(float sf, float oc, float at, float po){
+bool PolygonCreator::init(float sf, float oc, float at, float po, float ap){
 
     scale_footprint = sf;
     contour_offset = oc;
     areaThreshold = at;
     perimeter_offset = po;
+    apply_contouring = ap;
     CoveragePlotHelper cph;
     
     return true;
@@ -36,7 +38,7 @@ bool PathContouring::init(float sf, float oc, float at, float po){
 }
 
 /*************************************/
-vector<K::Vector_2> PathContouring::defineVectors(vector<K::Point_2> path){
+vector<K::Vector_2> PolygonCreator::defineVectors(vector<K::Point_2> path){
 
     vector<K::Vector_2> pathVectors;
     for(int i = 0; i < path.size(); i++){
@@ -51,7 +53,7 @@ vector<K::Vector_2> PathContouring::defineVectors(vector<K::Point_2> path){
 }
 
 /*************************************/
-vector<K::Segment_2> PathContouring::defineSegments(vector<K::Point_2> path){
+vector<K::Segment_2> PolygonCreator::defineSegments(vector<K::Point_2> path){
 
     vector<K::Segment_2> path_segments;
     for(int i = 0; i < path.size(); i++){
@@ -65,7 +67,7 @@ vector<K::Segment_2> PathContouring::defineSegments(vector<K::Point_2> path){
 }
 
 /*************************************/
-vector<K::Point_2> PathContouring::definePathFromSegments(vector<K::Segment_2> segments){
+vector<K::Point_2> PolygonCreator::definePathFromSegments(vector<K::Segment_2> segments){
     
     vector<K::Point_2> path_from_segments;
     for(int i = 0; i < segments.size(); i++){
@@ -86,7 +88,7 @@ vector<K::Point_2> PathContouring::definePathFromSegments(vector<K::Segment_2> s
 }
 
 /*************************************/
-void PathContouring::plotPath(vector<K::Point_2> path, 
+void PolygonCreator::plotPath(vector<K::Point_2> path, 
                             cv::Mat pathImage, 
                             int B, 
                             int G, 
@@ -132,7 +134,7 @@ void PathContouring::plotPath(vector<K::Point_2> path,
 }
 
 /*************************************/
-void PathContouring::unitVector(K::Vector_2* vector){
+void PolygonCreator::unitVector(K::Vector_2* vector){
 
     float norm = sqrt(pow(vector->x(), 2) + pow(vector->y(), 2));
     K::Vector_2 v_norm(vector->x()/norm, vector->y()/norm);
@@ -141,7 +143,7 @@ void PathContouring::unitVector(K::Vector_2* vector){
 }
 
 /*************************************/
-K::Vector_2 PathContouring::perpendicularVector(K::Vector_2 vector, bool down){
+K::Vector_2 PolygonCreator::perpendicularVector(K::Vector_2 vector, bool down){
 
     K::Vector_2 vector_perpendicular;
     if(down == true){
@@ -156,7 +158,7 @@ K::Vector_2 PathContouring::perpendicularVector(K::Vector_2 vector, bool down){
 }
 
 /*************************************/
-vector<K::Point_2> PathContouring::segmentShift(vector<K::Point_2> path, bool down, float scale_footprint){
+vector<K::Point_2> PolygonCreator::segmentShift(vector<K::Point_2> path, bool down, float scale_footprint){
 
     K::Vector_2 initial_vector(path.at(0), path.at(1));
     K::Vector_2 perpendicular_vector;
@@ -175,7 +177,7 @@ vector<K::Point_2> PathContouring::segmentShift(vector<K::Point_2> path, bool do
 }
 
 /*************************************/
-vector<K::Point_2> PathContouring::offsetPath(auto path, float scale_footprint, bool down){
+vector<K::Point_2> PolygonCreator::offsetPath(auto path, float scale_footprint, bool down){
 
     vector<K::Vector_2> path_vectors = defineVectors(path); 
     vector<K::Point_2> path_offset; 
@@ -234,7 +236,7 @@ vector<K::Point_2> PathContouring::offsetPath(auto path, float scale_footprint, 
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PathContouring::definePolygon(auto path_down, auto path_up){
+CGAL::Polygon_2<K> PolygonCreator::definePolygon(auto path_down, auto path_up){
 
     CGAL::Polygon_2<K> polygon;
     reverse(path_down.begin(), path_down.end());
@@ -254,7 +256,7 @@ CGAL::Polygon_2<K> PathContouring::definePolygon(auto path_down, auto path_up){
 }
 
 /*************************************/
-void PathContouring::printPolygonsWithHoles(auto polygon, 
+void PolygonCreator::printPolygonsWithHoles(auto polygon, 
                                             CoveragePlotHelper cph, 
                                             cv::Mat pathImage, 
                                             bool fill, 
@@ -294,7 +296,7 @@ void PathContouring::printPolygonsWithHoles(auto polygon,
 }
 
 /*************************************/
-CGAL::Polygon_2<K2> PathContouring::convertPoly2K2(CGAL::Polygon_2<K> polygon){
+CGAL::Polygon_2<K2> PolygonCreator::convertPoly2K2(CGAL::Polygon_2<K> polygon){
 
     CGAL::Polygon_2<K2> polygon_K2;
     for(int i = 0; i < polygon.size(); i++){
@@ -307,7 +309,7 @@ CGAL::Polygon_2<K2> PathContouring::convertPoly2K2(CGAL::Polygon_2<K> polygon){
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PathContouring::convertPolyWithHoles2K2(CGAL::Polygon_with_holes_2<K> polygon_with_holes){
+CGAL::Polygon_with_holes_2<K2> PolygonCreator::convertPolyWithHoles2K2(CGAL::Polygon_with_holes_2<K> polygon_with_holes){
 
     CGAL::Polygon_2<K2> outer_boundary;
     for(int i = 0; i < polygon_with_holes.outer_boundary().size(); i++){
@@ -327,7 +329,7 @@ CGAL::Polygon_with_holes_2<K2> PathContouring::convertPolyWithHoles2K2(CGAL::Pol
 
 
 /*************************************/
-vector<pair<int, int>> PathContouring::pathSegmentation(vector<K::Point_2> path, 
+vector<pair<int, int>> PolygonCreator::pathSegmentation(vector<K::Point_2> path, 
                                                         vector<vector<K::Segment_2>>* segments_no_int, 
                                                         vector<vector<K::Segment_2>>* segments_int){
 
@@ -390,7 +392,7 @@ vector<pair<int, int>> PathContouring::pathSegmentation(vector<K::Point_2> path,
 }
 
 /*************************************/
-vector<CGAL::Polygon_with_holes_2<K>> PathContouring::defineIntersectionPolygons(vector<vector<K::Segment_2>> segments_int){
+vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIntersectionPolygons(vector<vector<K::Segment_2>> segments_int){
 
     vector<CGAL::Polygon_with_holes_2<K>> polygon_final_int;
     /*The code iterates along the first level of the input vector of segment vectors. Each step, therefore, considers a vector of segments.*/
@@ -451,7 +453,7 @@ vector<CGAL::Polygon_with_holes_2<K>> PathContouring::defineIntersectionPolygons
 }
 
 /*************************************/
-vector<CGAL::Polygon_with_holes_2<K>> PathContouring::defineIndipendentPolygons(vector<vector<K::Segment_2>> segments_no_int){
+vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIndipendentPolygons(vector<vector<K::Segment_2>> segments_no_int){
 
     vector<CGAL::Polygon_with_holes_2<K>> polygon_final_no_int;
     /*The code iterates along the first level of the input vector of segment vectors. Each step, therefore, considers a vector of segments.*/
@@ -493,7 +495,7 @@ vector<CGAL::Polygon_with_holes_2<K>> PathContouring::defineIndipendentPolygons(
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PathContouring::mergePolygons(vector<CGAL::Polygon_with_holes_2<K>> polygon_final_no_int, 
+CGAL::Polygon_with_holes_2<K2> PolygonCreator::mergePolygons(vector<CGAL::Polygon_with_holes_2<K>> polygon_final_no_int, 
                                                             vector<CGAL::Polygon_with_holes_2<K>> polygon_final_int,
                                                             vector<pair<int, int>> count_int,
                                                             cv::Mat pathImage,
@@ -559,7 +561,7 @@ CGAL::Polygon_with_holes_2<K2> PathContouring::mergePolygons(vector<CGAL::Polygo
 }
 
 /*************************************/
-void PathContouring::deleteHoles(CGAL::Polygon_with_holes_2<K2>* contour, 
+void PolygonCreator::deleteHoles(CGAL::Polygon_with_holes_2<K2>* contour, 
                                                                     float areaThreshold, 
                                                                     cv::Mat pathImage, 
                                                                     std::string name){
@@ -579,7 +581,7 @@ void PathContouring::deleteHoles(CGAL::Polygon_with_holes_2<K2>* contour,
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PathContouring::selectMajorPolygon(vector<CGAL::Polygon_with_holes_2<K>> contours){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::selectMajorPolygon(vector<CGAL::Polygon_with_holes_2<K>> contours){
 
     CGAL::Polygon_with_holes_2<K> perimeter_contour;
     if(contours.size() == 0){
@@ -607,7 +609,7 @@ CGAL::Polygon_with_holes_2<K> PathContouring::selectMajorPolygon(vector<CGAL::Po
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PathContouring::polygonFromClosedPath(vector<K::Point_2> path){
+CGAL::Polygon_2<K> PolygonCreator::polygonFromClosedPath(vector<K::Point_2> path){
 
     CGAL::Polygon_2<K> polygon;
     for(int i = 0; i < path.size(); i++){
@@ -619,7 +621,7 @@ CGAL::Polygon_2<K> PathContouring::polygonFromClosedPath(vector<K::Point_2> path
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PathContouring::perimeterContour(CGAL::Polygon_2<K> perimeter_polygon){
+CGAL::Polygon_2<K> PolygonCreator::perimeterContour(CGAL::Polygon_2<K> perimeter_polygon){
 
     CGAL::Polygon_with_holes_2<K> perimeter_contour;
     PolygonWithHolesPtrVector contour_ptr = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(perimeter_offset,perimeter_polygon);
@@ -633,12 +635,12 @@ CGAL::Polygon_with_holes_2<K> PathContouring::perimeterContour(CGAL::Polygon_2<K
         perimeter_contour = selectMajorPolygon(contours);
     }
 
-    return perimeter_contour;
+    return perimeter_contour.outer_boundary();
 
 }
 
 /*************************************/
-void PathContouring::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
+void PolygonCreator::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
 
     CGAL::Polygon_2<K> inner_boundary = contour.outer_boundary();
     CGAL::Polygon_2<K2> inner_boundary_K2 = convertPoly2K2(inner_boundary);
@@ -662,7 +664,7 @@ void PathContouring::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PathContouring::returnFinalContour(vector<K::Point_2> path){
+CGAL::Polygon_with_holes_2<K2> PolygonCreator::createPolygonFromPath(vector<K::Point_2> path){
 
     plotPath(path, initialPathImage, 0, 0, 0, false, "Path", false, true, 100, 500); 
     cv::imshow("Path", initialPathImage);
@@ -692,7 +694,7 @@ CGAL::Polygon_with_holes_2<K2> PathContouring::returnFinalContour(vector<K::Poin
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PathContouring::returnFinalPerimeter(vector<K::Point_2> perimeter, vector<vector<K::Point_2>> banned_areas){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygon(vector<K::Point_2> perimeter, vector<vector<K::Point_2>> banned_areas){
 
     CGAL::Polygon_2<K> perimeter_polygon = polygonFromClosedPath(perimeter);
 
@@ -700,8 +702,16 @@ CGAL::Polygon_with_holes_2<K> PathContouring::returnFinalPerimeter(vector<K::Poi
     perimeter_polygon.push_back(perimeter.at(0));
     printPolygonsWithHoles(perimeter_polygon_with_holes, cph, contourPerimeterImage, false, 0, 0, 0, "Perimeter contour", true, false);
 
-    CGAL::Polygon_with_holes_2<K> contour_perimeter = perimeterContour(perimeter_polygon);
+    CGAL::Polygon_2<K> contour_perimeter = perimeterContour(perimeter_polygon);
     printPolygonsWithHoles(contour_perimeter, cph, contourPerimeterImage, true, 0, 0, 125, "Perimeter contour", false, false);
+
+    CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes;
+    if(apply_contouring == true){
+        CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes(contour_perimeter);
+    }
+    else{
+        CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes(perimeter_polygon);
+    }
 
     for(int i = 0; i < banned_areas.size(); i++){
         vector<K::Point_2> banned_area = banned_areas.at(i);
@@ -711,14 +721,14 @@ CGAL::Polygon_with_holes_2<K> PathContouring::returnFinalPerimeter(vector<K::Poi
         printPolygonsWithHoles(banned_area_with_holes, cph, contourPerimeterImage, true, 255, 255, 255, "Perimeter contour", false, false);
         printPolygonsWithHoles(banned_area_with_holes, cph, contourPerimeterImage, false, 255, 0, 0, "Perimeter contour", false, false);
 
-        contour_perimeter.add_hole(banned_area_polygon);
+        contour_perimeter_with_holes.add_hole(banned_area_polygon);
     }
 
     cv::imshow("Perimeter contour", contourPerimeterImage);
     cv::waitKey(0);
 
-    checkBannedAreas(contour_perimeter);
+    checkBannedAreas(contour_perimeter_with_holes);
 
-    return contour_perimeter;
+    return contour_perimeter_with_holes;
 
 }

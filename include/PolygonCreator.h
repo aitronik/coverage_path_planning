@@ -29,13 +29,13 @@ typedef std::vector<PolygonWithHolesPtr>    PolygonWithHolesPtrVector;
 
 typedef std::list<CGAL::Polygon_with_holes_2<K2>>       Pwh_list_2;
 
-class PathContouring {
+class PolygonCreator {
 
     public:
 
-        PathContouring();
-        ~PathContouring();
-        bool init(float sf, float oc, float at, float po);
+        PolygonCreator();
+        ~PolygonCreator();
+        bool init(float sf, float oc, float at, float po, float ap);
 
         /*----------------- OUTPUT FUNCTIONS -----------------*/
 
@@ -45,7 +45,7 @@ class PathContouring {
          * @param path Input path (vector of CGAL points)
          * @return CGAL::Polygon_with_holes_2<K2> Output contour
          */
-        CGAL::Polygon_with_holes_2<K2> returnFinalContour(vector<K::Point_2> path);
+        CGAL::Polygon_with_holes_2<K2> createPolygonFromPath(vector<K::Point_2> path);
 
        /**
         * @brief Final pipeline for the perimeter
@@ -54,7 +54,7 @@ class PathContouring {
         * @param[in] perimeter Input banned area
         * @return CGAL::Polygon_with_holes_2<K2> Final perimeter with contour
         */
-        CGAL::Polygon_with_holes_2<K> returnFinalPerimeter(vector<K::Point_2> perimeter, vector<vector<K::Point_2>> banned_areas);
+        CGAL::Polygon_with_holes_2<K> createPolygon(vector<K::Point_2> perimeter, vector<vector<K::Point_2>> banned_areas);
 
 
 
@@ -118,6 +118,12 @@ class PathContouring {
          * 
          */
         float areaThreshold;
+
+        /**
+         * @brief Boolean that defines if the class has to apply the contouring function
+         * 
+         */
+        bool apply_contouring;
 
        /*----------------- PATH FUNCTIONS -----------------*/
 
@@ -328,7 +334,7 @@ class PathContouring {
         * @param[in] perimeter_polygon Input polygon of the perimeter
         * @return CGAL::Polygon_with_holes_2<K2> Contour of the perimeter
         */
-       CGAL::Polygon_with_holes_2<K> perimeterContour(CGAL::Polygon_2<K> perimeter_polygon);
+       CGAL::Polygon_2<K> perimeterContour(CGAL::Polygon_2<K> perimeter_polygon);
 
        /**
         * @brief Function that selects the polygon with the largest area
