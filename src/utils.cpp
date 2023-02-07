@@ -152,77 +152,40 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
 /*************************************/
 
 //si suppone che sia convesso
-K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
-
-    static K::Point_2 a[2];
-    int cont = 0;
+vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
+    
+    vector<K::Point_2> a; 
     size_t N = polygon->edges().size(); 
 
-    for (size_t i = 0 ; i < N;  i++) {
-   
-        const auto inter = CGAL::intersection(line, polygon->edge(i));
-    
-        if (inter){
+ 
 
-            if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter) ) { //se si intersecano in un segmento il source del segmento è il punto più "interno" del poligono?
-                
-                //cerco se c'è un lato adiacente collineare 
-                int is_collinear = isCollinear(polygon,i); // se è -1 non esiste
-                
-                if (is_collinear != -1) {
-                    
-                    //casi particolari
-                    if (i == 0 && is_collinear == N-1) {
-                        a[0] = polygon->edge(i).target(); 
-                        a[1] = polygon->edge(is_collinear).source(); 
-                        return a;
-                    }
-                    if (i == N-1 && is_collinear == 0) {
-                        a[0] = polygon->edge(is_collinear).target(); 
-                        a[1] = polygon->edge(i).source();
-                        return a;
-                    }
+    for (size_t i = 0; i < N ; i++) {
+        
+        const auto inter = CGAL::intersection(line, polygon->edge(i)); 
 
-                    //casi standard
-                    if (is_collinear > i) {
-                        a[0] = polygon->edge(is_collinear).target();
-                        a[1] = polygon->edge(i).source();
-                        return a; 
-                    }
-                    if (is_collinear < i) {
-                        a[0] = polygon->edge(i).target();
-                        a[1] = polygon->edge(is_collinear).source();
-                        return a;  
-                    }
+        if (inter) {
+            
+            if (a.size() < 2) {
+                // se l'intersezione è un segmento 
+                if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter)) { 
+                    a.clear();
+                    a.push_back(s->source()); 
+                    a.push_back(s->target()); 
+                }
+                else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
+                    a.push_back(*p); 
                 }
 
-                else {
-                    a[0] = polygon->edge(i).target();
-                    a[1] = polygon->edge(i).source();
-                }
-                return a;
-            }    
-            else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
-                a[cont] = *p;
-                cont++;
-                if (cont == 2) {
-                    return a;
-                }
             }
-            else {
-                cout << "Error" << endl;
-            }
+
         }
     }
-    if (cont == 0) {
-        a[0] = K::Point_2(-1,-1);
-        a[1] = a[0];
-    }
-    if (cont == 1) {
-        a[1] = K::Point_2(-1,-1);
-    } 
-    return a;  
+
+    return a; 
+
 }
+
+
 /*************************************/
 
 //restituisce l'indice di v nel quale c'è l'elemento x // -1 se non lo trova 
@@ -261,17 +224,15 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
     }
 
 
-    int num_lines = std::ceil(length/mySweepDistance);      
-    mySweepDistance = length/num_lines;
-    
+    int num_spaces = std::ceil(length/mySweepDistance);      
+    mySweepDistance = length/num_spaces;
+    int num_lines = num_spaces + 1; // init and ending point
 
-    K::Point_2 next = source; 
+    K::Point_2 next/* = source*/; 
     
-    int i = 0;
-    while (segment.collinear_has_on(next)) {
+    for (int i = 0; i < num_lines; i++) {
         next = source + ( (v/length)  * mySweepDistance * i);  //  v/length dovrebbe essere il vettore direzione 
         path.push_back(next); 
-        i++;
     }
 
     return path;

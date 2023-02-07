@@ -153,12 +153,12 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
     m_decompositionName = decomposition_name;
     size_t sz = poly.container().size();
     cv::Point p_label;
-    int vertexIndex = 0; 
+    // int vertexIndex = 0; 
     for (Point p: poly.container()) {
         cv::Point point ( pixelFromMetres(points[p].x()), pixelFromMetres(points[p].hy()) );
         if (putVertexText) {
-            cv::putText(m_image_decomposition, to_string(vertexIndex), point, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255), 2);
-            vertexIndex++; 
+            cv::putText(m_image_decomposition, to_string(p), point, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255), 2);
+            // vertexIndex++; 
         }
         p_label += point;
         if (cont == 0) {
@@ -338,3 +338,13 @@ void CoveragePlotHelper::clearAllImages() {
     m_image_decomposition = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
     m_testImage = cv::Mat(1000,1000, CV_8UC3, cv::Scalar(255,255,255));
 }
+
+/***********************************/
+// void plotSubPolygons(Polygon_list decomposition, vector<K::Point_2>& vertices, bool putVertexText){
+    
+//     for (const Polygon &poly : decomposition) {
+//         for (const &p : poly.container() ) {
+
+//         }
+//     }
+// }

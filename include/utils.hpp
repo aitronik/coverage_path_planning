@@ -72,7 +72,7 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
  * @param line 
  * @return K::Point_2* coppia di punti in cui si intersecano (eventualmente coincidenti)
  */
-K::Point_2* intersect_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
+vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
 
 
 

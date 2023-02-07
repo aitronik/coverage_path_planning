@@ -132,6 +132,6 @@ class CoveragePlotHelper {
          */
         void calculateResolution(vector<K::Point_2>& perimeter_vertices);
 
-
+        
         
 };
