@@ -45,7 +45,7 @@ class PolygonCreator {
          * @param path Input path (vector of CGAL points)
          * @return CGAL::Polygon_with_holes_2<K2> Output contour
          */
-        CGAL::Polygon_with_holes_2<K2> createPolygonFromPath(vector<K::Point_2> path);
+        CGAL::Polygon_with_holes_2<K> createPolygonFromPath(vector<K::Point_2> path);
 
        /**
         * @brief Final pipeline for the perimeter
@@ -258,6 +258,15 @@ class PolygonCreator {
          */
         CGAL::Polygon_2<K2> convertPoly2K2(CGAL::Polygon_2<K> polygon);
 
+       /**
+        * @brief Function to convert a polygon constructed on Kernel K2(Exact_predicates_exact_constructions_kernel) with 
+                one constructed on the Kernel K (Exact_predicates_inexact_constructions_kernel);
+        * 
+        * @param polygon Input polygon
+        * @return CGAL::Polygon_2<K2> Output converted polygon
+        */
+        CGAL::Polygon_2<K> convertPoly2K(CGAL::Polygon_2<K2> polygon);
+
         /**
          * @brief Function to convert a polygon with holes constructed on Kernel K(Exact_predicates_inexact_constructions_kernel) with 
                 one constructed on the Kernel K2 (Exact_predicates_exact_constructions_kernel);
@@ -266,6 +275,15 @@ class PolygonCreator {
          * @return CGAL::Polygon_with_holes_2<K2> Output converted polygon with holes
          */
         CGAL::Polygon_with_holes_2<K2> convertPolyWithHoles2K2(CGAL::Polygon_with_holes_2<K> polygon_with_holes);
+
+       /**
+        * @brief Function to convert a polygon with holes constructed on Kernel K2(Exact_predicates_exact_constructions_kernel) with 
+                one constructed on the Kernel K (Exact_predicates_inexact_constructions_kernel);
+        * 
+        * @param[in] polygon_with_holes Input polygon with holes
+        * @return CGAL::Polygon_with_holes_2<K> Output converted polygon with holes
+        */
+        CGAL::Polygon_with_holes_2<K> convertPolyWithHoles2K(CGAL::Polygon_with_holes_2<K2> polygon_with_holes);
 
         /**
          * @brief Function allowing the path to be segmented according to self-intersections. In particular, two types of subpaths are defined:
@@ -347,15 +365,23 @@ class PolygonCreator {
        /**
         * @brief Function that returns the output polygon from a closed path of points
         * 
-        * @param perimeter Input closed path of points
+        * @param[in] perimeter Input closed path of points
         * @return CGAL::Polygon_2<K> Output polygon
         */
        CGAL::Polygon_2<K> polygonFromClosedPath(vector<K::Point_2> path);
 
        /**
+        * @brief Function that copies the input polygon (poly_to_clone) as outer boundary for the final_poly_with_holes
+        * 
+        * @param[in] final_poly_with_holes Polygon with holes in which the poly_to_clone polygon is cloned
+        * @param[in] poly_to_clone Input polygon to clone
+        */
+       void clonePolygon(CGAL::Polygon_with_holes_2<K>* final_poly_with_holes, CGAL::Polygon_2<K> poly_to_clone);
+
+       /**
         * @brief Function that returns if one (or more) banned area(s) split(s) the perimeter in subpolygons
         * 
-        * @param contour Input contour (perimeter) with holes (banned area)
+        * @param[in] contour Input contour (perimeter) with holes (banned area)
         */
        void checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour);
 

@@ -309,6 +309,19 @@ CGAL::Polygon_2<K2> PolygonCreator::convertPoly2K2(CGAL::Polygon_2<K> polygon){
 }
 
 /*************************************/
+CGAL::Polygon_2<K> PolygonCreator::convertPoly2K(CGAL::Polygon_2<K2> polygon){
+
+    CGAL::Polygon_2<K> polygon_K;
+    for(int i = 0; i < polygon.size(); i++){
+        K::Point_2 polygon_point(CGAL::to_double(polygon.vertex(i).x()), CGAL::to_double(polygon.vertex(i).y()));
+        polygon_K.push_back(polygon_point);
+    }
+
+    return polygon_K;
+
+}
+
+/*************************************/
 CGAL::Polygon_with_holes_2<K2> PolygonCreator::convertPolyWithHoles2K2(CGAL::Polygon_with_holes_2<K> polygon_with_holes){
 
     CGAL::Polygon_2<K2> outer_boundary;
@@ -327,6 +340,24 @@ CGAL::Polygon_with_holes_2<K2> PolygonCreator::convertPolyWithHoles2K2(CGAL::Pol
 
 }
 
+/*************************************/
+CGAL::Polygon_with_holes_2<K> PolygonCreator::convertPolyWithHoles2K(CGAL::Polygon_with_holes_2<K2> polygon_with_holes){
+
+    CGAL::Polygon_2<K> outer_boundary;
+    for(int i = 0; i < polygon_with_holes.outer_boundary().size(); i++){
+        K::Point_2 point_outer_boundary(CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).x()), CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).y()));
+        outer_boundary.push_back(point_outer_boundary);
+    }
+
+    CGAL::Polygon_with_holes_2<K> poly_K(outer_boundary);
+    for(int i = 0; i < polygon_with_holes.number_of_holes(); i++){
+        CGAL::Polygon_2<K> hole = convertPoly2K(polygon_with_holes.holes().at(i));
+        poly_K.add_hole(hole);
+    }
+
+    return poly_K;
+
+}
 
 /*************************************/
 vector<pair<int, int>> PolygonCreator::pathSegmentation(vector<K::Point_2> path, 
@@ -640,6 +671,15 @@ CGAL::Polygon_2<K> PolygonCreator::perimeterContour(CGAL::Polygon_2<K> perimeter
 }
 
 /*************************************/
+void PolygonCreator::clonePolygon(CGAL::Polygon_with_holes_2<K>* final_poly_with_holes, CGAL::Polygon_2<K> poly_to_clone){
+
+    for(int i = 0; i < poly_to_clone.size(); i++){
+        final_poly_with_holes->outer_boundary().push_back(poly_to_clone.vertex(i));
+    }
+
+}
+
+/*************************************/
 void PolygonCreator::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
 
     CGAL::Polygon_2<K> inner_boundary = contour.outer_boundary();
@@ -664,7 +704,7 @@ void PolygonCreator::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PolygonCreator::createPolygonFromPath(vector<K::Point_2> path){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygonFromPath(vector<K::Point_2> path){
 
     plotPath(path, initialPathImage, 0, 0, 0, false, "Path", false, true, 100, 500); 
     cv::imshow("Path", initialPathImage);
@@ -689,7 +729,9 @@ CGAL::Polygon_with_holes_2<K2> PolygonCreator::createPolygonFromPath(vector<K::P
     cv::imshow("Contour without holes", contourWithoutHolesImage);
     cv::waitKey(0);
 
-    return contour;
+    CGAL::Polygon_with_holes_2<K> contour_K = convertPolyWithHoles2K(contour);
+
+    return contour_K;
 
 }
 
@@ -699,19 +741,19 @@ CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygon(vector<K::Point_2> p
     CGAL::Polygon_2<K> perimeter_polygon = polygonFromClosedPath(perimeter);
 
     CGAL::Polygon_with_holes_2<K> perimeter_polygon_with_holes(perimeter_polygon);
-    perimeter_polygon.push_back(perimeter.at(0));
     printPolygonsWithHoles(perimeter_polygon_with_holes, cph, contourPerimeterImage, false, 0, 0, 0, "Perimeter contour", true, false);
 
     CGAL::Polygon_2<K> contour_perimeter = perimeterContour(perimeter_polygon);
-    printPolygonsWithHoles(contour_perimeter, cph, contourPerimeterImage, true, 0, 0, 125, "Perimeter contour", false, false);
 
     CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes;
     if(apply_contouring == true){
-        CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes(contour_perimeter);
+        clonePolygon(&contour_perimeter_with_holes, contour_perimeter);
     }
     else{
-        CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes(perimeter_polygon);
+        clonePolygon(&contour_perimeter_with_holes, perimeter_polygon);
     }
+
+    printPolygonsWithHoles(contour_perimeter_with_holes, cph, contourPerimeterImage, true, 0, 0, 125, "Perimeter contour", false, false);
 
     for(int i = 0; i < banned_areas.size(); i++){
         vector<K::Point_2> banned_area = banned_areas.at(i);
@@ -727,6 +769,7 @@ CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygon(vector<K::Point_2> p
     cv::imshow("Perimeter contour", contourPerimeterImage);
     cv::waitKey(0);
 
+    cout << "ciao" << endl;
     checkBannedAreas(contour_perimeter_with_holes);
 
     return contour_perimeter_with_holes;

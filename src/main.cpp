@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     float contour_offset = 0.1;
     float area_threshold = 0.03;
     float perimeter_offset = 0.5;
-    bool apply_contouring = true;
+    bool apply_contouring = false;
 
     pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring);
 
