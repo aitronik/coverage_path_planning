@@ -32,7 +32,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/pathPoints.cpp src/PathContouring.cpp)
+add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/pathPoints.cpp src/PolygonCreator.cpp)
 ament_export_targets(export_lib_coverage_path HAS_LIBRARY_TARGET) 
 
 # Link the executable to CGAL and third-party libraries
