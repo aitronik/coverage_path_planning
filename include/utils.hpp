@@ -32,7 +32,7 @@ using namespace std;
  * @param filename nome del file 
  * @return vector<pair<float,float>> 
  */
-vector<pair<float,float>> readFromFile(string filename); 
+vector<pair<double,double>> readFromFile(string filename); 
 
 /**
  * @brief crea un polygon_2 

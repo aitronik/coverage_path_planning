@@ -2,12 +2,12 @@
 
 using namespace std; 
 
-vector<pair<float,float>> readFromFile(string name){
+vector<pair<double,double>> readFromFile(string name){
     string filename("../" + name);
     ifstream input_file(filename);
     vector<string> lines;
     string line;
-    vector<vector<pair<float,float>>> perimeters; 
+    vector<vector<pair<double,double>>> perimeters; 
     // vector<vector<K::Point_2>> perimeters; //il primo sarà il perimetro esterno, gli altri gli ostacoli 
     if (!input_file.is_open()) {
         cerr << "Could not open the file -'" << filename <<"'"<< endl;
@@ -20,7 +20,7 @@ vector<pair<float,float>> readFromFile(string name){
     string delimiter = ",";
     size_t pos;
     // vector<K::Point_2> tmp_poygon; 
-    vector<pair<float,float>> tmp_polygon;
+    vector<pair<double,double>> tmp_polygon;
     int cont = 0;
     for (size_t i = 0; i < lines.size(); i++) {
         tmp = lines.at(i);
@@ -33,7 +33,8 @@ vector<pair<float,float>> readFromFile(string name){
         pos = tmp.find(delimiter);
         token = tmp.substr(0,pos); //primo pezzo
         tmp.erase(0, delimiter.size() + token.size()) ;
-        pair<float,float> p(stof(token),stof(tmp)); 
+        
+        pair<double,double> p(stold(token),stold(tmp)); 
         // K::Point_2 p (stof(token),stof(tmp));
         tmp_polygon.push_back(p);
     }   

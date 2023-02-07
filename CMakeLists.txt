@@ -14,13 +14,25 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 find_package( CGAL QUIET COMPONENTS  )
+find_package(CGAL COMPONENTS Qt5)
 find_package( OpenCV REQUIRED  )
 find_package( Boost REQUIRED )
 
 
 include_directories(include)
 
-add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/pathPoints.cpp src/PathContouring.cpp)
 ament_export_targets(export_lib_coverage_path HAS_LIBRARY_TARGET) 
 
 # Link the executable to CGAL and third-party libraries
@@ -36,11 +48,15 @@ install(
 ) 
 ament_export_libraries(lib_coverage_path)
 
+add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
 
 #add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
 add_executable(coverage_path src/main.cpp)
-target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES})
+#target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES})
+target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES} GTest::gtest_main)
+target_link_libraries(lib_coverage_path PUBLIC CGAL::CGAL_Qt5)
 
+include(GoogleTest)
 
 install(TARGETS      coverage_path
         DESTINATION  lib/coverage_path_lib)

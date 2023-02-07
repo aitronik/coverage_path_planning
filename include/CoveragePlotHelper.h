@@ -68,6 +68,20 @@ class CoveragePlotHelper {
          */
         void plotPoint(K::Point_2 point); 
 
+        /**
+         * @brief calcola il valore in pixel dati x metri in base a m_resolution 
+         * 
+         * @param x 
+         * @return float 
+         */
+        float pixelFromMetres (float x);
+
+        /**
+         * @brief calcola la risoluzione da usare per l'immagine 
+         * @param perimeter_vertices vertici del poligono da stampare 
+         */
+        void calculateResolution(vector<K::Point_2>& perimeter_vertices);
+
     private: 
 
         /**
@@ -93,19 +107,5 @@ class CoveragePlotHelper {
          * 
          */
         float m_resolution; 
-
-        /**
-         * @brief calcola il valore in pixel dati x metri in base a m_resolution 
-         * 
-         * @param x 
-         * @return float 
-         */
-        float pixelFromMetres (float x);
-
-        /**
-         * @brief calcola la risoluzione da usare per l'immagine 
-         * @param perimeter_vertices vertici del poligono da stampare 
-         */
-        void calculateResolution(vector<K::Point_2>& perimeter_vertices);
         
 };
