@@ -594,7 +594,7 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
     cout << "createGrid()" << endl; 
 
     vector<CGAL::Line_2<K>> grid;
-
+    
     // linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono
     CGAL::Line_2<K> ortogonal = parallelEdge.supporting_line().perpendicular(point);  
     // punto di proiezione del punto più lontano sul lato della direzione 
@@ -603,9 +603,6 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
 
     const K::Point_2 *p = boost::get<K::Point_2>(&*projection);
     
-    // m_Helper.plotPoint(point, 'b', -1); 
-    // m_Helper.plotPoint(*p, 'b', -1); 
-
     CGAL::Segment_2<K> h(*p, point);
 
     vector<K::Point_2> intersectionPoints = divideSegment(h, m_sweepDistance);
@@ -613,7 +610,7 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
     // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
     for (size_t i = 0; i < intersectionPoints.size(); i++) {
         // m_Helper.plotPoint(intersectionPoints[i], 'r', -1); 
-        CGAL::Line_2<K> l(intersectionPoints[i], parallelEdge.direction());
+        CGAL::Line_2<K> l(intersectionPoints[i], parallelEdge.supporting_line().direction());
         grid.push_back(l);
 
     }
@@ -743,7 +740,6 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         }
     }
     
-    m_Helper.plotPerimeterForTest(polygon_new, "ciao", true); 
     return polygon_new;
 
 }        
@@ -756,15 +752,18 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
     cout << "generateGridForOnePolygon() " << endl;
 
     //riduzione sottopoligono in corrispondenza delle adiacenze 
-    shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = polygon;
-    // shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = reduceSubPolygon(polygon, borders);
+
+    //SE SI VUOLE FARE SENZA RESTRIZIONE DEI POLIGONI :
+    // shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = polygon;
+
+
+    shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = reduceSubPolygon(polygon, borders);
 
     //stampo poligono ristretto
     m_Helper.plotPerimeter(restrictedPolygon, "Perimeter", false);
 
     //trovo la direzione di spazzata 
 
-    //ATTENZIONE EDGE HA SOURCE E TARGET COINCIDENTI, POINT È L'ORIGINE 
     auto [edge, point] = findSweepDirection(restrictedPolygon);
 
     // edge è il lato del poligono parallelo alla direzione di spazzata
@@ -784,9 +783,6 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
     for (size_t i = 1; i < grid.size(); i++) {
 
         vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i));
-        for (int j = 0 ; j < a.size(); j++) {
-            m_Helper.plotPoint(a[j], 'b', -1); 
-        }
 
         // o non interseca oppure interseca solo in un punto
         if (a.size() == 0) {
@@ -942,11 +938,6 @@ void CoveragePathCreator::generatePathForSubpolygons(){
         return; 
     }
     
-    //occhio a questo in base a come gestisco i sottopolgioni degeneri
-    // if (m_intersections.size()!= m_NumerOfDecomposedSubPolygon) { //m_intersections.size() è il numero di poligoni 
-    //     cout << "generatePathForSubpoligons: errore" << endl; 
-    // }
-
     for (size_t i = 0; i < m_NumerOfDecomposedSubPolygon; i++) {
         //verifica , m anon credo sia possibile entrare qua 
         if (m_intersections[i].size() == 0 /*|| m_intersections[i][0] == pointError*/) {
@@ -963,7 +954,6 @@ void CoveragePathCreator::generatePathForSubpolygons(){
 
         n = m_intersections[i].size(); // è almeno 2
 
-        //if (m_intersections[i][0] != pointError) { //altrimenti non inserisco il path
         K::Point_2 last_point = m_intersections[i-1][m_intersections[i-1].size() - 1];
         
         //calcolo il punto dei 4 a cui collegarsi 
@@ -975,7 +965,6 @@ void CoveragePathCreator::generatePathForSubpolygons(){
 
         m_pathS.push_back(generatePathForOnePolygon(m_intersections[i], index));
         m_Helper.plotPathForConvexPolygon(m_pathS[m_pathS.size()-1]);
-        //}
     }
 
 }
@@ -1039,11 +1028,10 @@ void CoveragePathCreator::joinAndLinkPaths(){
             CGAL::Segment_2<K> segment_new;
                 
             float distance1, distance2; 
-            int index; //può essere 0 o 1 
+            int index; 
 
             vector<int> route = findMinRouteBetween(m_polygonsSorted[i], m_polygonsSorted[i+1]);
 
-            // cout << "percorso tra il poligono " << m_polygonsSorted[i] << " e " << m_polygonsSorted[i+1] << endl;   
            
             for (size_t j  = 0; j < route.size()-1; j++) {
 
