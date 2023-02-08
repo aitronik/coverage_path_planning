@@ -151,31 +151,32 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
 
 /*************************************/
 
-//si suppone che sia convesso
+//si suppone che polygon sia convesso
 vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
     
     vector<K::Point_2> a; 
     size_t N = polygon->edges().size(); 
 
- 
-
     for (size_t i = 0; i < N ; i++) {
-        
+
+        // cout << "line " << line << endl; 
+        // cout << "edge " << polygon->edge(i) << endl; 
+
         const auto inter = CGAL::intersection(line, polygon->edge(i)); 
 
-        if (inter) {
+        if (inter && a.size() <2 ) {
             
-            if (a.size() < 2) {
-                // se l'intersezione è un segmento 
-                if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter)) { 
-                    a.clear();
-                    a.push_back(s->source()); 
-                    a.push_back(s->target()); 
-                }
-                else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
-                    a.push_back(*p); 
-                }
-
+            // se l'intersezione è un segmento 
+            if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter)) { 
+                a.clear();
+                a.push_back(s->source()); 
+                a.push_back(s->target()); 
+                cout << "intersezione in un segmento " << endl; 
+            }
+            //se è un punto
+            else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
+                a.push_back(*p); 
+                cout << "intersezione in un punto" << endl;
             }
 
         }

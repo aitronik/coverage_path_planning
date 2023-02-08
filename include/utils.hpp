@@ -9,6 +9,7 @@
 #include <iterator>
 #include <cmath>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/partition_2.h>
 #include <CGAL/Partition_traits_2.h>
 #include <CGAL/property_map.h>

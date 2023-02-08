@@ -87,11 +87,6 @@ bool CoveragePathCreator::decompose() {
             pair<Polygon_list, vector<K::Point_2> > p = m_decomposer.getDecomposition();
             m_decomposedPolysOfIndices = p.first;
             m_decomposedVertices = p.second;
-
-            // cout << "decomposed vertices" << endl; 
-            // for (size_t i = 0; i < m_decomposedVertices.size() ; i++ ) {
-            //     cout << m_decomposedVertices[i] << endl; 
-            // }
             m_decompositionName = "My decomposition"; 
 
             break;
@@ -278,17 +273,13 @@ void CoveragePathCreator::createAdjWeigthMatrix() { // crea una matrice di adiac
     // creo matrice che abbia i pesi come elementi, al momento tutti 1 se i poligoni sono adiacenti
     vector<vector<int>> adj_new;
 
-    for (size_t i = 0; i < N; i++)
-    {
+    for (size_t i = 0; i < N; i++) {
         vector<int> tmp;
-        for (size_t j = 0; j < N; j++)
-        {
-            if (m_adj[i][j][0] != -1)
-            { // il secondo può essere -1 e il primo no , ma non il contrario
+        for (size_t j = 0; j < N; j++) {
+            if (m_adj[i][j][0] != -1) { // il secondo può essere -1 e il primo no , ma non il contrario
                 tmp.push_back(1);
             }
-            else
-            {
+            else {
                 tmp.push_back(0);
             }
         }
@@ -555,10 +546,6 @@ tuple<float, K::Point_2> CoveragePathCreator::maxDistance(vector<K::Point_2> &po
         }
     }
 
-    // if (dist == 0) {
-    //     point = K::Point_2(-1,-1); 
-    // }
-
     return make_tuple(dist, point);
 }
 
@@ -577,30 +564,24 @@ tuple<CGAL::Segment_2<K>, K::Point_2> CoveragePathCreator::findSweepDirection(sh
    
     // altitudine e lato hanno indice corrispondente nei due vector
 
- 
 
-
-        for (size_t i = 0; i < n_edges; i++)
-        {
-            edge = polygon->edge(i);
-            // tuple<float, K::Point_2>
-            auto [dist, point] = maxDistance(vertices, edge);
-            altitudes.push_back(dist);
-            corrispondent_points.push_back(point);
+    for (size_t i = 0; i < n_edges; i++) {
+        edge = polygon->edge(i);
+        // tuple<float, K::Point_2>
+        auto [dist, point] = maxDistance(vertices, edge);
+        altitudes.push_back(dist);
+        corrispondent_points.push_back(point);
+    }
+        // cerco la minima altitudine
+    float weigth = altitudes.at(0);
+    int index = 0; // indice del lato corrispondente alla minima altitudine
+    for (size_t i = 1; i < altitudes.size(); i++) {
+        if (altitudes.at(i) < weigth) {
+            weigth = altitudes.at(i);
+            index = i;
         }
-            // cerco la minima altitudine
-        float weigth = altitudes.at(0);
-        int index = 0; // indice del lato corrispondente alla minima altitudine
-            for (size_t i = 1; i < altitudes.size(); i++)
-            {
-                if (altitudes.at(i) < weigth)
-                {
-                    weigth = altitudes.at(i);
-                    index = i;
-                }
-            }
-
-        
+    }
+ 
         // la direzione di spazzata è la direzione di polygon.edge(index)
     return make_tuple(polygon->edge(index), corrispondent_points.at(index));
 }
@@ -622,8 +603,8 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
 
     const K::Point_2 *p = boost::get<K::Point_2>(&*projection);
     
-    m_Helper.plotPoint(point, 'b', -1); 
-    m_Helper.plotPoint(*p, 'b', -1); 
+    // m_Helper.plotPoint(point, 'b', -1); 
+    // m_Helper.plotPoint(*p, 'b', -1); 
 
     CGAL::Segment_2<K> h(*p, point);
 
@@ -631,8 +612,10 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
 
     // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
     for (size_t i = 0; i < intersectionPoints.size(); i++) {
-        m_Helper.plotPoint(intersectionPoints[i], 'r', -1); 
-        grid.push_back(CGAL::Line_2<K>(intersectionPoints[i], parallelEdge.direction()));
+        // m_Helper.plotPoint(intersectionPoints[i], 'r', -1); 
+        CGAL::Line_2<K> l(intersectionPoints[i], parallelEdge.direction());
+        grid.push_back(l);
+
     }
 
     return grid;
@@ -760,20 +743,21 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         }
     }
     
+    m_Helper.plotPerimeterForTest(polygon_new, "ciao", true); 
     return polygon_new;
 
 }        
-
-   
 
 /*******************************************************/
 
 // ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
 vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {
+    
     cout << "generateGridForOnePolygon() " << endl;
 
     //riduzione sottopoligono in corrispondenza delle adiacenze 
-    shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = polygon;// reduceSubPolygon(polygon, borders);
+    shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = polygon;
+    // shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = reduceSubPolygon(polygon, borders);
 
     //stampo poligono ristretto
     m_Helper.plotPerimeter(restrictedPolygon, "Perimeter", false);
@@ -791,11 +775,18 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 
     vector<K::Point_2> intersections; // intersezioni tra le sweep lines e il poligono
 
+    //intersezioni di grid[0] con il poligono sono il source e il target del lato parallelo
+    if (grid.size() != 0) {
+        intersections.push_back(edge.source()); 
+        intersections.push_back(edge.target()); 
+    }
 
-    for (size_t i = 0; i < grid.size(); i++) {
+    for (size_t i = 1; i < grid.size(); i++) {
 
         vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i));
-            
+        for (int j = 0 ; j < a.size(); j++) {
+            m_Helper.plotPoint(a[j], 'b', -1); 
+        }
 
         // o non interseca oppure interseca solo in un punto
         if (a.size() == 0) {
@@ -1056,8 +1047,6 @@ void CoveragePathCreator::joinAndLinkPaths(){
            
             for (size_t j  = 0; j < route.size()-1; j++) {
 
-                // cout << route[j] << endl; 
-
                 if ((m_adj[route[j]][route[j+1]][0] == -1 && m_adj[route[j]][route[j+1]][1] == -1)) { // non sono adiacenti
                     cout << "CoveragePathCreator::cover error" << endl;
                     return;
@@ -1239,7 +1228,7 @@ void CoveragePathCreator::cover() {
 /*******************************************************/
 vector<pair<float, float>> CoveragePathCreator::getFinalPath() {
 
-    cout << "getFinalPath" << endl; 
+    cout << "getFinalPath()" << endl; 
 
     vector<pair<float, float>> result;
   
@@ -1330,12 +1319,10 @@ bool CoveragePathCreator::run() {
 
     // stampo i sottopoligoni ordinati
     vector<Polygon> partitionPolys_new; // vector di appoggio in cui inserisco i sottopoligoni
-    for (const Polygon &poly : m_decomposedPolysOfIndices)
-    {
+    for (const Polygon &poly : m_decomposedPolysOfIndices) {
         partitionPolys_new.push_back(poly);
     }
-    for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++)
-    {
+    for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++) {
         Polygon poly = partitionPolys_new.at(m_polygonsSorted[pol_i]);
         m_Helper.plotSubPolygon(poly, m_decomposedVertices, m_decompositionName, true , to_string(m_polygonsSorted[pol_i]) , true );
     }
