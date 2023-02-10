@@ -216,16 +216,20 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
     for (size_t i = 0; i < path.size(); i++) {
         K::Point_2 p = path.at(i).source();
         K::Point_2 q = path.at(i).target(); 
-        cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(255,20,147), 1, 8, 0); 
+        if (p != q){
+            cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
+                cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(255,20,147), 1, 8, 0); 
+        }
     }
 
     //stampo spessore robot 
     for (size_t i = 0; i < path.size(); i++) {
         K::Point_2 p = path.at(i).source();
         K::Point_2 q = path.at(i).target();
-        cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(250,235,215), pixelFromMetres(sweepDistance), 8, 0);
+        if (p! = q){
+            cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
+                cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(250,235,215), pixelFromMetres(sweepDistance), 8, 0);
+        }
     }
 
 

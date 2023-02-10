@@ -54,23 +54,6 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 
 /*************************************/
 
-
-
-// double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
-
-//     double theta = CGAL::scalar_product(v,w);
-//     double len1, len2;
-//     len1 = sqrt(v.squared_length());
-//     len2 = sqrt(w.squared_length());
-//     return (theta/ (len1*len2));
-
-// }
-
-
-
-
-/*************************************/
-
 //suppongo che i punti in comune non possano essere più di due
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
     int adj[2] = {-1,-1};
@@ -83,19 +66,17 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
             if (p == q) {
                 adj[cont] = p;
                 cont++;
+                break;
             }
         }
     }
-    // //se c'è un solo vertice di adiacenza, metto due volte lo stesso
-    // if (cont == 1) {
-    //     adj[1] = adj[0]; 
-    // }
     vertex_i = adj[0];
     vertex_j = adj[1];
     // vertex_i and j can be -1 if there is no adjacency
     // or have a value containing the vertex in which they are adjacent
     // return true if the two polygons have at least one vertex in common
     return (vertex_i != -1);
+    
 }
 
 /*************************************/ 

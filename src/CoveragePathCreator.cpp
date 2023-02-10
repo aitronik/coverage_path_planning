@@ -23,8 +23,22 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
         m_initialPerimeterVertices.push_back(p);
     }
 
+    //controllo che siano in senso orario 
+
+
     // creazione del poligono iniziale
+    if (m_initialPerimeterVertices.size() < 3) {
+        cout << "CoveragePathCreator: servono almeno 3 vertici" << endl; 
+        return false; 
+    }
+
+    // if (CGAL::orientation(m_initialPerimeterVertices[0], m_initialPerimeterVertices[1], m_initialPerimeterVertices[2]) == CGAL::COUNTERCLOCKWISE) {
+    //     cout << "COUNTERCLOCKWISE"<< endl; 
+    // }
+    
     m_initialPolygon = createPolygon(m_initialPerimeterVertices);
+
+
     m_decompositionType = decompositionType;
     m_sweepDistance = sweepDistance;
     m_rangeToReturn = 0.2;  

@@ -12,15 +12,18 @@
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
-//manca una strisciata a volte ==> riguardare come trova il punto a max distanza, forse non è divideSegment che si perde un punto, ma proprio dall'inizio 
+//non capisco perché a volte il perimetro esterno sembra più spesso 
+
 
 //BUG: 
 //./coverage_path ../test/area.txt 1 20
 //./coverage_path ../test/complex.txt 1 1
-
+//./coverage_path ../test/path2.txt 1 1 ==> manca una riga
+//../test/pol1.txt 1 0.4 ==> crasha per openCV 
 
 //ELIMINATI 
 //joinAndLinkPaths()
+//calculateAngle() 
 
 using namespace std;
 
