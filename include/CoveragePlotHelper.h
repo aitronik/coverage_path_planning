@@ -7,9 +7,11 @@
 #include <CGAL/partition_2.h>
 #include <CGAL/Partition_traits_2.h>
 #include <CGAL/property_map.h>
+#ifdef ENABLE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#endif
 #include "utils.hpp" //controlla se serve
 
 class CoveragePlotHelper {
@@ -87,7 +89,7 @@ class CoveragePlotHelper {
 
 
     private: 
-
+#ifdef ENABLE_OPENCV
         /**
          * @brief immagine del perimetro iniziale
          * 
@@ -105,7 +107,7 @@ class CoveragePlotHelper {
          * 
          */
         cv::Mat m_testImage; 
-
+#endif
         /**
          * @brief nome della decomposizione
          * 
