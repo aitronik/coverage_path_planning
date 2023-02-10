@@ -9,9 +9,6 @@
 
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
-//controllare punto iniziale e collegamenti iniziali 
-//quando il un "trapezio" il lato opposto a quello parallelo allo sweepLine non è parallelo a quel lato non viene integrato nel path 
-//e non viene pulito
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
 //manca una strisciata a volte ==> riguardare come trova il punto a max distanza, forse non è divideSegment che si perde un punto, ma proprio dall'inizio 
 
@@ -27,7 +24,6 @@ int main(int argc, char* argv[]) {
     //argomenti linea di comando
     if (argc < 4) { 
         cout << "Argument Error" << endl;
-        // printInfo();
         return 1;
     }
     string filename = argv[1];
