@@ -45,12 +45,10 @@ vector<pair<float,float>> readFromFile(string name){
 /*************************************/
 
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
-    size_t sz = points.size();
-    K::Point_2 array[sz]; 
-    for (size_t i = 0; i < sz; i++) array[i] = points.at(i); 
-    CGAL::Polygon_2<K> p (array, array+sz);
-    shared_ptr<CGAL::Polygon_2<K>> poly = make_shared<CGAL::Polygon_2<K>>(p);
-    return poly;
+    size_t sz = points.size(); 
+    CGAL::Polygon_2<K> polygon(points.begin(), points.begin()+sz); 
+    return make_shared<CGAL::Polygon_2<K>>(polygon); 
+
 }
 
 
@@ -58,20 +56,15 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 
 
 
-double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
+// double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w) {
 
-    double theta = CGAL::scalar_product(v,w);
-    double len1, len2;
-    len1 = sqrt(v.squared_length());
-    len2 = sqrt(w.squared_length());
+//     double theta = CGAL::scalar_product(v,w);
+//     double len1, len2;
+//     len1 = sqrt(v.squared_length());
+//     len2 = sqrt(w.squared_length());
+//     return (theta/ (len1*len2));
 
-    // cout << "theta: " << theta << endl; 
-    // cout << "len1: " << len1 << endl; 
-    // cout << "len2: " << len2 << endl;
-
-    return (theta/ (len1*len2));
-
-}
+// }
 
 
 
@@ -93,6 +86,10 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
             }
         }
     }
+    // //se c'è un solo vertice di adiacenza, metto due volte lo stesso
+    // if (cont == 1) {
+    //     adj[1] = adj[0]; 
+    // }
     vertex_i = adj[0];
     vertex_j = adj[1];
     // vertex_i and j can be -1 if there is no adjacency
@@ -104,7 +101,7 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
 /*************************************/ 
 
 //il secondo elemento del pair è l'indice del lato  in cui c'è l'intersezione
-pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex, int vertexIndex) {
+pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, size_t edgeIndex, size_t vertexIndex) {
 
     CGAL::Line_2<K> line = polygon->edge(edgeIndex).supporting_line();
     size_t N = polygon->edges().size(); 
@@ -113,7 +110,7 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
     vector<K::Point_2> points;
     for (size_t i = 0 ; i < polygon->edges().size() ;  i++) {
         // non confrontarlo con te stesso, precedente e successivo
-        if ( i !=edgeIndex && i != (edgeIndex+1)%(N) &&  i != (edgeIndex-1+N)%(N) ) {
+        if ( i != edgeIndex && i != (edgeIndex+1)%(N) &&  i != (edgeIndex-1+N)%(N) ) {
             const auto inter = CGAL::intersection(line, polygon->edge(i));
         
             if (inter){
@@ -128,15 +125,23 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
         }
     }
 
-   
     K::Point_2 vertex =  polygon->vertex(vertexIndex);
-    K::Point_2 closestPoint(-1,-1);
+    K::Point_2 other; // l'altro estremo (es. target del lato se il vertex ne è il source)
     int index_intersection = -1;
     float minDistance = MAXFLOAT;  
+    K::Point_2 closestPoint(-1,-1);
+
+    if (vertexIndex == edgeIndex) { //il vertex è il source dell'edge 
+        other = polygon->edge(edgeIndex).target(); 
+    }
+    else { // il vertex è il target 
+        other = polygon->edge(edgeIndex).source();
+    }
+   
     for (size_t i = 0; i < points.size(); i++){
-        // prendo il più vicino al vertex
+        // prendo il più vicino al vertex ma che sia più vicino al vertex rispetto all'altro estremo del lato
         const float dist = CGAL::squared_distance(points[i], vertex);
-        if ( dist < minDistance ) {
+        if ( (dist < minDistance) && (dist < CGAL::squared_distance(points[i], other)) ) {
             closestPoint = points[i]; 
             index_intersection = indexIntersections[i]; 
             minDistance = dist;
@@ -144,8 +149,21 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
     
     }
 
-
     return make_pair(closestPoint, index_intersection);
+}
+
+/*************************************/
+
+bool isOnSegment(CGAL::Segment_2<K> segment, K::Point_2 point) {
+    CGAL::Line_2<K> line = segment.supporting_line(); 
+    bool to_return = false; 
+    if (line.has_on(point)) {
+        if ((point.x() >= segment.source().x() && point.x() <= segment.target().x()) ||
+            point.x() >= segment.target().x() && point.x() <= segment.source().x() ) {
+                to_return = true; 
+        }
+    }
+    return to_return;
 }
 
 
@@ -171,12 +189,12 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
                 a.clear();
                 a.push_back(s->source()); 
                 a.push_back(s->target()); 
-                cout << "intersezione in un segmento " << endl; 
+                // cout << "intersezione in un segmento " << endl; 
             }
             //se è un punto
             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
                 a.push_back(*p); 
-                cout << "intersezione in un punto" << endl;
+                // cout << "intersezione in un punto" << endl;
             }
 
         }

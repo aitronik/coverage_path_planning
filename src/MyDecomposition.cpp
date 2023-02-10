@@ -40,30 +40,31 @@ pair<Polygon_list, vector<K::Point_2> > MyDecomposition::getDecomposition() {
 
 void MyDecomposition::run(){
 
-      vector<shared_ptr<CGAL::Polygon_2<K>>> tmp_decomposition; //sono i due sottopoligoni in cui viene diviso un sottopoligono 
-      Polygon_list tmp_indexedPolygons;
-      Polygon indexedToCut; 
+    vector<shared_ptr<CGAL::Polygon_2<K>>> tmp_decomposition; //sono i due sottopoligoni in cui viene diviso un sottopoligono 
+    Polygon_list tmp_indexedPolygons;
+    Polygon indexedToCut; 
 
-      shared_ptr<CGAL::Polygon_2<K>> toCut;
-      pair<CGAL::Segment_2<K>, int> cutter; 
+    shared_ptr<CGAL::Polygon_2<K>> toCut;
+    pair<CGAL::Segment_2<K>, int> cutter; 
 
-      m_decomposition.push_back(m_initialPolygon);
-      //nella lista di Polygon di indici già c'è il primo 
+    m_decomposition.push_back(m_initialPolygon);
+    //nella lista di Polygon di indici già c'è il primo 
 
-      bool allConvex = false;
+    bool allConvex = false;
 
-      while (!allConvex) {
-            
-            pair<int, int> p = allSubPolygonsConvex();
-            
-            if (p.first == -1) {// sono tutti convessi 
-                allConvex = true;
-            }
-            else {
+    while (!allConvex) {
+        
+        pair<int, int> p = allSubPolygonsConvex();
+        
+        if (p.first == -1) {// sono tutti convessi 
+            allConvex = true;
+        }
+
+        //sicuramente p.first e p.second sono positivi 
+        else {
 
             toCut = m_decomposition.at(p.first);
-          
-   
+            
             //rimuovo dal vector il poligono da tagliare
             m_decomposition.erase(m_decomposition.begin() + p.first);
             //rimuovo dalla lista il corrispondente poligono di indici
@@ -76,7 +77,7 @@ void MyDecomposition::run(){
 
             //taglio il poligono 
             cutPolygon(toCut, cutter.first , p.second, cutter.second); 
-      }
+        }
     }
 }
 
@@ -134,8 +135,7 @@ pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::
         cutter = CGAL::Segment_2<K> (poly->edge((startingVertex-1+N)%N).target(), resultIntersection2.first); 
         indexIntersectionEdge = resultIntersection2.second;
     }
- 
-
+    
     return make_pair(cutter, indexIntersectionEdge); 
 
 }

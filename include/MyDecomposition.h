@@ -37,9 +37,30 @@ class MyDecomposition {
 
       private:
             
+            /**
+             * @brief poligono iniziale 
+             * 
+             */
             shared_ptr<CGAL::Polygon_2<K>> m_initialPolygon;
+            
+            /**
+             * @brief vector di sottopoligoni in cui viene decomposto il poligono iniziale
+             * 
+             */
             vector<shared_ptr<CGAL::Polygon_2<K>>> m_decomposition;
-            Polygon_list m_indexedPolygons; //lista di poligoni di indici
+
+
+            /**
+             * @brief lista di sottopoligoni di indici 
+             * 
+             */
+            Polygon_list m_indexedPolygons; 
+
+            /**
+             * @brief vector dei vertici. 
+             * m_vertices[i] contiene il punto (K::Point_2) di indice i 
+             * 
+             */
             vector<K::Point_2> m_vertices; //contiene le corrispondenze indice-punto 
 
             /**
