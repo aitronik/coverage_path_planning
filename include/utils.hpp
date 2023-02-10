@@ -45,13 +45,13 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 
 // void printInfo();
 
-/**
- * @brief calcola il coseno dell'angolo tra due vettori in radianti (controllare che siano radianti )
- * @param v 
- * @param w 
- * @return double 
- */
-double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
+// /**
+//  * @brief calcola il coseno dell'angolo tra due vettori in radianti (controllare che siano radianti )
+//  * @param v 
+//  * @param w 
+//  * @return double 
+//  */
+// double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
 
 /**
  * @brief calcola i vertici di adiacenza tra due poligoni 
@@ -82,9 +82,21 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
  * 
  * @param polygon 
  * @param edgeIndex 
+ * @param vertexIndex 
  * @return pair<K::Point_2,int> 
  */
-pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex, int vertexIndex);
+pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, size_t edgeIndex, size_t vertexIndex);
+
+/**
+ * @brief 
+ * 
+ * @param segment 
+ * @param point 
+ * @return true 
+ * @return false 
+ */
+bool isOnSegment(CGAL::Segment_2<K> segment, K::Point_2 point);
+
 
 /**
  * @brief restituisce l'indice del vector a cui corrisponde il valore x

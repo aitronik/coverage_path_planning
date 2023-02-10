@@ -245,6 +245,10 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
 /***********************************/
 void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path, int cont) {
 #ifdef ENABLE_OPENCV
+
+    if (cont == 8) {
+        cout << path[path.size()-1].target() << endl; 
+    }
     // cout<< "CoveragePlotHelper: plotPartialPath"<< endl;
 
     cv::Point last( pixelFromMetres(path.at(path.size()-1).target().x()), pixelFromMetres(path.at(path.size()-1).target().hy())) ; 
@@ -253,7 +257,7 @@ void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path, int co
         K::Point_2 p = path.at(i).source();
         K::Point_2 q = path.at(i).target(); 
         cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(255,0,255) , 1, 8, 0);
+            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(0,0,255) , 1.5, 8, 0);
     }
 
     if (cont != -1) {
