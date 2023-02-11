@@ -87,25 +87,6 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
  */
 pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, size_t edgeIndex, size_t vertexIndex);
 
-/**
- * @brief 
- * 
- * @param segment 
- * @param point 
- * @return true 
- * @return false 
- */
-bool isOnSegment(CGAL::Segment_2<K> segment, K::Point_2 point);
-
-
-/**
- * @brief restituisce l'indice del vector a cui corrisponde il valore x
- * 
- * @param v 
- * @param x 
- * @return int 
- */
-int indexOf(vector<int> v, int x);
 
 /**
  * @brief divide un segmento in punti equidistanti in base a distance (eventualmente viene ridotta)
@@ -125,23 +106,6 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
  * @return false 
  */
  int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c); 
-
-/**
- * @brief restituisce -1 se il lato edgeIndex del poligono polygon non è collineare con nessuno dei due lati adiacenti, 
- * altrimenti restituisce l'indice del lato con cui è collineare 
- * @param polygon 
- * @param edgeIndex 
- * @return index of collinear edge 
- * @return -1 
- */
-int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex); 
-
-/**
- * @brief 
- * 
- * @param p 
- */
-void printPointCoordinates(K::Point_2 p); 
 
 /**
  * @brief 

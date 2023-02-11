@@ -8,22 +8,24 @@
 #include "CoveragePathCreator.h"
 
 
-// ./coverage_path ../test/nometest.txt <decompositionType> <sweepDistance> <rangeToReturn> 
+// ./coverage_path ../test/nometest.txt <decompositionType> <sweepDistance>  
 //deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
 //non capisco perché a volte il perimetro esterno sembra più spesso 
-
+//gestito il senso antiorario ma a me funziona in entrambi i casi anche senza invertire i punti 
+//non so se funziona con coordinate negative 
 
 //BUG: 
-//./coverage_path ../test/area.txt 1 20
-//./coverage_path ../test/complex.txt 1 1
-//./coverage_path ../test/path2.txt 1 1 ==> manca una riga
+//./coverage_path ../test/input.txt 1 1.5
+//./coverage_path ../test/path2.txt 1 0.5 ==> manca una riga
 //../test/pol1.txt 1 0.4 ==> crasha per openCV 
 
 //ELIMINATI 
 //joinAndLinkPaths()
 //calculateAngle() 
+//isToReduce()
+//isCollinear()
 
 using namespace std;
 

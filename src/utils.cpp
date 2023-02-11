@@ -135,21 +135,6 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
 
 /*************************************/
 
-bool isOnSegment(CGAL::Segment_2<K> segment, K::Point_2 point) {
-    CGAL::Line_2<K> line = segment.supporting_line(); 
-    bool to_return = false; 
-    if (line.has_on(point)) {
-        if ((point.x() >= segment.source().x() && point.x() <= segment.target().x()) ||
-            point.x() >= segment.target().x() && point.x() <= segment.source().x() ) {
-                to_return = true; 
-        }
-    }
-    return to_return;
-}
-
-
-/*************************************/
-
 //si suppone che polygon sia convesso
 vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
     
@@ -183,19 +168,6 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
 
     return a; 
 
-}
-
-
-/*************************************/
-
-//restituisce l'indice di v nel quale c'è l'elemento x // -1 se non lo trova 
-int indexOf(vector<int> v, int x) {
-    for (size_t i = 0; i < v.size(); i++) {
-        if (v.at(i) == x) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 
@@ -239,29 +211,6 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance) {
 }
 
 
-/*************************************/
-
-int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex) {
-    
- int to_return;
-    int N = polygon->edges().size(); 
-
-
-    if ( isLeft( polygon->edge((edgeIndex-1+N)%(N)).source(), polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target()) == 0 ) {
-        to_return = (edgeIndex-1+N)%N; 
-
-    }
-    else if (isLeft(polygon->edge(edgeIndex).source(), polygon->edge(edgeIndex).target(), polygon->edge((edgeIndex+1)%N).target() ) == 0 ){
-        to_return = (edgeIndex+1)%N; 
-    }
-    else {
-        to_return = -1;
-    }
-    return to_return;
-}
-
-
-
 /*******************************************************/
 
 int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 viene circa 0 (perché non 0 ? ==> capire cosa fa questa funzione)
@@ -285,12 +234,6 @@ int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 vi
 
 }
 
-
-/*******************************************************/
-
-void printPointCoordinates(K::Point_2 p) {
-    cout << p.x() << ", " << p.hy() << endl; 
-}
 
 
 /*******************************************************/

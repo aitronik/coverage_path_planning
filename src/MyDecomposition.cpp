@@ -25,8 +25,6 @@ bool MyDecomposition::init(shared_ptr<CGAL::Polygon_2<K>> poly) {
     //inserisco il poligono iniziale nella lista di poligoni di indici 
     m_indexedPolygons.push_back(initial);
 
-    m_Helper.init(m_vertices); 
-
     return true;
 }
 
@@ -74,7 +72,7 @@ void MyDecomposition::run(){
 
             //calcolo il segmento di taglio 
             cutter = calculateCutter(toCut , p.second);
-
+  
             //taglio il poligono 
             cutPolygon(toCut, cutter.first , p.second, cutter.second); 
         }
@@ -82,27 +80,6 @@ void MyDecomposition::run(){
 }
 
 /*******************************************************/
-
-//trovo elemento corrispondente nella Polygonlist
-Polygon MyDecomposition::getIthIndexedPolygon(size_t i) {
-
-    cout << "MyDecomposition: getIthIndexedPolygon()" << endl; 
-    //si può ottenere più velocemente l'i-esimo elemento di una lista? 
-    size_t cont = 0;
-    Polygon toReturn;
-    for (const Polygon &pol : m_indexedPolygons) {
-        if (cont ==i) {
-            toReturn = pol;
-            break;
-        }
-        else {
-            cont++;
-        }
-    }
-    return toReturn; //se non lo trova può essere null
-}
-/*******************************************************/
-
 
 //dato l'indice di un vertice CONCAVO calcola il segmento con cui tagliare il poligono 
 pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::Polygon_2<K>> poly, int &startingVertex) {
@@ -146,7 +123,7 @@ pair<CGAL::Segment_2<K>, int> MyDecomposition::calculateCutter(shared_ptr<CGAL::
 //restituisce il primo indice (del vertice) dove si trova una concavità . -1 se il poligono è convesso
 size_t MyDecomposition::isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter) {
 
-    cout << "MyDecomposition: isConcave()" << endl; 
+    // cout << "MyDecomposition: isConcave()" << endl; 
     vector<int> orientations;
     size_t N = perimeter->vertices().size();
     int index; //indice del primo punto di concavità
@@ -216,7 +193,7 @@ pair<int, int> MyDecomposition::allSubPolygonsConvex () {
 //trova l'indice di p in m_vertices , -1 se non lo trova
 int MyDecomposition::findIndex(K::Point_2 p) {
 
-    cout << "MyDecomposition: findIndex()" << endl; 
+    // cout << "MyDecomposition: findIndex()" << endl; 
 
     for (size_t i = 0; i < m_vertices.size(); i++) {
         if (p == m_vertices.at(i)) {
@@ -250,7 +227,7 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
     Polygon indexedPoly2; 
     int index;
 
-    if (startVertex == endEdge || startVertex == (endEdge+1)%N /*|| startVertex == (endEdge-1+N)%N */ )  { //non fa nulla 
+    if (startVertex == endEdge || startVertex == (endEdge+1)%N)  { //non fa nulla 
         m_decomposition.push_back(poly); 
         for (size_t i = 0; i < poly->vertices().size(); i++ ){
             index = findIndex(poly->vertex(i)); 
@@ -265,7 +242,6 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
         m_indexedPolygons.push_back(indexedPoly1); 
         return; 
     }
-
 
    else if (startVertex < endEdge) {
         //points1
@@ -300,7 +276,6 @@ void MyDecomposition::cutPolygon(shared_ptr<CGAL::Polygon_2<K>> poly, /*Polygon 
             points2.push_back(poly->edge(i).target()); 
         }
     }
-
 
     m_vertices.push_back(newEdge.target()); 
 
