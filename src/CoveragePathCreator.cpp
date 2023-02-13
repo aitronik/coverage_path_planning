@@ -1307,7 +1307,7 @@ bool CoveragePathCreator::run() {
     cover();
     
     m_Helper.plotFinalPath(m_finalPath, m_pathToReturn , m_firstVertex, m_sweepDistance); 
-    cv::waitKey(0);
+   
 
     return true;
 }

@@ -1,5 +1,5 @@
 <package format="2">
-    <name>coverage_path_lib</name>
+    <name>coverage_path_planning</name>
     <version>0.1.0</version>
     <description>Coverage path ceator package</description>
     
