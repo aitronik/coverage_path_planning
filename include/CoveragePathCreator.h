@@ -379,14 +379,6 @@ class CoveragePathCreator {
          */
         void simplifyPerimeter();
 
-        /**
-         * @brief  restituisce un vector i cui elementi rappresentano se il lato i esimo deve essere ridotto
-         * 
-         * @param polygon 
-         * @param borders 
-         * @return vector<int> -1 se non deve essere ridotto, 0 se deve essere ridottoin base all'angolo, 1 se deve essere ridotto in quanto bordo esterno (1/2 sweepDistance?)
-         */
-        vector<int> isToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
      
         /**
          * @brief riduce un sottopoligono secondo il vector borders

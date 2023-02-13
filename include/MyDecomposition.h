@@ -79,14 +79,6 @@ class MyDecomposition {
              * @return size_t 
              */
             size_t isConcave(shared_ptr<CGAL::Polygon_2<K>> perimeter);
-            
-            /**
-             * @brief Get the Ith Indexed Polygon object
-             * 
-             * @param i 
-             * @return Polygon 
-             */
-            Polygon getIthIndexedPolygon(size_t i);
 
 
             /**
