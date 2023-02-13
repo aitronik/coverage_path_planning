@@ -24,10 +24,7 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
         m_initialPerimeterVertices.push_back(p); 
     }
 
-    // //se sono in senso antiorario ne inverto l'ordine
- 
-    // if (CGAL::orientation(tmp[0], tmp[N/2], tmp[N-1]) == CGAL::CLOCKWISE) { //questo controllo non funziona 
- 
+     
     if (N < 3) {
         cout << "CoveragePathCreator: servono almeno 3 vertici" << endl; 
         return false; 
@@ -43,6 +40,10 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
     //creazione del poligono iniziale 
     m_initialPolygon = createPolygon(m_initialPerimeterVertices);
 
+    //se sono in senso orario ne inverto l'ordine
+    if (m_initialPolygon->is_clockwise_oriented()) {
+        m_initialPolygon->reverse_orientation();
+    }
 
     m_decompositionType = decompositionType;
     m_sweepDistance = sweepDistance;
@@ -229,7 +230,7 @@ int CoveragePathCreator::initialIndex(float a, float b, float c, float d) { // s
         min = d;
         index = 3;
     }
-    // cout << "INdex" << index << endl;
+
     return index;
 }
 
@@ -783,7 +784,7 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
         }
     }
 
-        // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx)
+    // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx)
     for (size_t i = 0; i < intersections.size(); i = i + 2) {
 
         K::Point_2 p;
@@ -1168,11 +1169,7 @@ void CoveragePathCreator::generateGridsForSubpolygons(){
                     // (CGAL::squared_distance(seg, edge.target()) < 0.001) ){ 
                     // if (seg.has_on(edge.source()) && seg.has_on(edge.target())) {
                         isEdgeAdjacent[j] = true; 
-                    }
-                    else {
-                        cout << "adiacent"<< endl; 
-                    }
-                
+                    }                
                 }
 
             }

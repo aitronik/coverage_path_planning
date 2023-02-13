@@ -6,7 +6,7 @@
 #include <CGAL/Partition_traits_2.h>
 #include "utils.hpp"
 #include "CoveragePathCreator.h"
-
+#include <exception>
 
 // ./coverage_path ../test/nometest.txt <decompositionType> <sweepDistance>  
 //deve funzionare con sweepdistance 0? 
@@ -17,9 +17,12 @@
 //non so se funziona con coordinate negative 
 
 //BUG: 
-//./coverage_path ../test/input.txt 1 1.5
-//./coverage_path ../test/path2.txt 1 0.5 ==> manca una riga
+//./coverage_path ../test/input.txt 1 1.5 ==> problemi intersezione (CGAL::intersect)
+//./coverage_path ../test/path2.txt 1 0.5 ==> manca una riga (problemi CGAL::intersect?)
 //../test/pol1.txt 1 0.4 ==> crasha per openCV 
+
+//quando un lato di un sottopoligono è adiacente a due diversi sottopoliogni (complessivamente per tutta la sua lunghezza) 
+//l'adiacenza non viene trovata e quindi viene ridotto il poligono su quel lato anche se non dovrebbe 
 
 //ELIMINATI 
 //joinAndLinkPaths()
@@ -49,10 +52,15 @@ int main(int argc, char* argv[]) {
     } 
 
     //qui eventualmente aggiungere setAddPerimeterToPath e setRangeToReturn per modificarne i valori 
-    
-    coverage_path_creator.run();
+    try {
+        coverage_path_creator.run();
+        points = coverage_path_creator.getFinalPath(); 
 
-    points = coverage_path_creator.getFinalPath(); 
+    }
+    catch (...){
+        cout << "Error " << endl;
+    }
+
 
     return 0;
 }

@@ -143,8 +143,6 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
 
     for (size_t i = 0; i < N ; i++) {
 
-        // cout << "line " << line << endl; 
-        // cout << "edge " << polygon->edge(i) << endl; 
 
         const auto inter = CGAL::intersection(line, polygon->edge(i)); 
 
@@ -155,12 +153,10 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
                 a.clear();
                 a.push_back(s->source()); 
                 a.push_back(s->target()); 
-                // cout << "intersezione in un segmento " << endl; 
             }
             //se è un punto
             else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
                 a.push_back(*p); 
-                // cout << "intersezione in un punto" << endl;
             }
 
         }
@@ -217,16 +213,12 @@ int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 vi
     
 
     float k = (b.x() - a.x())*(c.hy() - a.hy()) - (b.hy() - a.hy())*(c.x() - a.x());
-    // cout << a << "\t" << b << "\t" << c << endl;
-    // cout << "k" << k << endl;
 
     if ( k > 0.000001) {
         return 1;
-        // return k;
     }
     else if( k < -0.000001){
         return -1;
-        // return k;
     } 
     else{
         return 0;

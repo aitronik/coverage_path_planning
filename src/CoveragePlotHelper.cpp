@@ -249,9 +249,6 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
 /***********************************/
 void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path, int cont) {
 
-    if (cont == 8) {
-        cout << path[path.size()-1].target() << endl; 
-    }
     // cout<< "CoveragePlotHelper: plotPartialPath"<< endl;
 
     cv::Point last( pixelFromMetres(path.at(path.size()-1).target().x()), pixelFromMetres(path.at(path.size()-1).target().hy())) ; 
