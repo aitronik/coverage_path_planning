@@ -2,17 +2,11 @@
 
 PolygonCreator::PolygonCreator(){
 
-    scale_footprint = 0.001;
-    contour_offset = 0;
-    perimeter_offset = 0;
-    areaThreshold = 0;
-    apply_contouring = true;
-
-    initialPathImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
-    polygonsImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
-    contourImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
-    contourWithoutHolesImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
-    contourPerimeterImage = cv::Mat(1000,1500, CV_8UC3, cv::Scalar(255,255,255));
+    m_scaleFootprint = 0.001;
+    m_contourOffset = 0;
+    m_perimeterOffset = 0;
+    m_areaThreshold = 0;
+    m_applyContouring = true;
 
 }
 
@@ -24,28 +18,27 @@ PolygonCreator::~PolygonCreator(){
 
 /*************************************/
 
-bool PolygonCreator::init(float sf, float oc, float at, float po, float ap){
+bool PolygonCreator::init(float fakeFootprint, float contourOffset, float holeThreshold, float perimeterOffset, float applyContouring, const vector<int>& cleaningLvl){
 
-    scale_footprint = sf;
-    contour_offset = oc;
-    areaThreshold = at;
-    perimeter_offset = po;
-    apply_contouring = ap;
-    CoveragePlotHelper cph;
+    m_scaleFootprint = fakeFootprint;
+    m_contourOffset = contourOffset;
+    m_areaThreshold = holeThreshold;
+    m_perimeterOffset = perimeterOffset;
+    m_applyContouring = applyContouring;
+    m_cleaningLvl = cleaningLvl;
     
     return true;
 
 }
 
 /*************************************/
-vector<K::Vector_2> PolygonCreator::defineVectors(vector<K::Point_2> path){
+vector<K::Vector_2> PolygonCreator::pointsToVectors(const vector<K::Point_2>& points){
 
     vector<K::Vector_2> pathVectors;
-    for(int i = 0; i < path.size(); i++){
-        if(i != 0){
-            K::Vector_2 vector_tmp(path.at(i-1), path.at(i));
-            pathVectors.push_back(vector_tmp);
-        }
+    pathVectors.resize(points.size()-1);
+
+    for(int i = 1; i < points.size(); i++){
+        pathVectors[i-1] = K::Vector_2(points.at(i-1), points.at(i));
     }
 
     return pathVectors;
@@ -53,83 +46,31 @@ vector<K::Vector_2> PolygonCreator::defineVectors(vector<K::Point_2> path){
 }
 
 /*************************************/
-vector<K::Segment_2> PolygonCreator::defineSegments(vector<K::Point_2> path){
+vector<K::Segment_2> PolygonCreator::pointsToSegments(const vector<K::Point_2>& points){
 
-    vector<K::Segment_2> path_segments;
-    for(int i = 0; i < path.size(); i++){
-        if(i != 0){
-            K::Segment_2 segment_tmp(path.at(i-1), path.at(i));
-            path_segments.push_back(segment_tmp);
-        }
+    vector<K::Segment_2> pathSegments;
+    pathSegments.resize(points.size()-1);
+
+    for(int i = 1; i < points.size(); i++){
+        pathSegments[i-1] = K::Segment_2(points.at(i-1), points.at(i));
     }
 
-    return path_segments;
+    return pathSegments;
 }
 
 /*************************************/
-vector<K::Point_2> PolygonCreator::definePathFromSegments(vector<K::Segment_2> segments){
+vector<K::Point_2> PolygonCreator::segmentsToPoints(const vector<K::Segment_2>& segments){
     
-    vector<K::Point_2> path_from_segments;
+    vector<K::Point_2> segmentsPoints;
+    segmentsPoints.resize(segments.size() + 1);
+
+    segmentsPoints[0] = K::Point_2(segments.at(0).point(0).x(), segments.at(0).point(0).y());
+
     for(int i = 0; i < segments.size(); i++){
-
-        K::Segment_2 segment = segments.at(i);
-        K::Point_2 first_point(segment.point(0).x(), segment.point(0).y());
-        K::Point_2 second_point(segment.point(1).x(), segment.point(1).y());
-
-        if(i == 0){
-            path_from_segments.push_back(first_point);
-        }
-        
-        path_from_segments.push_back(second_point);
+        segmentsPoints[i+1] = K::Point_2(segments.at(i).point(1).x(), segments.at(i).point(1).y());;
     }
 
-    return path_from_segments;
-
-}
-
-/*************************************/
-void PolygonCreator::plotPath(vector<K::Point_2> path, 
-                            cv::Mat pathImage, 
-                            int B, 
-                            int G, 
-                            int R, 
-                            bool polygon, 
-                            std::string name, 
-                            bool fill, 
-                            bool resolution,
-                            int x_offset, 
-                            int y_offset){
-
-    if(resolution == true){
-        cph.calculateResolution(path);
-    }
-    
-
-    vector<cv::Point> path_opencv;
-    for(int i = 0; i < path.size(); i++){
-        cv::Point point_opencv_tmp(cph.pixelFromMetres(path.at(i).x()) + x_offset, cph.pixelFromMetres(path.at(i).y()) + y_offset);
-        path_opencv.push_back(point_opencv_tmp);
-
-        if(i != 0){
-            cv::line(pathImage, path_opencv.at(i-1), path_opencv.at(i), cv::Scalar(B,G,R), 2, 4, 0);
-        }
-    }
-
-    if(polygon == true){
-        cv::Point first_point_opencv(cph.pixelFromMetres(path.at(0).x()) + x_offset, cph.pixelFromMetres(path.at(0).y()) + y_offset);
-        cv::Point end_point_opencv(cph.pixelFromMetres(path.at(path.size() - 1).x()) + x_offset, cph.pixelFromMetres(path.at(path.size() - 1).y()) + y_offset);
-        
-        path_opencv.push_back(first_point_opencv);
-        
-        cv::line(pathImage, first_point_opencv, end_point_opencv, cv::Scalar(B,G,R), 2, 8, 0);
-    }
-    
-    if(fill){
-        vector<vector<cv::Point>> polygons_opencv;
-        polygons_opencv.push_back(path_opencv);
-
-        cv::fillPoly(pathImage, polygons_opencv, cv::Scalar(B,G,R), 8, 0);
-    }
+    return segmentsPoints;
 
 }
 
@@ -137,118 +78,113 @@ void PolygonCreator::plotPath(vector<K::Point_2> path,
 void PolygonCreator::unitVector(K::Vector_2* vector){
 
     float norm = sqrt(pow(vector->x(), 2) + pow(vector->y(), 2));
-    K::Vector_2 v_norm(vector->x()/norm, vector->y()/norm);
-    *vector = v_norm;
+    K::Vector_2 vNorm(vector->x()/norm, vector->y()/norm);
+    *vector = vNorm;
 
 }
 
 /*************************************/
-K::Vector_2 PolygonCreator::perpendicularVector(K::Vector_2 vector, bool down){
+K::Vector_2 PolygonCreator::perpendicularVector(K::Vector_2 vector, bool isComputedCounterClockwise){
 
-    K::Vector_2 vector_perpendicular;
-    if(down == true){
-        vector_perpendicular = vector.perpendicular(CGAL::Sign {CGAL::COUNTERCLOCKWISE});
+    K::Vector_2 vectorPerpendicular;
+    if(isComputedCounterClockwise == true){
+        vectorPerpendicular = vector.perpendicular(CGAL::Sign {CGAL::COUNTERCLOCKWISE});
     }
     else{
-        vector_perpendicular = vector.perpendicular(CGAL::Sign {CGAL::CLOCKWISE});
+        vectorPerpendicular = vector.perpendicular(CGAL::Sign {CGAL::CLOCKWISE});
     }
 
-    return vector_perpendicular;
+    return vectorPerpendicular;
 
 }
 
 /*************************************/
-vector<K::Point_2> PolygonCreator::segmentShift(vector<K::Point_2> path, bool down, float scale_footprint){
+vector<K::Point_2> PolygonCreator::segmentShift(const K::Segment_2 segment, const bool isComputedCounterClockwise, const float scaleFootprint){
 
-    K::Vector_2 initial_vector(path.at(0), path.at(1));
-    K::Vector_2 perpendicular_vector;
-    vector<K::Point_2> path_shifted;
+    vector<K::Point_2> segmentPoints;
+    segmentPoints.resize(2);
+    segmentPoints[0] = segment.point(0);
+    segmentPoints[1] = segment.point(1);
 
-    perpendicular_vector = perpendicularVector(initial_vector, down);
-    unitVector(&perpendicular_vector);
+    K::Vector_2 initialVector(segmentPoints.at(0), segmentPoints.at(1));
+    K::Vector_2 perpVector;
 
-    K::Point_2 first_point = path.at(0) + scale_footprint*perpendicular_vector;
-    K::Point_2 second_point = first_point + initial_vector;
+    vector<K::Point_2> pathShifted;
+    pathShifted.resize(2);
 
-    path_shifted.push_back(first_point);
-    path_shifted.push_back(second_point);
+    perpVector = perpendicularVector(initialVector, isComputedCounterClockwise);
+    unitVector(&perpVector);
 
-    return path_shifted;
+    K::Point_2 firstPoint = segmentPoints.at(0) + scaleFootprint*perpVector;
+    K::Point_2 secondPoint = firstPoint + initialVector;
+
+    pathShifted[0] = firstPoint;
+    pathShifted[1] = secondPoint;
+
+    return pathShifted;
 }
 
 /*************************************/
-vector<K::Point_2> PolygonCreator::offsetPath(auto path, float scale_footprint, bool down){
+vector<K::Point_2> PolygonCreator::offsetPath(const auto& path, const float scaleFootprint, const bool isComputedCounterClockwise){
 
-    vector<K::Vector_2> path_vectors = defineVectors(path); 
-    vector<K::Point_2> path_offset; 
+    vector<K::Vector_2> pathVectors = pointsToVectors(path); 
+    vector<K::Point_2> pathOffset; 
 
-    K::Vector_2 first_vector = path_vectors.at(0);
-    K::Vector_2 first_vector_perpendicular;
+    K::Vector_2 firstVectorPerpendicular;
+    firstVectorPerpendicular = perpendicularVector(pathVectors.at(0), isComputedCounterClockwise);
+    unitVector(&firstVectorPerpendicular);
 
-    first_vector_perpendicular = perpendicularVector(first_vector, down);
-    unitVector(&first_vector_perpendicular);
-
-    K::Point_2 first_point_offset = path.at(0) + scale_footprint*first_vector_perpendicular;
-    path_offset.push_back(first_point_offset);
+    pathOffset.push_back(path.at(0) + scaleFootprint*firstVectorPerpendicular);
 
     for(int i = 1; i < path.size()-1; i++){
 
-        K::Vector_2 vector_1 = path_vectors.at(i-1);
-        K::Vector_2 vector_perpendicular_1;
+        K::Vector_2 vectorPerpendicular1 = perpendicularVector(pathVectors.at(i-1), isComputedCounterClockwise);
+        unitVector(&vectorPerpendicular1);
+        K::Point_2 point1 = path.at(i) + scaleFootprint*vectorPerpendicular1;
 
-        vector_perpendicular_1 = perpendicularVector(vector_1, down);
-        unitVector(&vector_perpendicular_1);
-        K::Point_2 point_1 = path.at(i) + scale_footprint*vector_perpendicular_1;
+        K::Vector_2 vectorPerpendicular2 = perpendicularVector(pathVectors.at(i), isComputedCounterClockwise);
+        unitVector(&vectorPerpendicular2);
+        K::Point_2 point2 = path.at(i) + scaleFootprint*vectorPerpendicular2;
 
-        K::Vector_2 vector_2 = path_vectors.at(i);
-        K::Vector_2 vector_perpendicular_2;
-
-        vector_perpendicular_2 = perpendicularVector(vector_2, down);
-        unitVector(&vector_perpendicular_2);
-        K::Point_2 point_2 = path.at(i) + scale_footprint*vector_perpendicular_2;
-
-        K::Point_2 mean_point((point_1.x() + point_2.x())/2, (point_1.y() + point_2.y())/2);
-        path_offset.push_back(mean_point);
+        K::Point_2 meanPoint((point1.x() + point2.x())/2, (point1.y() + point2.y())/2);
+        pathOffset.push_back(meanPoint);
 
         if(CGAL::angle(path.at(i-1), path.at(i), path.at(i+1)) == 1){
-            K::Vector_2 vector3(path.at(i), mean_point);
-            K::Vector_2 vector3_perpendicular = perpendicularVector(vector3, !down);
-            unitVector(&vector3_perpendicular);
-            K::Point_2 mean_point2 = mean_point + 0.1*scale_footprint*vector3_perpendicular;
-            path_offset.push_back(mean_point2);
+            K::Vector_2 vector3(path.at(i), meanPoint);
+            K::Vector_2 vectorPerpendicular3 = perpendicularVector(vector3, !isComputedCounterClockwise);
+            unitVector(&vectorPerpendicular3);
+            
+            pathOffset.push_back(meanPoint + 0.1*scaleFootprint*vectorPerpendicular3);
         }
 
         
     }
 
-    K::Vector_2 end_vector = path_vectors.at(path_vectors.size()-1);
-    K::Vector_2 end_vector_perpendicular;
 
-    end_vector_perpendicular = perpendicularVector(end_vector, down);
-    unitVector(&end_vector_perpendicular);
+    K::Vector_2 endVectorPerpendicular;
+    endVectorPerpendicular = perpendicularVector(pathVectors.at(pathVectors.size()-1), isComputedCounterClockwise);
+    unitVector(&endVectorPerpendicular);
 
-    K::Point_2 end_point = path.at(path.size()-1) + scale_footprint*end_vector_perpendicular;
+    pathOffset.push_back(path.at(path.size()-1) + scaleFootprint*endVectorPerpendicular);
 
-    path_offset.push_back(end_point);
-
-    return path_offset;
+    return pathOffset;
 
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PolygonCreator::definePolygon(auto path_down, auto path_up){
+CGAL::Polygon_2<K> PolygonCreator::definePolygon(auto& pathDown, const auto& pathUp){
 
     CGAL::Polygon_2<K> polygon;
-    reverse(path_down.begin(), path_down.end());
+    polygon.resize(pathDown.size() + pathUp.size());
 
-    for(int i = 0; i < path_up.size(); i++){
-        K::Point_2 point_up(CGAL::to_double(path_up.at(i).x()), CGAL::to_double(path_up.at(i).y()));
-        polygon.push_back(point_up);
+    reverse(pathDown.begin(), pathDown.end());
+
+    for(int i = 0; i < pathUp.size(); i++){
+        polygon[i] = K::Point_2(CGAL::to_double(pathUp.at(i).x()), CGAL::to_double(pathUp.at(i).y()));
     }
 
-    for(int i = 0; i < path_down.size(); i++){
-        K::Point_2 point_down(CGAL::to_double(path_down.at(i).x()), CGAL::to_double(path_down.at(i).y()));
-        polygon.push_back(point_down);
+    for(int i = 0; i < pathDown.size(); i++){
+        polygon[i + pathUp.size()] = K::Point_2(CGAL::to_double(pathDown.at(i).x()), CGAL::to_double(pathDown.at(i).y()));
     }
 
     return polygon;
@@ -256,124 +192,88 @@ CGAL::Polygon_2<K> PolygonCreator::definePolygon(auto path_down, auto path_up){
 }
 
 /*************************************/
-void PolygonCreator::printPolygonsWithHoles(auto polygon, 
-                                            CoveragePlotHelper cph, 
-                                            cv::Mat pathImage, 
-                                            bool fill, 
-                                            int B, 
-                                            int G, 
-                                            int R, 
-                                            std::string name, 
-                                            bool resolution,
-                                            bool pathORpolygon){
-                                                
-    int x_offset = 0;
-    int y_offset = 0;
-    if(pathORpolygon == true){
-        x_offset = 100;
-        y_offset = 500;
-    }
+CGAL::Polygon_2<K2> PolygonCreator::convertPoly2K2(const CGAL::Polygon_2<K> polygon){
 
-    vector<CGAL::Point_2<K>> outer_border;
-    for(int i = 0; i < polygon.outer_boundary().size(); i++){
-        K::Point_2 outer_point(CGAL::to_double(polygon.outer_boundary().vertex(i).x()), CGAL::to_double(polygon.outer_boundary().vertex(i).y())); 
-        outer_border.push_back(outer_point);
-    }
+    CGAL::Polygon_2<K2> polygonK2;
+    polygonK2.resize(polygon.size());
 
-    plotPath(outer_border, pathImage, B, G, R, true, name, fill, resolution, x_offset, y_offset);
-
-    for(int i = 0; i < polygon.number_of_holes(); i++){
-
-        vector<CGAL::Point_2<K>> hole;
-        for(int j = 0; j < polygon.holes().at(i).size(); j++){
-            K::Point_2 vertex(CGAL::to_double(polygon.holes().at(i).vertex(j).x()), CGAL::to_double(polygon.holes().at(i).vertex(j).y()));
-            hole.push_back(vertex);
-        }
-
-        plotPath(hole, pathImage, B, G, R, true, name, fill, resolution, x_offset, y_offset);
-    }
-    
-}
-
-/*************************************/
-CGAL::Polygon_2<K2> PolygonCreator::convertPoly2K2(CGAL::Polygon_2<K> polygon){
-
-    CGAL::Polygon_2<K2> polygon_K2;
     for(int i = 0; i < polygon.size(); i++){
-        K2::Point_2 polygon_point(CGAL::to_double(polygon.vertex(i).x()), CGAL::to_double(polygon.vertex(i).y()));
-        polygon_K2.push_back(polygon_point);
+        polygonK2[i] = K2::Point_2(CGAL::to_double(polygon.vertex(i).x()), CGAL::to_double(polygon.vertex(i).y()));;
     }
 
-    return polygon_K2;
+    return polygonK2;
 
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PolygonCreator::convertPoly2K(CGAL::Polygon_2<K2> polygon){
+CGAL::Polygon_2<K> PolygonCreator::convertPoly2K(const CGAL::Polygon_2<K2> polygon){
 
-    CGAL::Polygon_2<K> polygon_K;
+    CGAL::Polygon_2<K> polygonK;
+    polygonK.resize(polygon.size());
+
     for(int i = 0; i < polygon.size(); i++){
-        K::Point_2 polygon_point(CGAL::to_double(polygon.vertex(i).x()), CGAL::to_double(polygon.vertex(i).y()));
-        polygon_K.push_back(polygon_point);
+        polygonK[i] = K::Point_2(CGAL::to_double(polygon.vertex(i).x()), CGAL::to_double(polygon.vertex(i).y()));;
     }
 
-    return polygon_K;
+    return polygonK;
 
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PolygonCreator::convertPolyWithHoles2K2(CGAL::Polygon_with_holes_2<K> polygon_with_holes){
+CGAL::Polygon_with_holes_2<K2> PolygonCreator::convertPolyWithHoles2K2(const CGAL::Polygon_with_holes_2<K> polygonWithHoles){
 
-    CGAL::Polygon_2<K2> outer_boundary;
-    for(int i = 0; i < polygon_with_holes.outer_boundary().size(); i++){
-        K2::Point_2 point_outer_boundary(CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).x()), CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).y()));
-        outer_boundary.push_back(point_outer_boundary);
+    CGAL::Polygon_2<K2> outerBoundary;
+    outerBoundary.resize(polygonWithHoles.outer_boundary().size());
+
+    for(int i = 0; i < polygonWithHoles.outer_boundary().size(); i++){
+        outerBoundary[i] = K2::Point_2(CGAL::to_double(polygonWithHoles.outer_boundary().vertex(i).x()), CGAL::to_double(polygonWithHoles.outer_boundary().vertex(i).y()));
     }
 
-    CGAL::Polygon_with_holes_2<K2> poly_K2(outer_boundary);
-    for(int i = 0; i < polygon_with_holes.number_of_holes(); i++){
-        CGAL::Polygon_2<K2> hole = convertPoly2K2(polygon_with_holes.holes().at(i));
-        poly_K2.add_hole(hole);
+    CGAL::Polygon_with_holes_2<K2> polyK2(outerBoundary);
+    for(int i = 0; i < polygonWithHoles.number_of_holes(); i++){
+        CGAL::Polygon_2<K2> hole = convertPoly2K2(polygonWithHoles.holes().at(i));
+        polyK2.add_hole(hole);
     }
 
-    return poly_K2;
+    return polyK2;
 
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PolygonCreator::convertPolyWithHoles2K(CGAL::Polygon_with_holes_2<K2> polygon_with_holes){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::convertPolyWithHoles2K(const CGAL::Polygon_with_holes_2<K2> polygonWithHoles){
 
-    CGAL::Polygon_2<K> outer_boundary;
-    for(int i = 0; i < polygon_with_holes.outer_boundary().size(); i++){
-        K::Point_2 point_outer_boundary(CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).x()), CGAL::to_double(polygon_with_holes.outer_boundary().vertex(i).y()));
-        outer_boundary.push_back(point_outer_boundary);
+    CGAL::Polygon_2<K> outerBoundary;
+    outerBoundary.resize(polygonWithHoles.outer_boundary().size());
+
+    for(int i = 0; i < polygonWithHoles.outer_boundary().size(); i++){
+        outerBoundary[i] = K::Point_2(CGAL::to_double(polygonWithHoles.outer_boundary().vertex(i).x()), CGAL::to_double(polygonWithHoles.outer_boundary().vertex(i).y()));;
     }
 
-    CGAL::Polygon_with_holes_2<K> poly_K(outer_boundary);
-    for(int i = 0; i < polygon_with_holes.number_of_holes(); i++){
-        CGAL::Polygon_2<K> hole = convertPoly2K(polygon_with_holes.holes().at(i));
-        poly_K.add_hole(hole);
+    CGAL::Polygon_with_holes_2<K> polyK(outerBoundary);
+    for(int i = 0; i < polygonWithHoles.number_of_holes(); i++){
+        CGAL::Polygon_2<K> hole = convertPoly2K(polygonWithHoles.holes().at(i));
+        polyK.add_hole(hole);
     }
 
-    return poly_K;
+    return polyK;
 
 }
 
 /*************************************/
-vector<pair<int, int>> PolygonCreator::pathSegmentation(vector<K::Point_2> path, 
-                                                        vector<vector<K::Segment_2>>* segments_no_int, 
-                                                        vector<vector<K::Segment_2>>* segments_int){
+vector<pair<int, int>> PolygonCreator::pathSegmentation(const vector<K::Point_2>& path, 
+                                                        vector<vector<K::Segment_2>>* segmentsNoInt, 
+                                                        vector<vector<K::Segment_2>>* segmentsInt){
 
     /*
     The function iterates over all segments of the path and merges together into a vector of segments (segments_no_int) the subpaths where there are no
     intersections. The intersecting segments, on the other hand, are saved in another vector of segments (segments_int).
     */
-    int jump_index = 0;
-    int i = jump_index;
+    int jumpIndex = 0;
+    int i = jumpIndex;
     
 
-    vector<pair<int, int>> count_int;
-    vector<K::Segment_2> path_segments = defineSegments(path);
+    vector<pair<int, int>> countInt;
+    vector<K::Segment_2> pathSegments = pointsToSegments(path);
     /*
     While loop which exits when the iteration index i (which is initialised to zero in the first step) is great than the length of the 
     vector of the path segments. In the while loop there is a for loop that iterates over the segments of the path. Given the i-th segment, a
@@ -383,193 +283,194 @@ vector<pair<int, int>> PolygonCreator::pathSegmentation(vector<K::Point_2> path,
     is interrupted with a break. The jump_index is updated to i+1 and the index i re-initialised with the new value of jump_index.
     In addition, the indexes of the intersections are saved in the count_int vector.
     */
-    while(i < path_segments.size()){
-        vector<K::Segment_2> segment_tmp;
-        for(i = jump_index; i < path_segments.size(); i++){
-            vector<K::Segment_2> intersect_tmp;
-            K::Segment_2 first_segm = path_segments.at(i);
-            bool intersection_flag = false;
+    while(i < pathSegments.size()){
+        vector<K::Segment_2> segmentTmp;
+        for(i = jumpIndex; i < pathSegments.size(); i++){
+            vector<K::Segment_2> intersectTmp;
+            bool intersectionFlag = false;
 
-            for(int j = i + 1; j < path_segments.size(); j++){
-                CGAL::Segment_2<K> second_segm = path_segments.at(j);
-                auto result = CGAL::intersection(first_segm, second_segm);
-                K::Point_2 intersection_point;
+            for(int j = i + 1; j < pathSegments.size(); j++){
+                auto result = CGAL::intersection(pathSegments.at(i), pathSegments.at(j));
+                K::Point_2 intersectionPoint;
                 if(result){
-                    intersection_point = boost::get<K::Point_2 >(*result);
-                    if(intersection_point.x() != second_segm.point(0).x() && intersection_point.y() != second_segm.point(0).y()){
-                        count_int.push_back({i, j});
-                        intersection_flag = true;
+                    intersectionPoint = boost::get<K::Point_2 >(*result);
+                    if(intersectionPoint.x() != pathSegments.at(j).point(0).x() && intersectionPoint.y() != pathSegments.at(j).point(0).y()){
+                        countInt.push_back({i, j});
+                        intersectionFlag = true;
                 
-                        intersect_tmp.push_back(first_segm);
-                        intersect_tmp.push_back(second_segm);
+                        intersectTmp.push_back(pathSegments.at(i));
+                        intersectTmp.push_back(pathSegments.at(j));
                     }
                 }
             }
 
-            if(intersection_flag == true){
-                jump_index = i + 1;
-                segments_int->push_back(intersect_tmp);
+            if(intersectionFlag == true){
+                jumpIndex = i + 1;
+                segmentsInt->push_back(intersectTmp);
                 break;
             }
 
-            segment_tmp.push_back(path_segments.at(i));
+            segmentTmp.push_back(pathSegments.at(i));
         }
 
-        segments_no_int->push_back(segment_tmp);
+        segmentsNoInt->push_back(segmentTmp);
     }
 
-    return count_int;
+    return countInt;
 
 }
 
 /*************************************/
-vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIntersectionPolygons(vector<vector<K::Segment_2>> segments_int){
+vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIntersectionPolygons(const vector<vector<K::Segment_2>>& segmentsInt){
 
-    vector<CGAL::Polygon_with_holes_2<K>> polygon_final_int;
+    vector<CGAL::Polygon_with_holes_2<K>> polygonFinalInt;
     /*The code iterates along the first level of the input vector of segment vectors. Each step, therefore, considers a vector of segments.*/
-    for(int i = 0; i < segments_int.size(); i++){
+    for(int i = 0; i < segmentsInt.size(); i++){
 
-        vector<CGAL::Polygon_2<K>> poly_list_int;
+        vector<CGAL::Polygon_2<K>> polyListInt;
 
         /*The second for loop runs through all the segments of the vector of segments selected in the previous for loop. Dummy polygons are generated
         with an infinitesimal thickness (scale_footprint, which is set to 0.001 metres by default) which are saved in a vector (poly_list_int). 
         Why generate polygons with infinitesimal thickness?
         CGAL works well with polygons and many functions (including contouring functions) can only be used on polygons. Creating polygons with infinitesimal
         thickness allows these functions to be exploited. The overlap error with the original path is negligible.*/
-        for(int j = 0; j < segments_int.at(i).size(); j++){
-            vector<K::Point_2> path_int;
-            K::Segment_2 segment_tmp = segments_int.at(i).at(j);
-            K::Point_2 segment_point1(segment_tmp.point(0).x(), segment_tmp.point(0).y());
-            K::Point_2 segment_point2(segment_tmp.point(1).x(), segment_tmp.point(1).y());
+        for(int j = 0; j < segmentsInt.at(i).size(); j++){
+            K::Segment_2 segmentTmp = segmentsInt.at(i).at(j);
+            vector<K::Point_2> pathTmp;
+            pathTmp.resize(2);
+            pathTmp[0] = segmentTmp.point(0);
+            pathTmp[1] = segmentTmp.point(1);
 
-            path_int.push_back(segment_point1);
-            path_int.push_back(segment_point2);
+            if(pathTmp.size() != 0){
+                vector<K::Point_2> pathUpInt = segmentShift(segmentTmp, false, m_scaleFootprint);
+                vector<K::Point_2> pathDownInt = segmentShift(segmentTmp, true, m_scaleFootprint);
+                
+                CGAL::Polygon_2<K> polyInt = definePolygon(pathDownInt, pathUpInt);
 
-            if(path_int.size() != 0){
-                vector<K::Point_2> path_up_int = segmentShift(path_int, false, scale_footprint);
-                vector<K::Point_2> path_down_int = segmentShift(path_up_int, true, scale_footprint);
-                CGAL::Polygon_2<K> poly_int = definePolygon(path_down_int, path_up_int);
-
-                if(poly_int.is_counterclockwise_oriented() == false){
-                    poly_int.reverse_orientation();
+                if(polyInt.is_counterclockwise_oriented() == false){
+                    polyInt.reverse_orientation();
                 }
 
-                poly_list_int.push_back(poly_int);
+                polyListInt.push_back(polyInt);
             }
         }
 
-        if(poly_list_int.size() != 0){
+        if(polyListInt.size() != 0){
 
-            CGAL::Polygon_2<K2> polygon_K2_initial = convertPoly2K2(poly_list_int.at(0));
-            CGAL::Polygon_with_holes_2<K2> polygon_with_holes_K2(polygon_K2_initial);
+            CGAL::Polygon_2<K2> polygonK2Initial = convertPoly2K2(polyListInt.at(0));
+            CGAL::Polygon_with_holes_2<K2> polygonWithHolesK2(polygonK2Initial);
 
-            for(int j = 1; j < poly_list_int.size(); j++){
-                CGAL::Polygon_2<K2> polygon_K2 = convertPoly2K2(poly_list_int.at(j));
-                CGAL::join(polygon_with_holes_K2, polygon_K2, polygon_with_holes_K2);
+            for(int j = 1; j < polyListInt.size(); j++){
+                CGAL::Polygon_2<K2> polygonK2 = convertPoly2K2(polyListInt.at(j));
+                CGAL::join(polygonWithHolesK2, polygonK2, polygonWithHolesK2);
             }
 
-            PolygonWithHolesPtrVector contour_ptr = CGAL::create_exterior_skeleton_and_offset_polygons_with_holes_2(contour_offset,polygon_with_holes_K2.outer_boundary());
+            PolygonWithHolesPtrVector contour_ptr = CGAL::create_exterior_skeleton_and_offset_polygons_with_holes_2(m_contourOffset,polygonWithHolesK2.outer_boundary());
 
             vector<CGAL::Polygon_with_holes_2<K>> contour;
             for(PolygonWithHolesPtrVector::const_iterator v = contour_ptr.begin(); v != contour_ptr.end(); ++v){
                 contour.push_back(**v);
             }
 
-            polygon_final_int.push_back(contour.at(0));
+            polygonFinalInt.push_back(contour.at(0));
         }
     }
 
-    return polygon_final_int;
+    return polygonFinalInt;
 
 }
 
 /*************************************/
-vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIndipendentPolygons(vector<vector<K::Segment_2>> segments_no_int){
+vector<CGAL::Polygon_with_holes_2<K>> PolygonCreator::defineIndipendentPolygons(const vector<vector<K::Segment_2>>& segmentsNoInt){
 
-    vector<CGAL::Polygon_with_holes_2<K>> polygon_final_no_int;
+    vector<CGAL::Polygon_with_holes_2<K>> polygonFinalNoInt;
     /*The code iterates along the first level of the input vector of segment vectors. Each step, therefore, considers a vector of segments.*/
-    for(int k = 0; k < segments_no_int.size(); k++){
+    for(int k = 0; k < segmentsNoInt.size(); k++){
 
-        vector<K::Segment_2> segments = segments_no_int.at(k);
-        vector<K::Point_2> subpath = definePathFromSegments(segments);
+        vector<K::Segment_2> segments = segmentsNoInt.at(k);
+        
+        if(segments.size() != 0){
+
+            vector<K::Point_2> subpath = segmentsToPoints(segments);
 
         
-        /*The second for loop runs through all the segments of the vector of segments selected in the previous for loop. Dummy polygons are generated
-        with an infinitesimal thickness (scale_footprint, which is set to 0.001 metres by default) which are saved in a vector (poly_list_int). 
-        Why generate polygons with infinitesimal thickness?
-        CGAL works well with polygons and many functions (including contouring functions) can only be used on polygons. Creating polygons with infinitesimal
-        thickness allows these functions to be exploited. The overlap error with the original path is negligible.*/
-        if(subpath.size() != 0){
-            vector<K::Point_2> path_up = offsetPath(subpath, scale_footprint, false);
-            vector<K::Point_2> path_down = offsetPath(subpath, scale_footprint, true);
+            /*The second for loop runs through all the segments of the vector of segments selected in the previous for loop. Dummy polygons are generated
+            with an infinitesimal thickness (scale_footprint, which is set to 0.001 metres by default) which are saved in a vector (poly_list_int). 
+            Why generate polygons with infinitesimal thickness?
+            CGAL works well with polygons and many functions (including contouring functions) can only be used on polygons. Creating polygons with infinitesimal
+            thickness allows these functions to be exploited. The overlap error with the original path is negligible.*/
+            if(subpath.size() != 0){
+                vector<K::Point_2> pathUp = offsetPath(subpath, m_scaleFootprint, false);
+                vector<K::Point_2> pathDown = offsetPath(subpath, m_scaleFootprint, true);
 
-            CGAL::Polygon_2<K> polygon = definePolygon(path_down, path_up);
+                CGAL::Polygon_2<K> polygon = definePolygon(pathDown, pathUp);
 
-            CGAL::Polygon_with_holes_2<K> poly_with_holes(polygon);
+                CGAL::Polygon_with_holes_2<K> polyWithHoles(polygon);
 
-            PolygonWithHolesPtrVector contour_ptr = CGAL::create_exterior_skeleton_and_offset_polygons_with_holes_2(contour_offset,polygon);
+                PolygonWithHolesPtrVector contourPtr = CGAL::create_exterior_skeleton_and_offset_polygons_with_holes_2(m_contourOffset,polygon);
 
-            if(contour_ptr.size() != 0){
-                vector<CGAL::Polygon_with_holes_2<K>> contour;
-                for(PolygonWithHolesPtrVector::const_iterator v = contour_ptr.begin(); v != contour_ptr.end(); ++v){
-                    contour.push_back(**v);
+                if(contourPtr.size() != 0){
+                    vector<CGAL::Polygon_with_holes_2<K>> contour;
+                    for(PolygonWithHolesPtrVector::const_iterator v = contourPtr.begin(); v != contourPtr.end(); ++v){
+                        contour.push_back(**v);
+                    }
+
+                    polygonFinalNoInt.push_back(contour.at(0));
+
                 }
-
-                polygon_final_no_int.push_back(contour.at(0));
-
             }
+
         }
+    
     }
 
-    return polygon_final_no_int;
+    return polygonFinalNoInt;
 
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K2> PolygonCreator::mergePolygons(vector<CGAL::Polygon_with_holes_2<K>> polygon_final_no_int, 
-                                                            vector<CGAL::Polygon_with_holes_2<K>> polygon_final_int,
-                                                            vector<pair<int, int>> count_int,
-                                                            cv::Mat pathImage,
-                                                            std::string name){
+CGAL::Polygon_with_holes_2<K2> PolygonCreator::mergePolygons(const vector<CGAL::Polygon_with_holes_2<K>>& polygonFinalNoInt, 
+                                                            const vector<CGAL::Polygon_with_holes_2<K>>& polygonFinalInt,
+                                                            const vector<pair<int, int>>& countInt,
+                                                            const std::string name){
     
-    int index_int = 0;
-    int index_seg = 1;
+    int indexInt = 0;
+    int indexSeg = 1;
 
-    CGAL::Polygon_with_holes_2<K2> initial_polygon = convertPolyWithHoles2K2(polygon_final_no_int.at(0));
-    CGAL::Polygon_with_holes_2<K2> contour_final = initial_polygon;
+    CGAL::Polygon_with_holes_2<K2> initialPolygon = convertPolyWithHoles2K2(polygonFinalNoInt.at(0));
+    CGAL::Polygon_with_holes_2<K2> contourFinal = initialPolygon;
 
-    printPolygonsWithHoles(initial_polygon, cph, pathImage, false, 255, 0, 0, name, false, true);
+    m_cph.printPolygonsWithHolesK2(initialPolygon, m_cph.m_polygonsImage, false, 0, 0, 0, name, false, true, false, m_cleaningLvl);
 
     int index = 0;
     int i = index;
-    while(i < count_int.size()-1){
+    while(i < countInt.size()-1){
 
-        for(i = index; i < count_int.size()-1; i++){
-            if((count_int.at(i+1).first - count_int.at(i).first == 1 || count_int.at(i+1).first - count_int.at(i).first == 0)){
-                CGAL::Polygon_with_holes_2<K> polygon_intersection(polygon_final_int.at(index_int));
-                if(count_int.at(i+1).first - count_int.at(i).first == 1){
-                    index_int = index_int + 1;
+        for(i = index; i < countInt.size()-1; i++){
+            if((countInt.at(i+1).first - countInt.at(i).first == 1 || countInt.at(i+1).first - countInt.at(i).first == 0)){
+                CGAL::Polygon_with_holes_2<K> polygonIntersection(polygonFinalInt.at(indexInt));
+                if(countInt.at(i+1).first - countInt.at(i).first == 1){
+                    indexInt = indexInt + 1;
                 }
                 
-                CGAL::Polygon_with_holes_2<K2> polygon_intersectionK2 = convertPolyWithHoles2K2(polygon_intersection);
-                printPolygonsWithHoles(polygon_intersection, cph, pathImage, false, 0, 0, 255, name, false, true);
-                CGAL::join(contour_final, polygon_intersectionK2, contour_final);
-
+                CGAL::Polygon_with_holes_2<K2> polygonIntersectionK2 = convertPolyWithHoles2K2(polygonIntersection);
+                m_cph.printPolygonsWithHolesK(polygonIntersection, m_cph.m_polygonsImage, false, 0, 0, 0, name, false, true, false, m_cleaningLvl);
+                CGAL::join(contourFinal, polygonIntersectionK2, contourFinal);
             }
             else{
                 
-                CGAL::Polygon_with_holes_2<K> polygon_no_intersection(polygon_final_no_int.at(index_seg));
-                index_seg = index_seg + 1;
-                CGAL::Polygon_with_holes_2<K2> polygon_no_intersectionK2 = convertPolyWithHoles2K2(polygon_no_intersection);
-                printPolygonsWithHoles(polygon_no_intersection, cph, pathImage, false, 255, 0, 0, name, false, true);
-                CGAL::join(contour_final, polygon_no_intersectionK2, contour_final);
+                CGAL::Polygon_with_holes_2<K> polygonNoIntersection(polygonFinalNoInt.at(indexSeg));
+                indexSeg = indexSeg + 1;
+                CGAL::Polygon_with_holes_2<K2> polygonNoIntersectionK2 = convertPolyWithHoles2K2(polygonNoIntersection);
+                m_cph.printPolygonsWithHolesK(polygonNoIntersection, m_cph.m_polygonsImage, false, 0, 0, 0, name, false, true, false, m_cleaningLvl);
+                CGAL::join(contourFinal, polygonNoIntersectionK2, contourFinal);
 
 
-                CGAL::Polygon_with_holes_2<K> polygon_intersection(polygon_final_int.at(index_int));
-                index_int = index_int + 1;
-                CGAL::Polygon_with_holes_2<K2> polygon_intersectionK2 = convertPolyWithHoles2K2(polygon_intersection);
-                printPolygonsWithHoles(polygon_intersection, cph, pathImage, false, 0, 0, 255, name, false, true);
-                CGAL::join(contour_final, polygon_intersectionK2, contour_final);
+                CGAL::Polygon_with_holes_2<K> polygonIntersection(polygonFinalInt.at(indexInt));
+                indexInt = indexInt + 1;
+                CGAL::Polygon_with_holes_2<K2> polygonIntersectionK2 = convertPolyWithHoles2K2(polygonIntersection);
+                m_cph.printPolygonsWithHolesK(polygonIntersection, m_cph.m_polygonsImage, false, 0, 0, 0, name, false, true, false, m_cleaningLvl);
+                CGAL::join(contourFinal, polygonIntersectionK2, contourFinal);
 
                 index = i+1;
 
@@ -578,32 +479,29 @@ CGAL::Polygon_with_holes_2<K2> PolygonCreator::mergePolygons(vector<CGAL::Polygo
         }
     }
 
-    CGAL::Polygon_with_holes_2<K> polygon_no_intersection(polygon_final_no_int.at(polygon_final_no_int.size()-1));
-    CGAL::Polygon_with_holes_2<K2> polygon_no_intersectionK2 = convertPolyWithHoles2K2(polygon_no_intersection);
+    CGAL::Polygon_with_holes_2<K> polygonNoIntersection(polygonFinalNoInt.at(polygonFinalNoInt.size()-1));
+    CGAL::Polygon_with_holes_2<K2> polygonNoIntersectionK2 = convertPolyWithHoles2K2(polygonNoIntersection);
 
-    CGAL::join(contour_final, polygon_no_intersectionK2, contour_final);
+    CGAL::join(contourFinal, polygonNoIntersectionK2, contourFinal);
 
-    printPolygonsWithHoles(polygon_final_no_int.at(polygon_final_no_int.size()-1), cph, pathImage, false, 255, 0, 0, name, false, true); 
-    cv::imshow(name, pathImage);
-    cv::waitKey(0);
+    m_cph.printPolygonsWithHolesK(polygonFinalNoInt.at(polygonFinalNoInt.size()-1), m_cph.m_polygonsImage, false, 0, 0, 0, name, false, true, true, m_cleaningLvl); 
 
-    return(contour_final);
+    return(contourFinal);
 
 }
 
 /*************************************/
 void PolygonCreator::deleteHoles(CGAL::Polygon_with_holes_2<K2>* contour, 
-                                                                    float areaThreshold, 
-                                                                    cv::Mat pathImage, 
-                                                                    std::string name){
+                                const float areaThreshold,
+                                const std::string name){
 
     for(auto hole = contour->holes_begin(); hole != contour->holes_end(); hole++){
 
-        double hole_area = abs(CGAL::to_double(hole->area()));
-        if(hole_area != 0){
-            if(hole_area < areaThreshold){
-                CGAL::Polygon_with_holes_2<K2> hole_to_delete(*hole);
-                printPolygonsWithHoles(hole_to_delete, cph, pathImage, false, 255, 0, 0, name, false, true);
+        double holeArea = abs(CGAL::to_double(hole->area()));
+        if(holeArea != 0){
+            if(holeArea < areaThreshold){
+                CGAL::Polygon_with_holes_2<K2> holeToDelete(*hole);
+                m_cph.printPolygonsWithHolesK2(holeToDelete, m_cph.m_contourImage, false, 0, 0, 0, name, false, true, true, m_cleaningLvl);
                 contour->erase_hole(hole);
             }
         }
@@ -612,14 +510,13 @@ void PolygonCreator::deleteHoles(CGAL::Polygon_with_holes_2<K2>* contour,
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PolygonCreator::selectMajorPolygon(vector<CGAL::Polygon_with_holes_2<K>> contours){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::selectMajorPolygon(const vector<CGAL::Polygon_with_holes_2<K>>& contours){
 
-    CGAL::Polygon_with_holes_2<K> perimeter_contour;
+    CGAL::Polygon_with_holes_2<K> perimeterContour;
     if(contours.size() == 0){
-        perimeter_contour = contours.at(0);
+        perimeterContour = contours.at(0);
     }
     else{
-
         double largest_area = 0.0;
         int largest_polygon = 0;
         for(int i = 0; i < contours.size(); i++){
@@ -632,19 +529,20 @@ CGAL::Polygon_with_holes_2<K> PolygonCreator::selectMajorPolygon(vector<CGAL::Po
 
         }
 
-        perimeter_contour = contours.at(largest_polygon);
+        perimeterContour = contours.at(largest_polygon);
     }
 
-    return perimeter_contour;
+    return perimeterContour;
 
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PolygonCreator::polygonFromClosedPath(vector<K::Point_2> path){
+CGAL::Polygon_2<K> PolygonCreator::polygonFromClosedPath(const vector<K::Point_2>& path){
 
     CGAL::Polygon_2<K> polygon;
+    polygon.resize(path.size());
     for(int i = 0; i < path.size(); i++){
-        polygon.push_back(path.at(i));
+        polygon[i] = path.at(i);
     }
 
     return polygon;
@@ -652,47 +550,47 @@ CGAL::Polygon_2<K> PolygonCreator::polygonFromClosedPath(vector<K::Point_2> path
 }
 
 /*************************************/
-CGAL::Polygon_2<K> PolygonCreator::perimeterContour(CGAL::Polygon_2<K> perimeter_polygon){
+CGAL::Polygon_2<K> PolygonCreator::perimeterContour(const CGAL::Polygon_2<K> perimeterPolygon){
 
-    CGAL::Polygon_with_holes_2<K> perimeter_contour;
-    PolygonWithHolesPtrVector contour_ptr = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(perimeter_offset,perimeter_polygon);
+    CGAL::Polygon_with_holes_2<K> perimeterContour;
+    PolygonWithHolesPtrVector contourPtr = CGAL::create_interior_skeleton_and_offset_polygons_with_holes_2(m_perimeterOffset, perimeterPolygon);
 
-    if(contour_ptr.size() != 0){
+    if(contourPtr.size() != 0){
         vector<CGAL::Polygon_with_holes_2<K>> contours;
-        for(PolygonWithHolesPtrVector::const_iterator v = contour_ptr.begin(); v != contour_ptr.end(); ++v){
+        for(PolygonWithHolesPtrVector::const_iterator v = contourPtr.begin(); v != contourPtr.end(); ++v){
             contours.push_back(**v);
         }
 
-        perimeter_contour = selectMajorPolygon(contours);
+        perimeterContour = selectMajorPolygon(contours);
     }
 
-    return perimeter_contour.outer_boundary();
+    return perimeterContour.outer_boundary();
 
 }
 
 /*************************************/
-void PolygonCreator::clonePolygon(CGAL::Polygon_with_holes_2<K>* final_poly_with_holes, CGAL::Polygon_2<K> poly_to_clone){
+void PolygonCreator::clonePolygon(CGAL::Polygon_with_holes_2<K>* finalPolyWithHoles, const CGAL::Polygon_2<K> polyToClone){
 
-    for(int i = 0; i < poly_to_clone.size(); i++){
-        final_poly_with_holes->outer_boundary().push_back(poly_to_clone.vertex(i));
+    for(int i = 0; i < polyToClone.size(); i++){
+        finalPolyWithHoles->outer_boundary().push_back(polyToClone.vertex(i));
     }
 
 }
 
 /*************************************/
-void PolygonCreator::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
+void PolygonCreator::checkBannedAreas(const CGAL::Polygon_with_holes_2<K> contour){
 
-    CGAL::Polygon_2<K> inner_boundary = contour.outer_boundary();
-    CGAL::Polygon_2<K2> inner_boundary_K2 = convertPoly2K2(inner_boundary);
+    CGAL::Polygon_2<K> innerBoundary = contour.outer_boundary();
+    CGAL::Polygon_2<K2> innerBoundaryK2 = convertPoly2K2(innerBoundary);
 
     for(int hole = 0; hole < contour.number_of_holes(); hole++){
-        CGAL::Polygon_2<K> hole_polygon = contour.holes().at(hole);
-        CGAL::Polygon_2<K2> hole_polygon_K2 = convertPoly2K2(hole_polygon);
+        CGAL::Polygon_2<K> holePolygon = contour.holes().at(hole);
+        CGAL::Polygon_2<K2> holePolygonK2 = convertPoly2K2(holePolygon);
 
-        Pwh_list_2 difference_polygon;
-        CGAL::symmetric_difference(inner_boundary_K2, hole_polygon_K2, std::back_inserter(difference_polygon));
+        Pwh_list_2 differencePolygon;
+        CGAL::symmetric_difference(innerBoundaryK2, holePolygonK2, std::back_inserter(differencePolygon));
 
-        if(difference_polygon.size() == 1){
+        if(differencePolygon.size() == 1){
             cout << "Hole n° " << hole << ": ok" << endl;
         }
         else{
@@ -704,34 +602,39 @@ void PolygonCreator::checkBannedAreas(CGAL::Polygon_with_holes_2<K> contour){
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygonFromPath(vector<K::Point_2> path){
+CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygonFromPath(const vector<K::Point_2>& path){
 
-    plotPath(path, initialPathImage, 0, 0, 0, false, "Path", false, true, 100, 500); 
-    cv::imshow("Path", initialPathImage);
+    m_cph.plotPath(path, m_cph.m_initialPathImage, false, 0, 0, 0, "Path", false, true, m_cleaningLvl); 
+    cv::imshow("Path", m_cph.m_initialPathImage);
     cv::waitKey(0);
 
-    vector<vector<K::Segment_2>> segments_no_int;
-    vector<vector<K::Segment_2>> segments_int;
-    vector<pair<int, int>>  count_int = pathSegmentation(path, &segments_no_int, &segments_int);
+    clock_t tic = clock();
 
-    vector<CGAL::Polygon_with_holes_2<K>> poly_intersection = defineIntersectionPolygons(segments_int);
-    vector<CGAL::Polygon_with_holes_2<K>> poly_no_intersection = defineIndipendentPolygons(segments_no_int);
+    vector<vector<K::Segment_2>> segmentsNoInt;
+    vector<vector<K::Segment_2>> segmentsInt;
+    vector<pair<int, int>>  count_int = pathSegmentation(path, &segmentsNoInt, &segmentsInt);
 
-    plotPath(path, polygonsImage, 0, 0, 0, false, "Polygons", false, true, 100, 500); 
-    CGAL::Polygon_with_holes_2<K2> contour = mergePolygons(poly_no_intersection, poly_intersection, count_int, polygonsImage, "Polygons");
-
-    printPolygonsWithHoles(contour, cph, contourImage, false, 0, 0, 255, "Contour", false, true);
-    deleteHoles(&contour, areaThreshold, contourImage, "Contour");
-    cv::imshow("Contour", contourImage);
-    cv::waitKey(0);
+    vector<CGAL::Polygon_with_holes_2<K>> polyIntersection = defineIntersectionPolygons(segmentsInt);
+    vector<CGAL::Polygon_with_holes_2<K>> polyNoIntersection = defineIndipendentPolygons(segmentsNoInt);
     
-    printPolygonsWithHoles(contour, cph, contourWithoutHolesImage, false, 0, 0, 255, "Contour without holes", false, true);
-    cv::imshow("Contour without holes", contourWithoutHolesImage);
-    cv::waitKey(0);
+    m_cph.plotPath(path, m_cph.m_polygonsImage, false, 0, 0, 0, "Polygons", false, true, m_cleaningLvl); 
+    CGAL::Polygon_with_holes_2<K2> contour = mergePolygons(polyNoIntersection, polyIntersection, count_int, "Polygons");
 
-    CGAL::Polygon_with_holes_2<K> contour_K = convertPolyWithHoles2K(contour);
+    
 
-    return contour_K;
+    clock_t toc = clock();
+    double time = (double)(toc-tic);
+    cout << "It took "<< 1000*(time/CLOCKS_PER_SEC) << "millisecond(ms)."<< endl;
+
+
+    m_cph.printPolygonsWithHolesK2(contour, m_cph.m_contourImage, false, 0, 0, 0, "Contour", false, true, true, m_cleaningLvl);
+    deleteHoles(&contour, m_areaThreshold, "Contour");
+
+    m_cph.printPolygonsWithHolesK2(contour, m_cph.m_contourWithoutHolesImage, false, 0, 0, 0, "Contour without holes", false, true, true, m_cleaningLvl);
+
+    CGAL::Polygon_with_holes_2<K> contourK = convertPolyWithHoles2K(contour);
+
+    return contourK;
 
 }
 
@@ -741,35 +644,31 @@ CGAL::Polygon_with_holes_2<K> PolygonCreator::createPolygon(vector<K::Point_2> p
     CGAL::Polygon_2<K> perimeter_polygon = polygonFromClosedPath(perimeter);
 
     CGAL::Polygon_with_holes_2<K> perimeter_polygon_with_holes(perimeter_polygon);
-    printPolygonsWithHoles(perimeter_polygon_with_holes, cph, contourPerimeterImage, false, 0, 0, 0, "Perimeter contour", true, false);
+    m_cph.printPolygonsWithHolesK(perimeter_polygon_with_holes, m_cph.m_contourPerimeterImage, false, 0, 0, 0, "Perimeter contour", true, false, true, m_cleaningLvl);
 
     CGAL::Polygon_2<K> contour_perimeter = perimeterContour(perimeter_polygon);
 
     CGAL::Polygon_with_holes_2<K> contour_perimeter_with_holes;
-    if(apply_contouring == true){
+    if(m_applyContouring == true){
         clonePolygon(&contour_perimeter_with_holes, contour_perimeter);
     }
     else{
         clonePolygon(&contour_perimeter_with_holes, perimeter_polygon);
     }
 
-    printPolygonsWithHoles(contour_perimeter_with_holes, cph, contourPerimeterImage, true, 0, 0, 125, "Perimeter contour", false, false);
+    m_cph.printPolygonsWithHolesK(contour_perimeter_with_holes, m_cph.m_contourPerimeterImage, true, 0, 0, 255, "Perimeter contour", false, false, true, m_cleaningLvl);
 
     for(int i = 0; i < banned_areas.size(); i++){
         vector<K::Point_2> banned_area = banned_areas.at(i);
 
         CGAL::Polygon_2<K> banned_area_polygon = polygonFromClosedPath(banned_area);
         CGAL::Polygon_with_holes_2<K> banned_area_with_holes(banned_area_polygon);
-        printPolygonsWithHoles(banned_area_with_holes, cph, contourPerimeterImage, true, 255, 255, 255, "Perimeter contour", false, false);
-        printPolygonsWithHoles(banned_area_with_holes, cph, contourPerimeterImage, false, 255, 0, 0, "Perimeter contour", false, false);
+        m_cph.printPolygonsWithHolesK(banned_area_with_holes, m_cph.m_contourPerimeterImage, true, 255, 255, 255, "Perimeter contour", false, false, true, m_cleaningLvl);
+        m_cph.printPolygonsWithHolesK(banned_area_with_holes, m_cph.m_contourPerimeterImage, false, 0, 0, 0, "Perimeter contour", false, false, true, m_cleaningLvl);
 
         contour_perimeter_with_holes.add_hole(banned_area_polygon);
     }
 
-    cv::imshow("Perimeter contour", contourPerimeterImage);
-    cv::waitKey(0);
-
-    cout << "ciao" << endl;
     checkBannedAreas(contour_perimeter_with_holes);
 
     return contour_perimeter_with_holes;

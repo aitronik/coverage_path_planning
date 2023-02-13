@@ -24,6 +24,20 @@ bool CoveragePath::init(int type, int cleanlvl, vector<K::Point_2> path, vector<
 }
 
 /*************************************/
+void CoveragePath::setPolygonCreatorInit(float fake_offset, float contour_offset, float area_threshold, float perimeter_offset, bool apply_contouring, const vector<int>& cleaningLvl){
+
+    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaningLvl);
+
+}
+
+/*************************************/
+void CoveragePath::setCoveragePathCreatorInit(CGAL::Polygon_2<K> polygon, float sweepDistance, int m_decompositionType){
+
+    cpc.init(polygon, sweepDistance, m_decompositionType);
+
+}
+
+/*************************************/
 CGAL::Polygon_with_holes_2<K> CoveragePath::getInputPolygon(){
 
     CGAL::Polygon_with_holes_2<K> poly_with_holes;
@@ -39,5 +53,19 @@ CGAL::Polygon_with_holes_2<K> CoveragePath::getInputPolygon(){
         default:
             cout << "Input type error. Please specify if the input path is a PATH (0) or PERIMETER (1)." << endl;
     }
+
+    return poly_with_holes;
+
+}
+
+/*************************************/
+CGAL::Polygon_with_holes_2<K> CoveragePath::run(){
+
+    CGAL::Polygon_with_holes_2<K> polygon = getInputPolygon();
+    setCoveragePathCreatorInit(polygon.outer_boundary(), 0.05, 1);
+
+    cpc.run();
+
+    return polygon;
 
 }

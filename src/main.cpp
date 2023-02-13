@@ -29,11 +29,15 @@
 #include <list>
 #include <boost/shared_ptr.hpp>
 #include "utils.hpp"
-#include "CoveragePathCreator.h"
-#include "CoveragePlotHelper.h"
+// #include "CoveragePathCreator.h"
+// #include "CoveragePlotHelper.h"
 #include "PolygonCreator.h"
+#include "CoveragePath.h"
 #include "pathPoints.h"
 #include "print.h"
+
+
+#include <chrono>
 
 #include <CGAL/create_straight_skeleton_2.h> 
 #include <CGAL/Kernel/global_functions.h>
@@ -84,6 +88,8 @@ int main(int argc, char* argv[]) {
     string filename_perimeter = argv[2];
     int number_of_banned_areas = stoi(argv[3]);
 
+    string filename_gemma = "a.txt";
+
     pathPoints mission;
     mission.init();
     mission.loadPoints(filename_mission);
@@ -104,12 +110,26 @@ int main(int argc, char* argv[]) {
 
     }
 
+    pathPoints gemma;
+    gemma.init();
+    gemma.loadPoints(filename_gemma);
+
     /*Path*/
     vector<pair<float, float>> points_path;
+    float minx = 0;
+    float miny = 0;
     for(int i = 0; i < mission.points.size(); i=i+20){
         
         pair<float, float> point;
         ll2planar(mission.points.at(0).first, mission.points.at(0).second, mission.points.at(i).first, mission.points.at(i).second, &point.first, &point.second);
+
+        if(point.first < minx){
+            minx = point.first;
+        }
+
+        if(point.second < miny){
+            miny = point.second;
+        }
 
         points_path.push_back(point);
  
@@ -118,9 +138,34 @@ int main(int argc, char* argv[]) {
     vector<K::Point_2> path_cgal;
     for(int i = 0; i < points_path.size(); i++){
 
-        K::Point_2 p(points_path.at(i).first, points_path.at(i).second);
+        K::Point_2 p(points_path.at(i).first - 2*minx, points_path.at(i).second - 2*miny);
         path_cgal.push_back(p);
 
+    }
+
+    /*Cleaning levels*/
+    vector<int> cleaning_levels;
+    cleaning_levels.resize(path_cgal.size());
+    for(int i = 0; i < path_cgal.size(); i++){
+        if(i >=0 && i < 25){
+            cleaning_levels[i] = 1;
+        }
+        else if(i >=25 && i < 60){
+            cleaning_levels[i] = 2;
+        }
+        else if(i >=60 && i < 80){
+            cleaning_levels[i] = 1;
+        }
+        else if(i >=80 && i < 90){
+            cleaning_levels[i] = 0;
+        }
+        else if(i >=90 && i < 110){
+            cleaning_levels[i] = 3;
+        }
+        else if(i >=110 && i < path_cgal.size()){
+            cleaning_levels[i] = 2;
+        }
+        
     }
 
     /*Perimeter*/
@@ -147,30 +192,52 @@ int main(int argc, char* argv[]) {
 
     }
 
+    /*Area for Gemma class*/
+    vector<K::Point_2> gemma_cgal;
+    for(int i = 0; i < gemma.points.size(); i++){
+
+        K::Point_2 p(gemma.points.at(i).first, gemma.points.at(i).second);
+        gemma_cgal.push_back(p);
+
+    }
+
     /*Contouring class*/
     PolygonCreator pc;
     float fake_offset = 0.001;
-    float contour_offset = 0.1;
+    float contour_offset = 0.3;
     float area_threshold = 0.03;
     float perimeter_offset = 0.5;
-    bool apply_contouring = false;
+    bool apply_contouring = true;
 
-    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring);
+    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaning_levels);
 
-    pc.createPolygonFromPath(path_cgal);
+    
+    //CGAL::Polygon_with_holes_2<K> final_contour = pc.createPolygonFromPath(path_cgal);
+
     CGAL::Polygon_with_holes_2<K> perimeter_contour = pc.createPolygon(perimeter_cgal, banned_areas_cgal);
 
-    /*Test*/
-    TEST(Perimeter, ContourDistance){
+    perimeter_offset = 0.4;
 
-        for(int i = 0; i < perimeter_cgal.size() - 1; i++){
-            K::Segment_2 s_perimeter(perimeter_cgal.at(i), perimeter_cgal.at(i+1));
-            K::Segment_2 s_contour(perimeter_contour.outer_boundary().vertex(i), perimeter_contour.outer_boundary().vertex(i+1));
-            float distance = CGAL::squared_distance(s_perimeter, s_contour);
-            EXPECT_EQ(sqrt(distance), perimeter_offset) << "Different distance at point n° " << i << endl;
-        }
+    CoveragePath cp;
+    cp.init(0, 0, path_cgal, {});
+    cp.setPolygonCreatorInit(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaning_levels);
+    CGAL::Polygon_with_holes_2<K> polygon = cp.run();
 
-    }
+    
+
+    // /*Test*/
+    // TEST(Perimeter, ContourDistance){
+
+    //     for(int i = 0; i < perimeter_cgal.size() - 1; i++){
+    //         K::Segment_2 s_perimeter(perimeter_cgal.at(i), perimeter_cgal.at(i+1));
+    //         K::Segment_2 s_contour(perimeter_contour.outer_boundary().vertex(i), perimeter_contour.outer_boundary().vertex(i+1));
+    //         float distance = CGAL::squared_distance(s_perimeter, s_contour);
+    //         EXPECT_EQ(sqrt(distance), perimeter_offset) << "Different distance at point n° " << i << endl;
+    //     }
+
+    // }
+
+    
  
     return 0;
 
