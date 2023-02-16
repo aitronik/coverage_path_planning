@@ -79,6 +79,43 @@ bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, 
     
 }
 
+/*************************************/
+bool isPointIntoConvexPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, K::Point_2 p, float approx) {
+    bool to_return = false; 
+    //cerco le massime e minime x,y del polygon 
+    double x_max = 0; 
+    double y_max = 0;
+    double x_min = INT_MAX; 
+    double y_min = INT_MAX; 
+
+    //calcolo xmax, ymax, xmin, ymin 
+    for (size_t i = 0; i < polygon->vertices().size(); i++) {
+        K::Point_2 corr = polygon->vertex(i);
+        if (corr.x() >= x_max) {
+            x_max = corr.x(); 
+        }
+        if (corr.x() <= x_min) {
+            x_min = corr.x(); 
+        }
+        if (corr.y() >= y_max) {
+            y_max = corr.y();
+        }
+        if (corr.y() <= y_min) {
+            y_min = corr.y();
+        }
+    }
+
+    if (p.x() >= x_min-approx && p.x() <= x_max+approx) {
+        if (p.y() >= y_min-approx && p.y() <= y_max+approx) {
+            to_return = true; 
+        }
+    }
+
+    return to_return; 
+
+}
+
+
 /*************************************/ 
 
 //il secondo elemento del pair è l'indice del lato  in cui c'è l'intersezione
@@ -134,9 +171,47 @@ pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon
 }
 
 /*************************************/
+vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float approximation) {
+    //se sono la stessa retta restituisce due punti p(-1,-1)
+    //se sono parallele e non sono la stessa retta restituisce p(-1,-1)
+    //altrimenti restituisce il punto di intersezione 
+    vector<K::Point_2> to_return; 
+    double Px, Py;
 
+    double a1 = line1.a(); 
+    double b1 = line1.b(); 
+    double c1 = line1.c(); 
+    double a2 = line2.a(); 
+    double b2 = line2.b();
+    double c2 = line2.c();  
+
+    double k = (( a2 * b1) - (a1 * b2)); 
+    if (k != 0) { 
+        if (b1 != 0) {
+            Px = ( (b2*c1) - (b1*c2) ) /k; 
+            Py =  ( (a1*c2) - (a2*c1) )/ k; 
+        }
+        else { //a1 e b2 sono sicuramente != 0 perché k != 0 
+            Px = -(c1/a1); 
+            Py = ( (a2*c1) - (a1*c2)) / (a1*b2); 
+        }
+        to_return.push_back(K::Point_2(Px,Py)); 
+    } 
+    else { //sono parallele 
+        if (CGAL::squared_distance(line1, line2) <= approximation) { //coincidenti
+            to_return.push_back(K::Point_2(-1,-1)); 
+            to_return.push_back(K::Point_2(-1,-1)); 
+        }
+        else {
+            //quindi non si intersecano
+            to_return.push_back(K::Point_2(-1,-1));
+        }
+    }
+    return to_return;
+}
+/*************************************/
 //si suppone che polygon sia convesso
-vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line) {
+vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line, float approx) {
     
     vector<K::Point_2> a; 
     size_t N = polygon->edges().size(); 
@@ -144,22 +219,24 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
     for (size_t i = 0; i < N ; i++) {
 
 
-        const auto inter = CGAL::intersection(line, polygon->edge(i)); 
+        vector<K::Point_2> inters = intersect_lines(line, polygon->edge(i).supporting_line(), approx); 
+        
+        if (a.size() < 2) { //se non ho ancora trovato due punti di intersezione
 
-        if (inter && a.size() <2 ) {
-            
-            // se l'intersezione è un segmento 
-            if (const CGAL::Segment_2<K>* s = boost::get<CGAL::Segment_2<K>>(&*inter)) { 
-                a.clear();
-                a.push_back(s->source()); 
-                a.push_back(s->target()); 
-            }
-            //se è un punto
-            else if (const K::Point_2* p = boost::get<K::Point_2>(&*inter)){ 
-                a.push_back(*p); 
+            if (inters.size() == 2) { //coincidenti ==> l'intersezione è il lato stesso 
+                a.clear(); //se ne avevo già trovato uno lo rimuovo 
+                a.push_back(polygon->edge(i).source()); 
+                a.push_back(polygon->edge(i).target());
             }
 
-        }
+            else if (inters[0] != K::Point_2(-1,-1)) { //si intersecano in un punto 
+                if (CGAL::squared_distance(inters[0], polygon->edge(i)) <= approx ) {
+                    a.push_back(inters[0]); 
+                }
+            }
+
+           
+        }        
     }
 
     return a; 

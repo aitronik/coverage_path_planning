@@ -68,12 +68,44 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
 
 /**
+ * @brief 
+ * 
+ * @param polygon 
+ * @param p 
+ * @param approx
+ * @return true 
+ * @return false 
+ */
+bool isPointIntoConvexPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, K::Point_2 p, float approx);
+
+/**
+ * @brief 
+ * 
+ * @param line1 
+ * @param line2 
+ * @param approximation  
+ * @return vector<K::Point_2> 
+ */
+vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float approximation);
+
+/**
+ * @brief 
+ * 
+ * @param line1 
+ * @param line2 
+ * @param sweepDistance 
+ * @return vector<K::Point_2> 
+ */
+vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float sweepDistance);
+
+/**
  * @brief interseca un poligono con una retta
  * @param polygon 
  * @param line 
+ * @param approx
  * @return K::Point_2* coppia di punti in cui si intersecano (eventualmente coincidenti)
  */
-vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
+vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line, float approx);
 
 
 

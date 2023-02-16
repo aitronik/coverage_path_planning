@@ -19,26 +19,26 @@ bool CoveragePathCreator::init(vector<pair<float, float>> points, float sweepDis
 
     //creo punti di CGAL e inserisco in m_initialPerimeterVertices
     size_t N = points.size(); 
-    for (size_t i = 0; i < N; i++) {
-        K::Point_2 p(points[i].first, points[i].second);
-        m_initialPerimeterVertices.push_back(p); 
-    }
-
-     
     if (N < 3) {
         cout << "CoveragePathCreator: servono almeno 3 vertici" << endl; 
         return false; 
     }
-
+    
     if (sweepDistance <= 0) {
         cout << "CoveragePathCreator: la sweepDistance deve essere maggiore di 0" << endl; 
         return false; 
     }
 
-   
     
+    for (size_t i = 0; i < N; i++) {
+        K::Point_2 p(points[i].first, points[i].second);
+        m_initialPerimeterVertices.push_back(p);
+    }
+
+   
     //creazione del poligono iniziale 
     m_initialPolygon = createPolygon(m_initialPerimeterVertices);
+
 
     //se sono in senso orario ne inverto l'ordine
     if (m_initialPolygon->is_clockwise_oriented()) {
@@ -211,7 +211,7 @@ int CoveragePathCreator::indexOfMinimum(vector<float> &dist, vector<bool> &visit
 
 int CoveragePathCreator::initialIndex(float a, float b, float c, float d) { // si può fare in modo più furbo
 
-    cout << "initialIndex()"<< endl; 
+    // cout << "initialIndex()"<< endl; 
 
     float min = a;
     int index = 0;
@@ -255,7 +255,7 @@ int CoveragePathCreator::numAdiacency(int node) {
 void CoveragePathCreator::Dijkstra(vector<vector<int>> &graph, int sorg, vector<float> &distances)
 {
 
-    cout << "Dijkstra()" << endl; 
+    // cout << "Dijkstra()" << endl; 
 
     size_t numNodes = graph[0].size();
     distances = vector<float>(numNodes, INT_MAX); 
@@ -548,7 +548,7 @@ bool CoveragePathCreator::orderSubPolygons()
 tuple<float, K::Point_2> CoveragePathCreator::maxDistance(vector<K::Point_2> &points, K::Segment_2 &segment)
 { // altitudine
 
-    cout << "maxDistance()" << endl; 
+    // cout << "maxDistance()" << endl; 
 
     float dist = 0;
     float tmp;
@@ -615,123 +615,107 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
     // linea perpendicolare alla direzione di spazzata e passante per il punto più lontano del poligono
     CGAL::Line_2<K> ortogonal = parallelEdge.supporting_line().perpendicular(point);  
     // punto di proiezione del punto più lontano sul lato della direzione 
-    auto projection = CGAL::intersection(ortogonal, parallelEdge.supporting_line());
+    //questo ha sempre funzionato ma forse potrei usare la mia funzione
+    auto projection = CGAL::intersection(ortogonal, parallelEdge.supporting_line()); 
 
 
     const K::Point_2 *p = boost::get<K::Point_2>(&*projection);
     
     CGAL::Segment_2<K> h(*p, point);
 
-    vector<K::Point_2> intersectionPoints = divideSegment(h, m_sweepDistance);
+    vector<K::Point_2> pointsAtDistance = divideSegment(h, m_sweepDistance);
+
 
     // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
-    for (size_t i = 0; i < intersectionPoints.size(); i++) {
-        CGAL::Line_2<K> l(intersectionPoints[i], parallelEdge.supporting_line().direction());
+    for (size_t i = 0; i < pointsAtDistance.size(); i++) {
+        CGAL::Line_2<K> l(pointsAtDistance[i], parallelEdge.supporting_line().direction());
         grid.push_back(l);
-
     }
 
     return grid;
 }
 
-
 /*******************************************************/
-
 shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &isEdgeAdjacent ) {
-    
+
     cout << "reduceSubPolygon(), " << endl;
   
     double offset; //di quanto riduco 
     shared_ptr<CGAL::Polygon_2<K>> polygon_new = std::make_shared<CGAL::Polygon_2<K>>(*polygon); 
 
     size_t N = polygon->edges().size(); 
+    vector<CGAL::Line_2<K>> newEdges(polygon->edges().size());  
 
-    for (size_t i = 0; i < N; i++) {
-     
-        // prendo il lato corrente
-        CGAL::Segment_2<K> corr = polygon->edge(i); // lato corrente
-    
-        // prendo la perpendicolare
+
+  
+
+    for (size_t i = 0; i < N ; i++) {
+        
+        //prendo il lato corrente 
+        CGAL::Segment_2<K> corr = polygon->edge(i); 
+
+        //prendo la retta perpendicolare al lato 
         CGAL::Line_2<K> perp(corr); 
-        perp = perp.perpendicular(corr.source()); // perpendicolare al lato
+        perp = perp.perpendicular(corr.source()); 
 
-        // trasformo in vettore la linea
+        //la trasfonrmo in vettore la linea
         CGAL::Vector_2<K> v = perp.to_vector();
       
         // override!!!!!
         offset = (m_sweepDistance/2); 
         if (isEdgeAdjacent[i]) {
-            continue;
-            // offset = offset/2;
+            offset = 0; 
         }
-
 
         //spostamento del lato di offset 
         v = v / (sqrt(v.squared_length())); //vettore direzione 
         v = v * offset; //traslazione 
         K::Point_2 p = corr.source() + v; //punto a distanza corretta
-        CGAL::Line_2<K> new_line(p, corr.direction()); //parallela al lato che passa per quel punto 
 
-        vector<K::Point_2> a = intersect_convex_polygon_line(polygon_new, new_line); //interrsezione della retta con il poligono 
+        //la retta a cui appartiene il nuovo lato 
+        newEdges[i] = CGAL::Line_2<K> (p, corr.direction()); //passante per p parallela al lato 
+    
 
+    }
 
-        //spostamento effettivo
-        if (a.size() == 0) {
-            cout << "reduceSubPolygon(): not found intersections" << endl; 
+    vector<K::Point_2> inters;
+    for (size_t i = 0; i < N; i++) {
+        
+
+        //trovo i vertici come intersezioni delle rette calcolate 
+        inters = intersect_lines(newEdges[i], newEdges[(i+1)%N], 0.001); 
+        if (inters.size() == 1 ) {
+            if (inters[0] != K::Point_2(-1,-1)) {
+                polygon_new->vertex(i) = inters[0];
+            }
         }
-   
-        else {
-            
-            //aggiorno vertice i e vertice i+1
-            //ho i due punti di intersezione a[0] e a[1] , devo capire quale dei due vertici spostare su quale dei due 
+        else { //non trovato punto di intersezione (o sono coincidenti) ==> non faccio niente 
+            polygon_new = polygon; 
+            break; 
+        }
 
-            // polygon_new->vertex(i) corrisponde ad edge(i).source() 
-            // polygon_new->vertex(( i+1)%N) corrisponde a edge(i).target()
+    }
 
-            double distance1 = CGAL::squared_distance(polygon_new->vertex(i), a[0]);
-            double distance2 = CGAL::squared_distance(polygon_new->vertex(i), a[1]); 
-            double distance3 = CGAL::squared_distance(polygon_new->vertex(( i+1)%N),a[0]); 
-            double distance4 = CGAL::squared_distance(polygon_new->vertex(( i+1)%N),a[1]); 
+    //ci sono casi in cui se un lato non viene ridotto e i due adiacenti si , questi si possono intersecare all'interno del poligono
+    //in questo modo il poligono non viene ridotto ma si può fare meglio
+    if (!polygon_new->is_simple()) {
+        polygon_new = polygon; //in questo caso non riduco, può succedere con alcuni angoli e alcuni lati molto corti
+    }
 
-            //una delle 4 deve essere per forza 
-            if ( (distance1 <= distance2) && (distance4 <= distance3) ) { //vertex i è più vicino ad a[0] e vertex i+1 è più vicino ad a[1]
-                polygon_new->vertex(i) = a[0]; 
-                polygon_new->vertex((i+1)%N) = a[1]; 
-            }
-            else if ( (distance2 <= distance1 ) && (distance3 <= distance4) ){ //vertex i è più vicino ad a[1] e vertex i+1 è più vicino ad a[0]
-                polygon_new->vertex(i) = a[1]; 
-                polygon_new->vertex((i+1)%N) = a[0]; 
-            }
-            else if ( (distance1 <= distance2) && ( distance3 <= distance4) ) { //entrambi più vicini ad a[0] che ad a[1]
-                //scelgo quello a minor distanza da a[0] per associarlo ad a[0]
-                if (distance1 <= distance3) { //scelgo vertex i 
-                    polygon_new->vertex(i) = a[0]; 
-                    polygon_new->vertex((i+1)%N) = a[1]; 
-                }
-                else {
-                    polygon_new->vertex(i) = a[1]; 
-                    polygon_new->vertex((i+1)%N) = a[0];
-                }
-            }
-            else { //entrambi più vicini ad a[1] che ad a[0]
-                //scelgo quello a minor distanza da a[1] per associarlo ad a[1]
-                if (distance2 <= distance4) {
-                    polygon_new->vertex(i) = a[1]; 
-                    polygon_new->vertex((i+1)%N) = a[0];
-                }
-                else {
-                    polygon_new->vertex(i) = a[0]; 
-                    polygon_new->vertex((i+1)%N) = a[1]; 
-                }
-            }
+    // se uno dei nuovi vertici è fuori dal poligono iniziale (la sweepDistance era maggiore dell'altezza del poligono)
+    for (size_t i = 0; i < N; i++) {
+        if (!isPointIntoConvexPolygon(polygon, polygon_new->vertex(i), 0.001)) {
+            polygon_new = polygon; 
+            break;
         }
     }
-    
+
     return polygon_new;
 
-}        
+}
 
 /*******************************************************/
+
 
 // ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
 vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders) {
@@ -742,7 +726,6 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 
     //SE SI VUOLE FARE SENZA RESTRIZIONE DEI POLIGONI :
     // shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = polygon;
-
 
     shared_ptr<CGAL::Polygon_2<K>> restrictedPolygon = reduceSubPolygon(polygon, borders);
 
@@ -768,7 +751,9 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 
     for (size_t i = 1; i < grid.size(); i++) {
 
-        vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i));
+        // vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i));
+        vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i), 0.001);
+
 
         // o non interseca oppure interseca solo in un punto
         if (a.size() == 0) {
@@ -949,7 +934,8 @@ int CoveragePathCreator::generateLinkBetween(size_t indexOfLastPolygonCovered, s
     last_point = m_finalPath[m_finalPath.size()-1].target(); 
     int n = m_intersections[indexPolygon].size(); 
 
-    //scelgo a quale punto unire al path i esimo (primo, secondo, penultimo o ultimo)
+
+    //scelgo a quale punto unire al path i esimo (primo, secondo, penultimo o ultimo
     distance1 = CGAL::squared_distance(last_point, m_intersections[indexPolygon][0]); 
     distance2 = CGAL::squared_distance(last_point, m_intersections[indexPolygon][1]); 
     distance3 = CGAL::squared_distance(last_point, m_intersections[indexPolygon][n-2]); 
@@ -1005,11 +991,21 @@ void CoveragePathCreator::generatePathForSubpolygons(){
 
     //scelgo da quale punto partire del primo poligono ==> il più vicino ad initialVertex
     size_t n = m_intersections[0].size(); 
+
     double distance1 = CGAL::squared_distance(m_firstVertex, m_intersections[0][0]); 
     double distance2 = CGAL::squared_distance(m_firstVertex, m_intersections[0][1]); 
     double distance3 = CGAL::squared_distance(m_firstVertex, m_intersections[0][n-2]); 
     double distance4 = CGAL::squared_distance(m_firstVertex, m_intersections[0][n-1]); 
+  
     int index = initialIndex(distance1, distance2, distance3, distance4); 
+    
+    //corrispondenza nel caso degli ultimi due punti dell'index trovato con il corrispondente indice in m_intersections
+    if (index == 2) {
+        index = n-2;
+    }
+    if (index == 3) {
+        index = n-1;
+    }
 
 
     // collego il punto iniziale al punto di partenza del path del primo sottopoligono
@@ -1162,12 +1158,7 @@ void CoveragePathCreator::generateGridsForSubpolygons(){
                 //cerco quale lato del poligono k corrisponde all'adiacenza 
                 for (size_t j = 0; j < curr->edges().size(); j++) {                    
                     CGAL::Segment_2<K> edge = curr->edge(j); 
-                    //0.001 è un cm? 
-                       if ( (CGAL::squared_distance(seg, edge.source()) < (m_sweepDistance/4))   && 
-                    (CGAL::squared_distance(seg, edge.target()) < (m_sweepDistance/4)) ){ 
-                    // if ( (CGAL::squared_distance(seg, edge.source()) < 0.001)   && 
-                    // (CGAL::squared_distance(seg, edge.target()) < 0.001) ){ 
-                    // if (seg.has_on(edge.source()) && seg.has_on(edge.target())) {
+                    if (seg.has_on(edge.source()) && seg.has_on(edge.target())) {
                         isEdgeAdjacent[j] = true; 
                     }                
                 }
@@ -1270,7 +1261,7 @@ bool CoveragePathCreator::run() {
     simplifyPerimeter();
 
     //aggiornamento del'immagine del perimetro in Coverage Plot Helper
-    m_Helper.updatePerimeterImage(m_simplyfiedPolygon, true);
+    m_Helper.updatePerimeterImage(m_simplyfiedPolygon, false);
 
     //decomposizione in sottopoligoni convessi 
 

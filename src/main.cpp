@@ -20,6 +20,9 @@
 //./coverage_path ../test/input.txt 1 1.5 ==> problemi intersezione (CGAL::intersect)
 //./coverage_path ../test/path2.txt 1 0.5 ==> manca una riga (problemi CGAL::intersect?)
 //../test/pol1.txt 1 0.4 ==> crasha per openCV 
+//complex 
+//./coverage_path ../test/polly.txt 1 20 ==> riduzione poligono (reduce: riga 702)
+//TestGemma1 poligono3
 
 //quando un lato di un sottopoligono è adiacente a due diversi sottopoliogni (complessivamente per tutta la sua lunghezza) 
 //l'adiacenza non viene trovata e quindi viene ridotto il poligono su quel lato anche se non dovrebbe 

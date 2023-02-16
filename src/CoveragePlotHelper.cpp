@@ -321,11 +321,11 @@ void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line, string imageName)
     double c = line.c(); 
 
     if (a == 0 ) {
-         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(1), pixelFromMetres(-(c/b))),   
+         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(10), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(1), pixelFromMetres(-(c/b))),   
         cv::Scalar(0, 0, 255), 1, 8, 0   );
     }
     else if (b == 0) {
-         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1)),   
+         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(10)), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1)),   
         cv::Scalar(0, 0, 255), 1, 8, 0   );
     }
     else {
