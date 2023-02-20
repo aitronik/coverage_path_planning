@@ -9,29 +9,17 @@
 #include <exception>
 
 // ./coverage_path ../test/nometest.txt <decompositionType> <sweepDistance>  
-//deve funzionare con sweepdistance 0? 
 //sistemare gli shared ptr
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
-//non capisco perché a volte il perimetro esterno sembra più spesso 
-//gestito il senso antiorario ma a me funziona in entrambi i casi anche senza invertire i punti 
 //non so se funziona con coordinate negative 
 
-//BUG: 
-//./coverage_path ../test/input.txt 1 1.5 ==> problemi intersezione (CGAL::intersect)
-//./coverage_path ../test/path2.txt 1 0.5 ==> manca una riga (problemi CGAL::intersect?)
-//../test/pol1.txt 1 0.4 ==> crasha per openCV 
-//complex 
-//./coverage_path ../test/polly.txt 1 20 ==> riduzione poligono (reduce: riga 702)
-//TestGemma1 poligono3
+//TO DO: 
+//1.
+//la funzione per comporre le adiacenze che "avanzano" per vedere se unendole formano un lato intero non va
+//2.
+//Se due lati non adiacenti di un poligono ridotto si intersecano ("fiocco") inserire il punto di intersezione tra i vertici 
+//e togliere gli altri due 
 
-//quando un lato di un sottopoligono è adiacente a due diversi sottopoliogni (complessivamente per tutta la sua lunghezza) 
-//l'adiacenza non viene trovata e quindi viene ridotto il poligono su quel lato anche se non dovrebbe 
-
-//ELIMINATI 
-//joinAndLinkPaths()
-//calculateAngle() 
-//isToReduce()
-//isCollinear()
 
 using namespace std;
 

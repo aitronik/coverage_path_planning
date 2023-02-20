@@ -43,29 +43,22 @@ vector<pair<float,float>> readFromFile(string filename);
  */
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 
-// void printInfo();
 
 // /**
-//  * @brief calcola il coseno dell'angolo tra due vettori in radianti (controllare che siano radianti )
-//  * @param v 
-//  * @param w 
-//  * @return double 
+//  * @brief calcola i vertici di adiacenza tra due poligoni 
+//  * se ci sono due punti in comune tra container1 e container2 return true e salva i due vertici in vertex_i e vertex_2. 
+//  * Se c'è un solo punto di adiacenza salva punto,-1 . 
+//  * Altrimenti  salva -1 e -1 
+//  * @param container1 
+//  * @param container2 
+//  * @param vertex_i 
+//  * @param vertex_j 
+//  * @return true se c'è adiacenza 
+//  * @return false altrimenti
 //  */
-// double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
+// bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
 
-/**
- * @brief calcola i vertici di adiacenza tra due poligoni 
- * se ci sono due punti in comune tra container1 e container2 return true e salva i due vertici in vertex_i e vertex_2. 
- * Se c'è un solo punto di adiacenza salva punto,-1 . 
- * Altrimenti  salva -1 e -1 
- * @param container1 
- * @param container2 
- * @param vertex_i 
- * @param vertex_j 
- * @return true se c'è adiacenza 
- * @return false altrimenti
- */
-bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j, vector<K::Point_2> decomposedVertices);
 
 /**
  * @brief 
@@ -97,6 +90,18 @@ vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2,
  * @return vector<K::Point_2> 
  */
 vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float sweepDistance);
+
+
+/**
+ * @brief 
+ * 
+ * @param l1 
+ * @param l2 
+ * @param approx 
+ * @return true 
+ * @return false 
+ */
+bool areParallel(CGAL::Line_2<K> l1, CGAL::Line_2<K> l2, float approx);
 
 /**
  * @brief interseca un poligono con una retta
@@ -144,10 +149,23 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
  * 
  * @param a 
  * @param b 
+ * @param approx
  * @return true 
  * @return false 
  */
-bool areEqual(K::Point_2 a, K::Point_2 b);
+bool arePointsEqual(K::Point_2 a, K::Point_2 b, float approx);
+
+/**
+ * @brief 
+ * 
+ * @param s1 
+ * @param s2 
+ * @param approx 
+ * @return true 
+ * @return false 
+ */
+bool areSegmentsEqual(CGAL::Segment_2<K> s1, CGAL::Segment_2<K> s2, float approx);
+
 
 /**
  * @brief 
@@ -157,3 +175,16 @@ bool areEqual(K::Point_2 a, K::Point_2 b);
  * @return K::Point_2 
  */
 K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points);
+
+
+/**
+ * @brief 
+ * 
+ * @param segment1 
+ * @param segment2 
+ * @param approx 
+ * @return pair<bool, CGAL::Segment_2<K>> 
+ */
+pair<bool, CGAL::Segment_2<K>> concatenateSegments(CGAL::Segment_2<K> segment1, CGAL::Segment_2<K> segment2, float approx);
+
+

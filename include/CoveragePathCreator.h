@@ -261,6 +261,16 @@ class CoveragePathCreator {
          */
         vector<CGAL::Line_2<K>> createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point);
 
+         /**
+         * @brief 
+         * 
+         * @param polygon 
+         * @param isEdgeToReduce 
+         * @param adjacences 
+         */
+        void areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &isEdgeToReduce, vector<CGAL::Segment_2<K>> adjacences);
+
+
         /**
          * @brief ritorna i punti di intersezione tra la griglia e il poligono ristretto nelle adiacenze
          * @param cont numero del sottopoligono

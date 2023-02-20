@@ -51,33 +51,147 @@ shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) {
 
 }
 
-
 /*************************************/
-
 //suppongo che i punti in comune non possano essere più di due
-bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
-    int adj[2] = {-1,-1};
-    int cont = 0;
-    // per ogni lista di vertici di un poligono
-    for (size_t p: container1) {
-        // guardi tutti i vertici
-        for (size_t q:container2) {
-            // se sono uguali
-            if (p == q) {
+//ritorna true se a[0] != -1 
+//a[0] == -1 && a[1] == -1 se non c'è adiacenza 
+//a[0] != -1 && a[1] == -1 se c'è un solo punto di adiacenza 
+//altrimenti a[0] e a[1] sono i due estremi del segmento di adiacenza tra i due poligoni 
+
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j, vector<K::Point_2> decomposedVertices) {
+    
+    int adj[2] = {-1, -1}; //punti di adiacenza (estremi del segmento)
+    int cont = 0; //contatore di quanti punti sono stati trovati (da 0 a 2)
+    
+    // //controllo tramite la lista di indici dei poligoni che ci sia almeno un vertice in comune 
+    // for (size_t p : container1) {
+    //     for (size_t q : container2) {
+    //         //se sono uguali 
+    //         if (p == q && cont < 2) {
+    //             adj[cont] = p; 
+    //             cont ++; 
+    //             break;
+    //         } 
+    //     }
+    // }
+
+    //se è solo uno, provo a calcolarne un secondo (che potrebbe non essere in comune come vertice, ma appartenere comunque anche 
+    //a un lato del poligono di cui non è vertice) 
+    
+
+    size_t old, first; 
+    int k; 
+
+    //prima cerco a partire da polygon1
+    for (size_t p : container1) {
+        if (cont == 2) {
+            break;
+        }
+        k = 0;
+        //controllo se è parte di uno dei lati di polygon2
+        for (size_t q : container2) {
+            if (k == 0) { // sono al primo vertice
+                old = q;
+                first = q;
+            }
+
+            if (p == q && cont < 2) {
+            adj[cont] = p; 
+            cont ++; 
+            break;
+            }
+
+
+            if (k == container2.size()-1) { //sono all'ultimo vertice
+                if (p != adj[0] && CGAL::squared_distance(CGAL::Segment_2<K>(decomposedVertices[q],decomposedVertices[first] ), decomposedVertices[p]) <= 0.001) {
+                    adj[cont] = p;
+                    cont ++;    
+                    break;
+                }
+            }
+            if (p != adj[0] && CGAL::squared_distance(CGAL::Segment_2<K>(decomposedVertices[old],decomposedVertices[q] ), decomposedVertices[p]) <= 0.001) {
                 adj[cont] = p;
-                cont++;
+                cont ++;    
                 break;
             }
+            k++;
+            old = q;
         }
     }
+
+    //al contrario
+    for (size_t p : container2) {
+        
+        if (cont == 2) {
+            break; 
+        }
+        k = 0;
+        for (size_t q : container1) {
+            
+            if (k == 0) {
+                first = q;
+                old = q;
+            }
+
+            // if (p == q && cont < 2) {
+            //     adj[cont] = p; 
+            //     cont ++; 
+            //     break;
+            // }
+
+            if (k == container1.size()-1) { //sono all'ultimo vertice
+                if (p != adj[0] && CGAL::squared_distance(CGAL::Segment_2<K>(decomposedVertices[q],decomposedVertices[first] ), decomposedVertices[p]) <= 0.001) {
+                    adj[cont] = p;
+                    cont ++;    
+                    break;
+                }
+            }
+            if (p != adj[0] && CGAL::squared_distance(CGAL::Segment_2<K>(decomposedVertices[old],decomposedVertices[q] ), decomposedVertices[p]) <= 0.001) {
+                adj[cont] = p;
+                cont ++;    
+                break;
+            }
+            k++;
+            old = q;
+        }
+    } 
+    
+    
+    
     vertex_i = adj[0];
     vertex_j = adj[1];
-    // vertex_i and j can be -1 if there is no adjacency
-    // or have a value containing the vertex in which they are adjacent
-    // return true if the two polygons have at least one vertex in common
+
     return (vertex_i != -1);
-    
 }
+
+
+
+
+/*************************************/
+//suppongo che i punti in comune non possano essere più di due
+// bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j ) {
+//     int adj[2] = {-1,-1};
+//     int cont = 0;
+//     // per ogni lista di vertici di un poligono
+//     for (size_t p: container1) {
+//         // guardi tutti i vertici
+//         for (size_t q:container2) {
+//             // se sono uguali
+//             if (p == q && cont < 2) {
+//                 adj[cont] = p;
+//                 cont++;
+//                 break;
+//             }
+//         }
+//     }
+//     vertex_i = adj[0];
+//     vertex_j = adj[1];
+//     // vertex_i and j can be -1 if there is no adjacency
+//     // or have a value containing the vertex in which they are adjacent
+//     // return true if the two polygons have at least one vertex in common
+//     return (vertex_i != -1);
+    
+// }
 
 /*************************************/
 bool isPointIntoConvexPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, K::Point_2 p, float approx) {
@@ -210,6 +324,20 @@ vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2,
     return to_return;
 }
 /*************************************/
+
+bool areParallel(CGAL::Line_2<K> l1, CGAL::Line_2<K> l2, float approx) {
+    
+    bool to_ret = false; 
+    vector<K::Point_2> inters = intersect_lines(l1,l2,approx); 
+    if (inters[0] == K::Point_2(-1,-1)) {
+        to_ret = true;
+    }
+    return to_ret; 
+
+}
+
+
+/*************************************/
 //si suppone che polygon sia convesso
 vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line, float approx) {
     
@@ -307,16 +435,29 @@ int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c){ //se l'angolo è di 180 vi
 
 /*******************************************************/
 
-bool areEqual(K::Point_2 a, K::Point_2 b) {
+bool arePointsEqual(K::Point_2 a, K::Point_2 b, float approx) {
+
     bool to_ret = false;
-    if (a.x() == b.x() && a.hy() == b.hy()) {
-        to_ret = true;
+    if (CGAL::squared_distance(a,b) <= approx) {
+        to_ret = true; 
     }
     return to_ret;
 }
 
 /*******************************************************/
+bool areSegmentsEqual(CGAL::Segment_2<K> s1, CGAL::Segment_2<K> s2, float approx) { 
+    bool to_ret = false; 
+    if (arePointsEqual(s1.source(), s2.source(), approx) && arePointsEqual(s1.target(), s2.target(), approx)) {
+        to_ret = true; 
+    }
+    else if (arePointsEqual(s1.source(), s2.target(), approx) && arePointsEqual(s1.target(), s2.source(), approx)) { 
+        to_ret = true;
+    }
+    return to_ret; 
 
+} 
+
+/*******************************************************/
 K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points) {
     
     float minDistance = MAXFLOAT; 
@@ -329,5 +470,41 @@ K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points) {
     }
     return nearest; 
 }
+
+/*******************************************************/
+pair<bool, CGAL::Segment_2<K>> concatenateSegments(CGAL::Segment_2<K> segment1, CGAL::Segment_2<K> segment2, float approx) {
+
+    bool to_ret = false; 
+    CGAL::Segment_2<K> resultingSegment(K::Point_2(-1,-1), K::Point_2(-1,-1)); 
+
+    K::Point_2 s1 = segment1.source();
+    K::Point_2 t1 = segment1.target();
+    K::Point_2 s2 = segment2.source();
+    K::Point_2 t2 = segment2.target(); 
+
+    if (areParallel(segment1.supporting_line(), segment2.supporting_line(), 0.001)) {
+
+        if (arePointsEqual(s1,s2,0.001)) {
+            to_ret = true;
+            resultingSegment = CGAL::Segment_2<K>(t1,t2); 
+        }
+        else if (arePointsEqual(s1,t2,0.001)) {
+            to_ret = true;
+            resultingSegment = CGAL::Segment_2<K>(t1, s2);
+        }
+        else if (arePointsEqual(t1,t2,0.001)) {
+            to_ret = true;
+            resultingSegment = CGAL::Segment_2<K>(s1,s2); 
+        }
+        else if (arePointsEqual(t1, s2, 0.001)) {
+            to_ret = true;
+            resultingSegment = CGAL::Segment_2<K>(s1,t2); 
+        }
+    }
+
+    return make_pair(to_ret, resultingSegment);
+
+}
+
 
 /*******************************************************/
