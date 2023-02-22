@@ -1108,71 +1108,98 @@ void CoveragePathCreator::eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  
 void CoveragePathCreator::areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &isEdgeToReduce, vector<CGAL::Segment_2<K>> adjacences) {
     
     vector<CGAL::Segment_2<K>> tmp;
-    for (size_t i = 0; i < adjacences.size(); i++) {
+
+    for (size_t i = 0 ; i < adjacences.size(); i++) {
         for (size_t j = 0; j < polygon->edges().size(); j++) {
-            //se il lato è completamente contenuto nell'adiacenza 
             if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.001 && 
-            CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
+                    CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
                 isEdgeToReduce[j] = false;
+                break;
             }
-            else {
+            else if (j == polygon->edges().size()-1) {
                 tmp.push_back(adjacences[i]);
             }
-        }        
+        }
+
     }
     adjacences = tmp;
 
-    // //composizione delle adiacenze rimaste (la somma di due diverse adiacenze potrebbe dare un intero lato del poligono)
-    // bool allConcatenated = false; 
-    // while (!allConcatenated) {
-    //     bool concatenated = false;
-    //     for (size_t i = 0; i < adjacences.size(); i++ ) {
-            
-    //         if (concatenated) {
-    //             break;
-    //         }
-    //         for (size_t j = 0; j < adjacences.size(); j++) {
-    //             if (i != j) {
-    //                 pair<bool, CGAL::Segment_2<K>> pair = concatenateSegments(adjacences[i], adjacences[j], 0.001);
-    //                 if (pair.first) {
-    //                     //rimuovo le due adiacenze originarie (prima quella con indice maggiore) 
-    //                     if (j > i) {
-    //                         adjacences.erase(adjacences.begin() + j); 
-    //                         adjacences.erase(adjacences.begin() + i);
-    //                     }
-    //                     else {
-    //                         adjacences.erase(adjacences.begin() + i);
-    //                         adjacences.erase(adjacences.begin() + j);
-    //                     }
-    //                     concatenated = true;
-    //                     //inserisco in adjacences
-    //                     adjacences.push_back(pair.second);
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //         if (i == adjacences.size()-1) {
-    //             allConcatenated = true;
-    //         }
-
-    //     }  
-    // }
-
-    // //ripeto il controllo sui lati da ridurre 
-    // tmp.clear();
+    // cout << "BEFORE" << endl; 
     // for (size_t i = 0; i < adjacences.size(); i++) {
-    //     for (size_t j = 0; j < polygon->edges().size(); j++) {
-    //         //se il lato è completamente contenuto nell'adiacenza 
-    //         if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.001 && 
-    //         CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
-    //             isEdgeToReduce[j] = false;
-    //         }
-    //         else {
-    //             tmp.push_back(adjacences[i]);
-    //         }
-    //     }        
+    //     cout << adjacences[i] << endl;
+    //     // m_Helper.plotPoint(adjacences[i].source(), 'r', 0); 
     // }
-    // adjacences = tmp;
+    // if (adjacences.size() == 2) {
+    //     m_Helper.plotPoint(adjacences[0].source(), 'r', 0); 
+    //     m_Helper.plotPoint(adjacences[0].target(), 'r', 1);
+    //     m_Helper.plotPoint(adjacences[1].source(), 'b', 0); 
+    //     m_Helper.plotPoint(adjacences[1].target(), 'b', 1); 
+    // }
+
+    //composizione delle adiacenze rimaste (la somma di due diverse adiacenze potrebbe dare un intero lato del poligono)
+    if (adjacences.size() > 1 ) { 
+
+        bool allConcatenated = false; 
+
+        while (!allConcatenated) {
+            bool concatenated = false;
+            for (size_t i = 0; i < adjacences.size(); i++ ) {
+                if (concatenated) {
+                    break;
+                }
+                for (size_t j = 0; j < adjacences.size(); j++) {
+
+                    if (i != j) {
+                        
+                        pair<bool, CGAL::Segment_2<K>> pair = concatenateSegments(adjacences[i], adjacences[j], 0.001);
+                        if (pair.first) {
+                            //rimuovo le due adiacenze originarie (prima quella con indice maggiore) 
+                            if (j > i) {
+                                adjacences.erase(adjacences.begin() + j); 
+                                adjacences.erase(adjacences.begin() + i);
+                            }
+                            else {
+                                adjacences.erase(adjacences.begin() + i);
+                                adjacences.erase(adjacences.begin() + j);
+                            }
+                            concatenated = true;
+                            //inserisco in adjacences
+                            adjacences.push_back(pair.second);
+                            break;
+                        }
+                    }
+                }
+                if (i == adjacences.size()-1) {                    
+                    allConcatenated = true;
+                }
+
+            }  
+        }
+
+
+        cout << "AFTER" << endl; 
+        for (size_t i = 0; i < adjacences.size(); i++) {
+            cout << adjacences[i] << endl;
+        }
+
+        //dopo la composizione ripeto il confronto con i lati 
+        for (size_t i = 0 ; i < adjacences.size(); i++) {
+            for (size_t j = 0; j < polygon->edges().size(); j++) {
+                if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.001 && 
+                        CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
+                    isEdgeToReduce[j] = false;
+                    break;
+                }
+                else if (j == polygon->edges().size()-1) {
+                    tmp.push_back(adjacences[i]);
+                }
+            }
+
+        }
+        adjacences = tmp;
+    
+    
+    }
 
 }
 

@@ -323,18 +323,6 @@ vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2,
     }
     return to_return;
 }
-/*************************************/
-
-bool areParallel(CGAL::Line_2<K> l1, CGAL::Line_2<K> l2, float approx) {
-    
-    bool to_ret = false; 
-    vector<K::Point_2> inters = intersect_lines(l1,l2,approx); 
-    if (inters[0] == K::Point_2(-1,-1)) {
-        to_ret = true;
-    }
-    return to_ret; 
-
-}
 
 
 /*************************************/
@@ -482,26 +470,40 @@ pair<bool, CGAL::Segment_2<K>> concatenateSegments(CGAL::Segment_2<K> segment1, 
     K::Point_2 s2 = segment2.source();
     K::Point_2 t2 = segment2.target(); 
 
-    if (areParallel(segment1.supporting_line(), segment2.supporting_line(), 0.001)) {
+    K::Point_2 s, t, m; //per la costruzione del nuovo segmento 
 
-        if (arePointsEqual(s1,s2,0.001)) {
-            to_ret = true;
-            resultingSegment = CGAL::Segment_2<K>(t1,t2); 
-        }
-        else if (arePointsEqual(s1,t2,0.001)) {
-            to_ret = true;
-            resultingSegment = CGAL::Segment_2<K>(t1, s2);
-        }
-        else if (arePointsEqual(t1,t2,0.001)) {
-            to_ret = true;
-            resultingSegment = CGAL::Segment_2<K>(s1,s2); 
-        }
-        else if (arePointsEqual(t1, s2, 0.001)) {
-            to_ret = true;
-            resultingSegment = CGAL::Segment_2<K>(s1,t2); 
-        }
+    //un estremo in comune 
+    if (arePointsEqual(s1,s2,0.001)) {
+        m = s1; 
+        s = t1; 
+        t = t2;
+    }
+    else if (arePointsEqual(s1,t2,0.001)) {
+        m = s1; 
+        s = t1; 
+        t = s2;
+    }
+    else if (arePointsEqual(t1,t2,0.001)) {
+        m = t1;
+        s = s1; 
+        t = s2; 
+    }
+    else if (arePointsEqual(t1, s2, 0.001)) {
+        m = t1; 
+        s = s1; 
+        t = t2; 
+    }
+    else {
+        return make_pair(to_ret, resultingSegment);
     }
 
+    //se sono collineari 
+    CGAL::Line_2<K> line(s,m); 
+    if (CGAL::squared_distance(line, t) <= 0.001) {
+        to_ret = true; 
+        resultingSegment = CGAL::Segment_2<K>(s,t);
+    }
+ 
     return make_pair(to_ret, resultingSegment);
 
 }

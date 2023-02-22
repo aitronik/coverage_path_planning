@@ -91,18 +91,6 @@ vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2,
  */
 vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float sweepDistance);
 
-
-/**
- * @brief 
- * 
- * @param l1 
- * @param l2 
- * @param approx 
- * @return true 
- * @return false 
- */
-bool areParallel(CGAL::Line_2<K> l1, CGAL::Line_2<K> l2, float approx);
-
 /**
  * @brief interseca un poligono con una retta
  * @param polygon 
