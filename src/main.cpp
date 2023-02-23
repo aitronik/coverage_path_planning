@@ -14,8 +14,6 @@
 //non so se funziona con coordinate negative 
 
 //TO DO: 
-//1.
-//la funzione per comporre le adiacenze che "avanzano" per vedere se unendole formano un lato intero non va
 //2.
 //Se due lati non adiacenti di un poligono ridotto si intersecano ("fiocco") inserire il punto di intersezione tra i vertici 
 //e togliere gli altri due 

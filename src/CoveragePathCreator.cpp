@@ -624,7 +624,6 @@ vector<CGAL::Line_2<K>> CoveragePathCreator::createGrid(CGAL::Segment_2<K> paral
 
     vector<K::Point_2> pointsAtDistance = divideSegment(h, m_sweepDistance);
 
-
     // genero una linea con direzione parallelEdge.direction e che passa per il punto i-esimo
     for (size_t i = 0; i < pointsAtDistance.size(); i++) {
         CGAL::Line_2<K> l(pointsAtDistance[i], parallelEdge.supporting_line().direction());
@@ -682,7 +681,7 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
         
 
         //trovo i vertici come intersezioni delle rette calcolate 
-        inters = intersect_lines(newEdges[i], newEdges[(i+1)%N], 0.001); 
+        inters = intersect_lines(newEdges[i], newEdges[(i+1)%N], 0.01); 
         if (inters.size() == 1 ) {
             if (inters[0] != K::Point_2(-1,-1)) {
                 polygon_new->vertex(i) = inters[0];
@@ -703,7 +702,7 @@ shared_ptr<CGAL::Polygon_2<K>> CoveragePathCreator::reduceSubPolygon(shared_ptr<
 
     // se uno dei nuovi vertici è fuori dal poligono iniziale (la sweepDistance era maggiore dell'altezza del poligono)
     for (size_t i = 0; i < N; i++) {
-        if (!isPointIntoConvexPolygon(polygon, polygon_new->vertex(i), 0.001)) {
+        if (!isPointIntoConvexPolygon(polygon, polygon_new->vertex(i), 0.01)) {
             polygon_new = polygon; 
             break;
         }
@@ -750,22 +749,25 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
 
     for (size_t i = 1; i < grid.size(); i++) {
 
-        // vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i));
-        vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i), 0.001);
-
-
+        vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid.at(i), 0.01);
+       
         // o non interseca oppure interseca solo in un punto
         if (a.size() == 0) {
-            cout << "generateGridForOnePolygon(): non trovate intersezioni tra griglia e sottopoligono ristretto" << endl;
+            cout << "generateGridForOnePolygon(): non trovate intersezioni tra linea e sottopoligono ristretto" << endl;
         }
         //due intersezioni non coincidenti
-        else if (a.size() > 1){
+        else if (a.size() == 1 && a[0] != K::Point_2(-1,-1)){
+            intersections.push_back(a[0]);
+            intersections.push_back(a[0]);
+        }
+        else {
             intersections.push_back(a[0]);
             intersections.push_back(a[1]);
         }
-        else {
-            cout << "generateGridForOnePolygon(): trovata una sola intersezione tra griglia e sottopoligono ristretto" << endl;
-        }
+        // else {
+        //     cout << "generateGridForOnePolygon(): trovata una sola intersezione tra griglia e sottopoligono ristretto" << endl;
+        //     intersections.push_back(a[0])
+        // }
     }
 
     // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx)
@@ -866,7 +868,7 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
     //non so perché ci siano punti duplicati, andrebbe risolto in altro modo ==> e comunque questo forse lo metto più alla fine 
     if (path.size() > 2) {
         for (size_t i = 0; i < path.size(); i++) {
-            if (arePointsEqual(path.at(i).source(), path.at(i).target(), 0.001)) {
+            if (arePointsEqual(path.at(i).source(), path.at(i).target(), 0.01)) {
                 path.erase(path.begin()+i);
             }
         }
@@ -1111,8 +1113,8 @@ void CoveragePathCreator::areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygo
 
     for (size_t i = 0 ; i < adjacences.size(); i++) {
         for (size_t j = 0; j < polygon->edges().size(); j++) {
-            if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.001 && 
-                    CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
+            if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.01 && 
+                    CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.01) {
                 isEdgeToReduce[j] = false;
                 break;
             }
@@ -1124,18 +1126,7 @@ void CoveragePathCreator::areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygo
     }
     adjacences = tmp;
 
-    // cout << "BEFORE" << endl; 
-    // for (size_t i = 0; i < adjacences.size(); i++) {
-    //     cout << adjacences[i] << endl;
-    //     // m_Helper.plotPoint(adjacences[i].source(), 'r', 0); 
-    // }
-    // if (adjacences.size() == 2) {
-    //     m_Helper.plotPoint(adjacences[0].source(), 'r', 0); 
-    //     m_Helper.plotPoint(adjacences[0].target(), 'r', 1);
-    //     m_Helper.plotPoint(adjacences[1].source(), 'b', 0); 
-    //     m_Helper.plotPoint(adjacences[1].target(), 'b', 1); 
-    // }
-
+   
     //composizione delle adiacenze rimaste (la somma di due diverse adiacenze potrebbe dare un intero lato del poligono)
     if (adjacences.size() > 1 ) { 
 
@@ -1151,7 +1142,7 @@ void CoveragePathCreator::areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygo
 
                     if (i != j) {
                         
-                        pair<bool, CGAL::Segment_2<K>> pair = concatenateSegments(adjacences[i], adjacences[j], 0.001);
+                        pair<bool, CGAL::Segment_2<K>> pair = concatenateSegments(adjacences[i], adjacences[j], 0.01);
                         if (pair.first) {
                             //rimuovo le due adiacenze originarie (prima quella con indice maggiore) 
                             if (j > i) {
@@ -1176,17 +1167,11 @@ void CoveragePathCreator::areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygo
             }  
         }
 
-
-        cout << "AFTER" << endl; 
-        for (size_t i = 0; i < adjacences.size(); i++) {
-            cout << adjacences[i] << endl;
-        }
-
         //dopo la composizione ripeto il confronto con i lati 
         for (size_t i = 0 ; i < adjacences.size(); i++) {
             for (size_t j = 0; j < polygon->edges().size(); j++) {
-                if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.001 && 
-                        CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.001) {
+                if ( CGAL::squared_distance(polygon->edge(j).source(), adjacences[i]) <= 0.01 && 
+                        CGAL::squared_distance(polygon->edge(j).target(), adjacences[i]) <= 0.01) {
                     isEdgeToReduce[j] = false;
                     break;
                 }

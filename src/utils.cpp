@@ -334,26 +334,35 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
 
     for (size_t i = 0; i < N ; i++) {
 
-
         vector<K::Point_2> inters = intersect_lines(line, polygon->edge(i).supporting_line(), approx); 
         
         if (a.size() < 2) { //se non ho ancora trovato due punti di intersezione
 
-            if (inters.size() == 2) { //coincidenti ==> l'intersezione è il lato stesso 
-                a.clear(); //se ne avevo già trovato uno lo rimuovo 
-                a.push_back(polygon->edge(i).source()); 
-                a.push_back(polygon->edge(i).target());
-            }
-
-            else if (inters[0] != K::Point_2(-1,-1)) { //si intersecano in un punto 
-                if (CGAL::squared_distance(inters[0], polygon->edge(i)) <= approx ) {
-                    a.push_back(inters[0]); 
+            if (inters[0] != K::Point_2(-1,-1)) {
+                
+                if (inters.size() == 2) { //coincidenti ==> l'intersezione è il lato stesso 
+                    a.clear(); //se ne avevo già trovato uno lo rimuovo 
+                    a.push_back(polygon->edge(i).source()); 
+                    a.push_back(polygon->edge(i).target());
                 }
+
+                //si intersecano in un punto 
+                else if (CGAL::squared_distance(inters[0], polygon->edge(i)) <= approx ) {
+                    
+                    if (a.size() == 1 && CGAL::squared_distance(a[0], inters[0]) <= approx) { //ho trovato per due volte 
+                    //un vertice (partendo da due lati diversi )
+                        continue; //non faccio niente 
+                    }
+
+                    a.push_back(inters[0]); 
+               
+                }
+                  
             }
 
-           
         }        
     }
+
 
     return a; 
 
