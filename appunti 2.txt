@@ -1,0 +1,83 @@
+vector<pair<CGAL::Polygon_with_holes_2<K2>, int>> seeds;
+
+    int jumpIndex = 0;
+    bool polygonCounter = false;
+
+    jump:   
+
+    CGAL::Polygon_with_holes_2<K2> seed(convertPolyWithHoles2K2(subpolygons.at(jumpIndex).first));
+
+    for(int i = 0; i < subpolygons.size(); i++){
+        if(CGAL::do_intersect(seed, convertPolyWithHoles2K2(subpolygons.at(i).first))){
+            if(subpolygons.at(i).first.outer_boundary().size() != 0){
+                CGAL::join(seed, convertPolyWithHoles2K2(subpolygons.at(i).first), seed);
+            }
+        }
+    }
+
+    cout << subpolygons.size() << " " << jumpIndex << endl;
+
+    seeds.push_back({seed, subpolygons.at(jumpIndex).second});
+
+    //reverse(subpolygons.begin(), subpolygons.end());
+    if(polygonCounter == true){
+        subpolygons.erase(subpolygons.begin() + jumpIndex);
+    }
+    bool seedMember;
+    
+    while(subpolygons.size() > 0){
+        for(int i = 0; i < subpolygons.size(); i++){
+    
+            for(int j = 0; j < seeds.size(); j++){
+                Pwh_list_2 intR;
+                cout << "ue" << endl;
+                if(seeds.at(j).first.outer_boundary().size() != 0 || subpolygons.at(i).first.outer_boundary().size() != 0){
+                    CGAL::intersection(seeds.at(j).first.outer_boundary(), convertPoly2K2(subpolygons.at(i).first.outer_boundary()), std::back_inserter(intR));
+                    cout << "UE2" << endl;
+
+                    if(intR.empty() == false){
+                        for(auto it = intR.begin(); it != intR.end(); it++){
+                            if(it->outer_boundary().area() != subpolygons.at(i).first.outer_boundary().area() && it->outer_boundary().area() != 0){
+                                CGAL::join(seeds.at(j).first, convertPolyWithHoles2K2(subpolygons.at(i).first), seeds.at(j).first);
+                            }
+                        }
+                        subpolygons.erase(subpolygons.begin() + i);
+                        seedMember = true;
+                    }
+                    else{
+                        seedMember = false;
+                    }
+                }
+                else{
+                    if(seeds.at(j).first.outer_boundary().size() == 0){
+                        seeds.erase(seeds.begin() + j);
+                    }
+                    if(subpolygons.at(i).first.outer_boundary().size() == 0){
+                        subpolygons.erase(subpolygons.begin() + i);
+                    }
+                    
+                }
+            }
+            
+            if(seedMember == false){
+                jumpIndex = i;
+                polygonCounter = true;
+                goto jump;
+            }
+        }
+    }
+        
+    
+        // CGAL::Polygon_with_holes_2<K2> finalSeed(convertPolyWithHoles2K2(subpolygons.at(subpolygons.size()-1).first));
+
+        // for(int i = 0; i < subpolygons.size(); i++){
+        //     if(CGAL::do_intersect(finalSeed, convertPolyWithHoles2K2(subpolygons.at(i).first))){
+        //         CGAL::join(finalSeed, convertPolyWithHoles2K2(subpolygons.at(i).first), finalSeed);
+        //         polygonCounter++;
+        //     }
+        // }
+
+        // seeds.push_back({finalSeed, subpolygons.at(subpolygons.size()-1).second});
+        
+        cout << "Fin " << subpolygons.size() << endl;
+        return(seeds);

@@ -38,16 +38,16 @@ void CoveragePath::setCoveragePathCreatorInit(CGAL::Polygon_2<K> polygon, float 
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> CoveragePath::getInputPolygon(){
+pair<vector<pair<CGAL::Polygon_with_holes_2<K>, int>>, CGAL::Polygon_with_holes_2<K2>> CoveragePath::getInputPolygon(){
 
-    CGAL::Polygon_with_holes_2<K> poly_with_holes;
+    pair<vector<pair<CGAL::Polygon_with_holes_2<K>, int>>, CGAL::Polygon_with_holes_2<K2>> poly_with_holes;
     switch(input_type){
         case PATH:
             poly_with_holes = pc.createPolygonFromPath(input_path);
             break;
         
         case PERIMETER:
-            poly_with_holes = pc.createPolygon(input_path, keep_out_zones);
+            //poly_with_holes = pc.createPolygon(input_path, keep_out_zones);
             break;
 
         default:
@@ -59,13 +59,42 @@ CGAL::Polygon_with_holes_2<K> CoveragePath::getInputPolygon(){
 }
 
 /*************************************/
-CGAL::Polygon_with_holes_2<K> CoveragePath::run(){
+void CoveragePath::run(){
 
-    CGAL::Polygon_with_holes_2<K> polygon = getInputPolygon();
-    setCoveragePathCreatorInit(polygon.outer_boundary(), 0.05, 1);
+    pair<vector<pair<CGAL::Polygon_with_holes_2<K>, int>>, CGAL::Polygon_with_holes_2<K2>> polygonAndContour = getInputPolygon();
+    vector<pair<CGAL::Polygon_with_holes_2<K>, int>> polygon = polygonAndContour.first;
+    CGAL::Polygon_with_holes_2<K2> contour = polygonAndContour.second;
 
-    cpc.run();
+    for(int i = 0; i < polygon.size(); i++){
+        char str[80];
+        sprintf(str, "%d:%d", i, i);
 
-    return polygon;
+        vector<int>path_lvl(input_path.size(), 4);
+        
+        m_cph.plotPath(input_path, m_cph.m_initialPathImage, 0, 0, 0, 255, false, str, false, true, path_lvl); 
+        vector<int>m_cleaningLvl(polygon.at(i).first.outer_boundary().size(), polygon.at(i).second);
+        m_cph.printPolygonsWithHolesK(polygon.at(i).first, m_cph.m_initialPathImage, false, 0, 0, 0, 255, str, false, true, true, m_cleaningLvl);
+        m_cph.printPolygonsWithHolesK(polygon.at(i).first, m_cph.m_polygonsImage, false, 0, 0, 0, 255, "Final Polygons", false, true, false, m_cleaningLvl);
+
+        
+        if(i != polygon.size()-1){
+            cv::destroyWindow(str);
+        }
+    
+    }
+
+    cout << polygon.size() << endl;
+
+    vector<int>m_cleaningLvl(polygon.at(polygon.size()-1).first.outer_boundary().size(), polygon.at(polygon.size()-1).second);
+    m_cph.printPolygonsWithHolesK(polygon.at(polygon.size()-1).first, m_cph.m_polygonsImage, false, 0, 0, 0, 255, "Final Polygons", false, true, true, m_cleaningLvl);
+   
+    m_cph.plotOverlappedAreas(polygon, contour);
+    
+    for(int i = 0; i < polygon.size(); i++){
+        CoveragePathCreator cpc_tmp;
+        cpc_tmp.init(polygon.at(i).first.outer_boundary(), 0.3, 1);
+        cpc_tmp.run();
+        cv::destroyAllWindows();
+    }
 
 }

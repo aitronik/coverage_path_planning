@@ -89,6 +89,7 @@ int main(int argc, char* argv[]) {
     int number_of_banned_areas = stoi(argv[3]);
 
     string filename_gemma = "a.txt";
+    string filename_sede = "path_sede.txt";
 
     pathPoints mission;
     mission.init();
@@ -97,6 +98,10 @@ int main(int argc, char* argv[]) {
     pathPoints perimeter;
     perimeter.init();
     perimeter.loadPoints(filename_perimeter);
+
+    pathPoints sede;
+    sede.init();
+    sede.loadPoints(filename_sede);
 
     vector<pathPoints> banned_area;
     for(int i = 4; i <= 3 + number_of_banned_areas; i++){
@@ -144,26 +149,95 @@ int main(int argc, char* argv[]) {
     }
 
     /*Cleaning levels*/
+    // vector<int> cleaning_levels;
+    // cleaning_levels.resize(path_cgal.size());
+    // for(int i = 0; i < path_cgal.size(); i++){
+    //     if(i >=0 && i < 10){
+    //         cleaning_levels[i] = 1;
+    //     }
+    //     else if(i >=10 && i < 30){
+    //         cleaning_levels[i] = 2;
+    //     }
+    //     else if(i >=30 && i < 45){
+    //         cleaning_levels[i] = 0;
+    //     }
+    //     else if(i >=45 && i < 50){
+    //         cleaning_levels[i] = 3;
+    //     }
+    //     else if(i >=50 && i < 70){
+    //         cleaning_levels[i] = 1;
+    //     }
+    //     else if(i >=70 && i < 80){
+    //         cleaning_levels[i] = 0;
+    //     }
+    //     else if(i >=80 && i < 100){
+    //         cleaning_levels[i] = 2;
+    //     }
+    //     else if(i >=100 && i < 110){
+    //         cleaning_levels[i] = 3;
+    //     }
+    //     else if(i >=110 && i < path_cgal.size()){
+    //         cleaning_levels[i] = 1;
+    //     }
+        
+    // }
+
+    /*Sede*/
+    vector<K::Point_2> sede_cgal;
+
+    vector<float> x_sede; 
+    x_sede.resize(sede.points.size());
+
+    vector<float> y_sede;
+    y_sede.resize(sede.points.size());
+
+    vector<pair<float, float>> coordinates;
+    coordinates.resize(sede.points.size());
+
+    for(int i = 0; i < sede.points.size(); i++){
+        x_sede[i] = sede.points.at(i).first;
+        y_sede[i] = sede.points.at(i).second;
+        coordinates[i] = {sede.points.at(i).first, sede.points.at(i).second};
+    }
+
+    
+    auto itx = std::unique(coordinates.begin(), coordinates.end());
+    coordinates.erase(itx, coordinates.end());
+
+    for(int i = 0; i < coordinates.size(); i = i + 10){
+        K::Point_2 p(coordinates.at(i).first, coordinates.at(i).second);
+        sede_cgal.push_back(p);
+    }
+    
+
+    cout << sede_cgal.size() << endl;
+
+    // sede_cgal.clear();
+    // sede_cgal = path_cgal;
+
     vector<int> cleaning_levels;
-    cleaning_levels.resize(path_cgal.size());
-    for(int i = 0; i < path_cgal.size(); i++){
-        if(i >=0 && i < 25){
+    cleaning_levels.resize(sede_cgal.size());
+    for(int i = 0; i < sede_cgal.size(); i++){
+        if(i >=0 && i < int(sede_cgal.size()/10)){
             cleaning_levels[i] = 1;
         }
-        else if(i >=25 && i < 60){
+        else if(i >=int(sede_cgal.size()/10) && i < 3*int(sede_cgal.size()/10)){
             cleaning_levels[i] = 2;
         }
-        else if(i >=60 && i < 80){
-            cleaning_levels[i] = 1;
-        }
-        else if(i >=80 && i < 90){
+        else if(i >=3*int(sede_cgal.size()/10) && i < 5*int(sede_cgal.size()/10)){
             cleaning_levels[i] = 0;
         }
-        else if(i >=90 && i < 110){
+        else if(i >=5*int(sede_cgal.size()/10) && i < 6*int(sede_cgal.size()/10)){
             cleaning_levels[i] = 3;
         }
-        else if(i >=110 && i < path_cgal.size()){
+        else if(i >=6*int(sede_cgal.size()/10) && i < 7*int(sede_cgal.size()/10)){
+            cleaning_levels[i] = 1;
+        }
+        else if(i >=7*int(sede_cgal.size()/10) && i < 9*int(sede_cgal.size()/10)){
             cleaning_levels[i] = 2;
+        }
+        else if(i >=9*int(sede_cgal.size()/10) && i < sede_cgal.size()){
+            cleaning_levels[i] = 1;
         }
         
     }
@@ -204,24 +278,24 @@ int main(int argc, char* argv[]) {
     /*Contouring class*/
     PolygonCreator pc;
     float fake_offset = 0.001;
-    float contour_offset = 0.3;
-    float area_threshold = 0.03;
+    float contour_offset = 0.4;
+    float area_threshold = 1;
     float perimeter_offset = 0.5;
     bool apply_contouring = true;
 
-    pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaning_levels);
+    //pc.init(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaning_levels);
 
     
     //CGAL::Polygon_with_holes_2<K> final_contour = pc.createPolygonFromPath(path_cgal);
 
-    CGAL::Polygon_with_holes_2<K> perimeter_contour = pc.createPolygon(perimeter_cgal, banned_areas_cgal);
+    //CGAL::Polygon_with_holes_2<K> perimeter_contour = pc.createPolygon(perimeter_cgal, banned_areas_cgal);
 
     perimeter_offset = 0.4;
 
     CoveragePath cp;
-    cp.init(0, 0, path_cgal, {});
+    cp.init(0, 0, sede_cgal, {});
     cp.setPolygonCreatorInit(fake_offset, contour_offset, area_threshold, perimeter_offset, apply_contouring, cleaning_levels);
-    CGAL::Polygon_with_holes_2<K> polygon = cp.run();
+    cp.run();
 
     
 

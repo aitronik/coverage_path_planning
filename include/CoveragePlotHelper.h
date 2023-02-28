@@ -20,55 +20,72 @@ class CoveragePlotHelper {
         bool init(vector<K::Point_2>& perimeter_vertices);
 
         /**
-         * @brief stampa un poligono in nero su un'immagine denominata "Perimeter"
+         * @brief stampa in nero perimetro di un poligono su sfondo bianco
+         * 
          * @param poly 
+         * @param imageName nome dell'immagine
+         * @param printIndexes se è true, vengono stampati gli indici dei vertici
          */
-        void plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly);
+        void plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
 
 
         /**
          * @brief stampa un sottopoligono numerato "num" , in nero su un'immagine denominata con decomposition_name
          * @param poly poligono da stampare 
          * @param points vertici 
-         * @param num numero del poligono nell'ordinamento 
+         * @param putPolygonText se true, vengono aggiunti i nomi dentro i sottopoligoni 
+         * @param polName nome da stampare sul poligono 
          * @param decomposition_name nome della decomposizione
+         * @param putVertexText se true, vengono aggiunti gli indici ai vertici 
+         * 
          */
-        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, int num, string decomposition_name);
+        void plotSubPolygon(const Polygon& poly,  vector<K::Point_2>& points, string decomposition_name, bool putPolygonText, string polName, bool putVertexText);
 
         /**
-         * @brief stampa il path di un singolo poligono sull'immagine della decomposizione 
+         * @brief 
          * 
+         * @param path 
          */
         void plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> path);
 
         /**
-         * @brief stampa il path finale su un'immagine "FinalPath" evidenziando i punti in cui viene diviso e il punto di partenza
+         * @brief 
+         * 
          * @param path 
          * @param pointsToPrint 
          * @param start 
+         * @param sweepDistance 
          */
-        void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint,  K::Point_2 start);
+        void plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K::Point_2> pointsToPrint,  K::Point_2 start, float sweepDistance);
 
         /**
          * @brief stampa su "FinalPath" una parte del path finale 
          * @param path 
+         * @param cont se != -1 stampa cont in corrispondenza dell'ultimo punto del path 
          */
-        void plotPartialPath(vector<CGAL::Segment_2<K>> path);
+        void plotPartialPath(vector<CGAL::Segment_2<K>> path, int cont);
 
 
         /**
          * @brief stampa un perimetro sull'immagine "Perimeter" e aggiorna m_perimeterImage
          * @param new_poly 
          */
-        void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly);
+        void updatePerimeterImage(shared_ptr<CGAL::Polygon_2<K>> new_poly, bool printIndexes);
 
         /**
          * @brief stampa su "FinalPath" in blu un singolo punto 
          * @param point 
+         * @param cont se cont != -1 , stampa il numero in corrispondenza del punto 
          */
-        void plotPoint(K::Point_2 point); 
+        void plotPoint(K::Point_2 point, char color, int cont); 
 
-        /**
+        void plotLineForTest(CGAL::Line_2<K> line, string imageName);
+
+        void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
+
+        void clearAllImages(); 
+
+         /**
          * @brief calcola il valore in pixel dati x metri in base a m_resolution 
          * 
          * @param x 
@@ -82,8 +99,6 @@ class CoveragePlotHelper {
          */
         void calculateResolution(vector<K::Point_2>& perimeter_vertices);
 
-    private: 
-
         /**
          * @brief immagine del perimetro iniziale
          * 
@@ -95,6 +110,15 @@ class CoveragePlotHelper {
          * 
          */
         cv::Mat m_image_decomposition;
+
+        /**
+         * @brief 
+         * 
+         */
+        cv::Mat m_testImage; 
+
+
+    private: 
 
         /**
          * @brief nome della decomposizione

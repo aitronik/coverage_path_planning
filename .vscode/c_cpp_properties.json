@@ -1,0 +1,37 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/home/ait_guest/ros2_ws/install/tutorial_interfaces/include/**",
+                "/home/ait_guest/ros2_ws/install/polygon_plugins/include/**",
+                "/home/ait_guest/ros2_ws/install/polygon_base/include/**",
+                "/home/ait_guest/ros2_ws/install/more_interfaces/include/**",
+                "/opt/ros/foxy/include/**",
+                "/home/ait_guest/ros2_ws/src/coverage_path_planning/include/**",
+                "/home/ait_guest/ros2_ws/src/cpp_parameters/include/**",
+                "/home/ait_guest/ros2_ws/src/cpp_pubsub/include/**",
+                "/home/ait_guest/ros2_ws/src/cpp_srvcli/include/**",
+                "/home/ait_guest/ros2_ws/src/more_interfaces/include/**",
+                "/home/ait_guest/ros2_ws/src/my_package/include/**",
+                "/home/ait_guest/ros2_ws/src/path_perimeter/include/**",
+                "/home/ait_guest/ros2_ws/src/polygon_base/include/**",
+                "/home/ait_guest/ros2_ws/src/polygon_plugins/include/**",
+                "/home/ait_guest/ros2_ws/src/ros_tutorials/turtlesim/include/**",
+                "/home/ait_guest/ros2_ws/src/tutorial_interfaces/include/**",
+                "include/**",
+                "/usr/include/**",
+                "/usr/include/opencv4"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}

@@ -50,6 +50,24 @@ class CgalPlotHelper {
         cv::Mat m_contourPerimeterImage;
 
         /**
+         * @brief Filled areas
+         * 
+         */
+        cv::Mat m_filledAreas;
+
+        /**
+         * @brief Decomposed polygons
+         * 
+         */
+        cv::Mat m_decomposedPolys;
+
+        /**
+         * @brief Decomposed polygons
+         * 
+         */
+        cv::Mat m_barycenterPolys;
+
+        /**
          * @brief CoveragePlotHelper class (by Gemma)
          * 
          */
@@ -73,6 +91,7 @@ class CgalPlotHelper {
                      int B_fill,
                      int G_fill,
                      int R_fill,
+                     double alpha,
                      bool polygon, 
                      std::string name, 
                      bool fill, 
@@ -101,6 +120,7 @@ class CgalPlotHelper {
                                     int B_fill,
                                     int G_fill,
                                     int R_fill,
+                                    double alpha,
                                     std::string name, 
                                     bool resolution,
                                     bool pathORpolygon,
@@ -128,10 +148,13 @@ class CgalPlotHelper {
                                     int B_fill,
                                     int G_fill,
                                     int R_fill,
+                                    double alpha,
                                     std::string name, 
                                     bool resolution,
                                     bool pathORpolygon,
                                     bool printOut,
                                     vector<int> cleaningLvl);
+
+    void plotOverlappedAreas(vector<pair<CGAL::Polygon_with_holes_2<K>, int>> polygons, CGAL::Polygon_with_holes_2<K2> contour);
 
 };

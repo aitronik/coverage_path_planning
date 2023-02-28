@@ -32,7 +32,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/pathPoints.cpp src/PolygonCreator.cpp)
+add_library(lib_coverage_path src/utils.cpp src/CoveragePathCreator.cpp src/CoveragePlotHelper.cpp src/pathPoints.cpp src/CgalPlotHelper.cpp src/PolygonCreator.cpp src/CoveragePath.cpp src/MyDecomposition.cpp)
 ament_export_targets(export_lib_coverage_path HAS_LIBRARY_TARGET) 
 
 # Link the executable to CGAL and third-party libraries
@@ -51,7 +51,7 @@ ament_export_libraries(lib_coverage_path)
 add_definitions(-DCGAL_USE_BASIC_VIEWER -DQT_NO_KEYWORDS)
 
 #add_executable( coverage_path main.cpp decomposer.cpp generatorPath.cpp utils.cpp )
-add_executable(coverage_path src/main.cpp)
+add_executable(coverage_path src/runCoveragePath.cpp)
 #target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES})
 target_link_libraries(coverage_path lib_coverage_path ${OpenCV_LIBRARIES} GTest::gtest_main)
 target_link_libraries(lib_coverage_path PUBLIC CGAL::CGAL_Qt5)

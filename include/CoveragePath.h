@@ -2,10 +2,12 @@
 
 #include <stdlib.h>
 #include <iostream>
+#include <string.h>
 
 #include "CoveragePathCreator.h"
 #include "CoveragePlotHelper.h"
 #include "PolygonCreator.h"
+#include "CgalPlotHelper.h"
 
 class CoveragePath {
 
@@ -30,7 +32,7 @@ class CoveragePath {
          * @brief Total pipeline of the class
          * 
          */
-        CGAL::Polygon_with_holes_2<K> run();
+        void run();
     
     private:
         
@@ -77,11 +79,17 @@ class CoveragePath {
         PolygonCreator pc;
 
         /**
+         * @brief CgalPlotHelper class
+         * 
+         */
+        CgalPlotHelper m_cph;
+
+        /**
          * @brief Get the Input Polygon for CoveragePathCreator
          * 
          * @return CGAL::Polygon_with_holes_2<K> Polygon to be used in CoveragePathCreator
          */
-        CGAL::Polygon_with_holes_2<K> getInputPolygon();
+        pair<vector<pair<CGAL::Polygon_with_holes_2<K>, int>>, CGAL::Polygon_with_holes_2<K2>> getInputPolygon();
 
         /**
          * @brief Initialization of the CoveragePathCreator class

@@ -11,6 +11,7 @@
 #include <CGAL/Polyline_simplification_2/simplify.h>
 #include "utils.hpp"
 #include "CoveragePlotHelper.h"
+#include "MyDecomposition.h"
 
 namespace PS = CGAL::Polyline_simplification_2;
 typedef PS::Stop_above_cost_threshold Stop;
@@ -22,6 +23,7 @@ class CoveragePathCreator {
       CoveragePathCreator();
 
       ~CoveragePathCreator();
+
       /**
        * @brief
        * 
@@ -31,7 +33,7 @@ class CoveragePathCreator {
        * @return true 
        * @return false 
        */
-      bool init( vector<pair<float,float>> points, float sweepDistance, int m_decompositionType );
+      bool init(CGAL::Polygon_2<K> polygon, float sweepDistance, int m_decompositionType );
 
       bool run();
 
@@ -43,51 +45,96 @@ class CoveragePathCreator {
        */
 
       void setAddPerimeterToPath(bool b); 
-      
+
+      /**
+         * @brief classe per fare tutti i plot 
+         * 
+         */
+        CoveragePlotHelper m_Helper;
+
+        /**
+         * @brief lista di sottopoligoni dopo la decomposizione (non ordinati)
+         * 
+         */
+        Polygon_list m_decomposedPolysOfIndices;
+
+        /**
+         * @brief nuovi vertici dopo la decomposizione (possono essere aumentati)
+         * 
+         */
+        vector<K::Point_2> m_decomposedVertices;
 
 
+        /**
+         * @brief 
+         * 
+         */
+        int m_NumerOfDecomposedSubPolygon; 
+
+        /**
+         * @brief approssima il perimetro iniziale riducendone i vertici a seconda della sweepDistance
+         * 
+         */
+        vector<K::Point_2> simplifyPerimeter(CGAL::Polygon_2<K> poly);
+
+        /**
+         * @brief decomoposizione del perimetro inziale
+         * 
+         * @return true -> se viene decomposto correttamente 
+         * @return false altrimenti 
+         */
+        pair<Polygon_list, vector<K::Point_2>> decompose(vector<K::Point_2> polyPoints, int decompositionType);
+
+        /**
+         * @brief crea la matrice di adiacenza dei sottopoligoni m_adj
+         * 
+         */
+        void createAdjMatrix();
+
+        /**
+         * @brief ordina i sottopoligoni per la percorrenza (chiama findMinRoute(int start))
+         * 
+         * @return true 
+         * @return false in caso di errori 
+         */
+        bool orderSubPolygons();
+
+        /**
+         * @brief inizia l'algoritmo di copertura del perimetro iniziale, chiamando poi tutte le altre funzioni 
+         * 
+         */
+        void cover();
 
     private:
   
         /**
-         * @brief vertici del poligono iniziale (vengono aggiornati dopo la semplificazione del perimetro)
+         * @brief vertici del poligono iniziale 
          * 
          */
-        vector<K::Point_2> m_perimeterVertices; 
+        vector<K::Point_2> m_initialPerimeterVertices; 
 
         /**
-         * @brief perimetro , poligono iniziale 
+         * @brief 
          * 
          */
-        shared_ptr<CGAL::Polygon_2<K>> m_perimeter;
+        vector<K::Point_2> m_simplyfiedVertices;
+
 
         /**
-         * @brief perimetro dopo la semploificazione 
+         * @brief poligono iniziale
          * 
          */
-        shared_ptr<CGAL::Polygon_2<K>> m_simplyfiedPerimeter;
+        shared_ptr<CGAL::Polygon_2<K>> m_initialPolygon;
 
         /**
-         * @brief lista di sottopoligoni dopo la decomposizione 
+         * @brief perimetro dopo la semplificazione 
          * 
          */
-        Polygon_list m_partitionPolys;
-
-        /**
-         * @brief intersezioni tra le griglia e i sottopoligoni. m_intersections[i][j] è la j-esima intersezione tra la i-esima griglia e l'i-esimo sottopoligono
-         * 
-         */
-        vector<vector<K::Point_2>> m_intersections;
-
-        /**
-         * @brief vector di polygoni per cui costruire il path, ordinati secondo tsp
-         * 
-         */
-        vector<shared_ptr<CGAL::Polygon_2<K>>> m_polygonsForPath; 
-
-        /**
-         * @brief matrice N*N*2 di adiacenza dei sottopoligoni. m_adj[i][j][0] e m_adj[i][j][1] sono i due vertici dell'adiacenza tra i e j. Se sono entrambi -1 
-         * i e j non sono adiacenti. 
+        shared_ptr<CGAL::Polygon_2<K>> m_simplyfiedPolygon;
+         
+         /**
+         * @brief matrice N*N*2 di adiacenza dei sottopoligoni in ordine di decomposizione (non per il path). m_adj[i][j][0] e m_adj[i][j][1] sono i due vertici dell'adiacenza 
+         * tra i e j. Se sono entrambi -1 i e j non sono adiacenti. 
          * 
          */
         vector<vector<vector<int>>> m_adj; 
@@ -95,10 +142,22 @@ class CoveragePathCreator {
         /**
          * @brief matrice N*N. Alla posizione (i,j) c'è il costo minimo del tragitto tra il sottopoligono i e il sottopoligono j .
          * Costo =  numero di sottopoligoni da attraversare  
-         * 
+         * (non è ordinata)
          */
         vector<vector<float>> m_adjWeigthMatrix; 
 
+        /**
+         * @brief intersezioni tra le griglia e i sottopoligoni. m_intersections[i][j] è la j-esima intersezione tra la i-esima griglia e l'i-esimo sottopoligono
+         * 
+         * m_intersections è ordinato rispetto all'ordine di percorrenza 
+         */
+        vector<vector<K::Point_2>> m_intersections;
+
+        /**
+         * @brief vector di polygoni per cui costruire il path, ordinati secondo tsp
+         * 
+         */
+        vector<shared_ptr<CGAL::Polygon_2<K>>> m_ordinatedSubpolygonsForPath; 
 
         /**
          * @brief m_polygonsSorted[i] è il numero del polygono da attraversare come i-esimo nell'ordinamento   
@@ -118,8 +177,7 @@ class CoveragePathCreator {
          * 
          */
         vector<CGAL::Segment_2<K>> m_finalPath;
-      
-
+  
         /**
          * @brief path per il return composto da punti a distanza 0.2 
          * 
@@ -158,40 +216,22 @@ class CoveragePathCreator {
         float m_sweepDistance;
 
         /**
-         * @brief classe per fare tutti i plot 
+         * @brief 
          * 
          */
-        CoveragePlotHelper m_Helper;
+        MyDecomposition m_decomposer; 
 
         /**
          * @brief vertice iniziale del path (primo vertice dato in input)
          * 
          */
+        K::Point_2 m_startingPoint;
+
+        /**
+         * @brief vertice del poligono decomposto preso come punto di partenza ( il più vicino allo startingPoint)  
+         * 
+         */
         K::Point_2 m_firstVertex;
-
-
-
-        /**
-         * @brief decomoposizione del perimetro inziale
-         * 
-         * @return true -> se viene decomposto correttamente 
-         * @return false altrimenti 
-         */
-        bool decompose();
-
-        /**
-         * @brief crea la matrice di adiacenza dei sottopoligoni m_adj
-         * 
-         */
-        void createAdjMatrix();
-
-        /**
-         * @brief ordina i sottopoligoni per la percorrenza (chiama findMinRoute(int start))
-         * 
-         * @return true 
-         * @return false in caso di errori 
-         */
-        bool orderSubPolygons();
 
         /**
          * @brief restituisce il punto a massima distanza da un segmento e il valore della distanza 
@@ -224,7 +264,7 @@ class CoveragePathCreator {
          * @param borders borders[i] == true se il lato i del sottopoligono cont ha un'adiacenza e va ristretta
          * @return vector<CGAL::Segment_2<K>> 
          */
-        vector<K::Point_2> generateGridForOnePolygon(int cont , vector<bool>& borders);
+        vector<K::Point_2> generateGridForOnePolygon(shared_ptr<CGAL::Polygon_2<K>> polygon , vector<bool>& borders);
 
         /**
          * @brief genera il path per un sottopoligono 
@@ -234,13 +274,21 @@ class CoveragePathCreator {
          */
         vector<CGAL::Segment_2<K>> generatePathForOnePolygon(vector<K::Point_2> intersections, int start);
 
+        /**
+         * @brief inserisce in m_finalPath il collegamento tra la fine del path creato fino a quel momento e l'inizio del path di indexedPolygon
+         *  , trovando di conseguenza il punto iniziale del nuvoo pezzo di path (uno dei 4 possibili) 
+         * @param indexPolygon 
+         * @param indexOfLastPolygonCovered
+         * @return int, indice di inizio per la costruzione del nuovo path 
+         */
+        int generateLinkBetween(size_t indexPolygon, size_t indexOfLastPolygonCovered, int &cont); 
 
         /**
          * @brief trova la strada più breve a partire da start per toccare tutti i sottopoligoni 
          * @param start sottopoligono di partenza 
          * @return vector<int> 
          */
-        vector<int> findMinRoute(int start);
+        vector<int> findMinRouteTo(int start);
 
 
         /**
@@ -249,7 +297,7 @@ class CoveragePathCreator {
          * @param end arrivo 
          * @return vector<int> ordinato : alla posizione 0 c'è start , alla 1 il successivo , e così via fino ad end 
          */
-        vector<int> findMinRoute(int start, int end);
+        vector<int> findMinRouteBetween(int start, int end);
 
         /**
          * @brief restituisce l'indice i del minimo valore di dist t.c. !visited[i]
@@ -305,15 +353,6 @@ class CoveragePathCreator {
          */
         void joinAndLinkPaths();
 
-
-        /**
-         * @brief inizia l'algoritmo di copertura del perimetro iniziale, chiamando poi tutte le altre funzioni 
-         * 
-         */
-        void cover();
-
-
-
         /**
          * @brief crea il path composto da coppie di punti 
          * 
@@ -329,18 +368,35 @@ class CoveragePathCreator {
         void generateGridsForSubpolygons();
 
         /**
-         * @brief approssima il perimetro iniziale riducendone i vertici a seconda della sweepDistance
+         * @brief  restituisce un vector i cui elementi rappresentano se il lato i esimo deve essere ridotto
          * 
+         * @param polygon 
+         * @param borders 
+         * @return vector<int> -1 se non deve essere ridotto, 0 se deve essere ridottoin base all'angolo, 1 se deve essere ridotto in quanto bordo esterno (1/2 sweepDistance?)
          */
-        void simplifyPerimeter();
-
+        vector<int> isToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
+     
+        /**
+         * @brief riduce un sottopoligono secondo il vector borders
+         * 
+         * @param polygon 
+         * @param edges 
+         * @return shared_ptr<CGAL::Polygon_2<K>> 
+         */
+        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &edges );
 
         /**
-         * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
+         * @brief 
          * 
+         * @param polygon
+         * @param isAdjacent 
+         * @return void
          */
-        shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(int cont, vector<bool> &borders);
-
-
-        
+        void eliminateExcessPoints(shared_ptr<CGAL::Polygon_2<K>>  polygon, vector<bool> &isAdjacent);
+        // /**
+        //  * @brief riduce un sottopoligono in corrispondenza delle sue adiacenze 
+        //  * 
+        //  */
+        // shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &borders);
+       
 };
