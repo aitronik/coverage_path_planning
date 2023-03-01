@@ -59,6 +59,26 @@ class CoveragePathCreator {
        */
       void setRangeToReturn(float range); 
 
+      /**
+       * @brief Set the Plot Restricted Polygons object
+       * 
+       * @param b 
+       */
+      void setPlotRestrictedPolygons(bool b);
+
+      /**
+       * @brief Set the Reduce Subpolygons object
+       * 
+       * @param b 
+       */
+      void setReduceSubpolygons(bool b); 
+
+      /**
+       * @brief Set the Plot Index Of Path object
+       * 
+       * @param b 
+       */
+      void setPlotIndexOfPath(bool b);
 
     private:
   
@@ -162,6 +182,24 @@ class CoveragePathCreator {
          * 
          */
         bool m_addPerimeterToPath;
+
+        /**
+         * @brief 
+         * 
+         */
+        bool m_plotRestrictedPolygons;
+
+        /**
+         * @brief 
+         * 
+         */
+        bool m_reduceSubpolygons; 
+
+        /**
+         * @brief true se si vogliono stampare indici alla fine di ogni parte del path (per seguire il percorso)
+         * 
+         */
+        bool m_plotIndexOfPath;
 
         /**
          * @brief tipo di decomposizione del perimetro iniziale 

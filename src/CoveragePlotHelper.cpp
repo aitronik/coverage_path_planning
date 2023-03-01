@@ -89,7 +89,7 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly, stri
             first = point;
         }
         if (i == points.size()-1 ) last = point;
-        cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);
+        cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2.5, 8, 0);
         
         if (printIndexes)  {
             cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
@@ -106,40 +106,6 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly, stri
 #endif
 }
 
-/***********************************/
-
-void CoveragePlotHelper::plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes) {
-#ifdef ENABLE_OPENCV
-    //trasformo i point di cgal in points di opencv
-    vector<K::Point_2> points;
-    for(const K::Point_2& pt : poly->vertices()) points.push_back(pt);
- 
-    
-    //creo points di opencv ==> trasformando da metri a pixel
-    cv::Point p_old;
-    cv::Point first;
-    cv::Point last;
-    for (size_t i = 0; i < points.size(); i++) {
-        cv::Point point ( pixelFromMetres(points.at(i).x()) , pixelFromMetres(points.at(i).hy()) );
-        if (i == 0) {
-            p_old = point;
-            first = point;
-        }
-        if (i == points.size()-1 ) last = point;
-        cv::line(m_testImage, p_old, point, cv::Scalar(0,0,0) , 2, 8, 0);           
-        p_old = point;
-        if (printIndexes)  {
-            cv::putText(m_testImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
-        }
-    }
-
-    cv::line(m_testImage, last, first, cv::Scalar(0,0,0), 2, 8, 0);
-    
-    cv::namedWindow(imageName, 1);
-    cv::imshow(imageName, m_testImage);
-    cv::waitKey(0);    
-#endif
-}
 
 /***********************************/
 //stampa il sottopoligono e un numero che indica la sua posizione nell'ordinamento 
@@ -168,7 +134,7 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
         if (cont == sz -1 ) {
             last = point;
         }
-        cv::line(m_image_decomposition, p_old, point, cv::Scalar(0,0,0), 2, 8, 0);
+        cv::line(m_image_decomposition, p_old, point, cv::Scalar(0,0,0), 2.5, 8, 0);
 
         p_old = point;
         cont++;
@@ -178,7 +144,7 @@ void CoveragePlotHelper::plotSubPolygon(const Polygon& poly,  vector<K::Point_2>
 
     cv::line(m_image_decomposition, last, first, cv::Scalar(0,0,0), 2, 8, 0); 
     if (putPolygonText) {
-        cv::putText(m_image_decomposition, polName , p_label, cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
+        cv::putText(m_image_decomposition, polName , p_label, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(125, 0, 255),2);
     }
     cv::namedWindow(m_decompositionName, 1); 
     cv::imshow(m_decompositionName, m_image_decomposition);
@@ -200,7 +166,7 @@ void CoveragePlotHelper::plotPathForConvexPolygon(vector<CGAL::Segment_2<K>> pat
         K::Point_2 p = path.at(k).source(); 
         K::Point_2 q = path.at(k).target();
         cv::line(m_image_decomposition, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(0, 0, 255), 1, 8, 0);
+            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(0, 0, 255), 2, 8, 0);
         k++;
     }
     cv::namedWindow(m_decompositionName, 1);    
@@ -218,7 +184,7 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
         K::Point_2 q = path.at(i).target(); 
         if (p != q){
             cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-                cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(255,20,147), 1, 8, 0); 
+                cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(255,20,147), 2, 8, 0); 
         }
     }
 
@@ -240,7 +206,7 @@ void CoveragePlotHelper::plotFinalPath(vector<CGAL::Segment_2<K>> path, vector<K
             2, cv::Scalar(255,0,0), 3 ); 
         }
     }   
-    // cv::namedWindow("FinalPath", 1);    
+    
     cv::imshow("FinalPath" , m_perimeterImage);
     cv::waitKey(0);    
 #endif
@@ -313,7 +279,7 @@ void CoveragePlotHelper::plotPoint(K::Point_2 point, char color, int cont) {
 }
 
 /***********************************/
-void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line, string imageName) {
+void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line) {
 #ifdef ENABLE_OPENCV
     cout << "CoveragePlotHelper: plotLineForTest() " << endl; 
     double a = line.a(); 
@@ -321,20 +287,21 @@ void CoveragePlotHelper::plotLineForTest(CGAL::Line_2<K> line, string imageName)
     double c = line.c(); 
 
     if (a == 0 ) {
-         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(10), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(1), pixelFromMetres(-(c/b))),   
-        cv::Scalar(0, 0, 255), 1, 8, 0   );
+         cv::line(m_perimeterImage, cv::Point(pixelFromMetres(1), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(1000), pixelFromMetres(-(c/b))),   
+        cv::Scalar(0, 0, 255), 1.5, 8, 0   );
     }
     else if (b == 0) {
-         cv::line(m_image_decomposition, cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(10)), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1)),   
-        cv::Scalar(0, 0, 255), 1, 8, 0   );
+         cv::line(m_perimeterImage, cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1)), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(1000)),   
+        cv::Scalar(0, 0, 255), 1.5, 8,  0 );
     }
     else {
-        cv::line(m_image_decomposition, cv::Point(pixelFromMetres(0), pixelFromMetres(-(c/b))), cv::Point(pixelFromMetres(-(c/a)), pixelFromMetres(0)),   
-            cv::Scalar(0, 0, 255), 1, 8, 0   );
+        cv::line(m_perimeterImage, cv::Point(pixelFromMetres(1), pixelFromMetres( ( (-c-(a)) /b ))), cv::Point(pixelFromMetres(1000), pixelFromMetres(( (-c-(1000*a)) /b )) ) ,   
+            cv::Scalar(0, 0, 255), 1.5, 8, 0);
     }
-    cv::namedWindow(imageName, 1);    
-    cv::imshow(imageName , m_testImage);
-    cv::waitKey(0);  
+    cv::namedWindow("FinalPath", 1);    
+    cv::imshow("FinalPath" , m_perimeterImage);
+    cv::waitKey(0);
+  
 #endif
 }
 

@@ -9,11 +9,15 @@
 #include <exception>
 
 // ./coverage_path ../test/nometest.txt <decompositionType> <sweepDistance>  
+
 //sistemare gli shared ptr
 //quando non ci sono intersezioni prendi il centro invece che il primo  vertice
 //non so se funziona con coordinate negative 
 
 //TO DO: 
+//1. 
+//BUG : ./coverage_path ../test/mydecompositiontest3.txt 1 17
+
 //2.
 //Se due lati non adiacenti di un poligono ridotto si intersecano ("fiocco") inserire il punto di intersezione tra i vertici 
 //e togliere gli altri due 
@@ -40,8 +44,13 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
 
-    //qui eventualmente aggiungere setAddPerimeterToPath e setRangeToReturn per modificarne i valori 
     try {
+
+        // coverage_path_creator.setAddPerimeterToPath(false);
+        // coverage_path_creator.setReduceSubpolygons(false);
+        // coverage_path_creator.setPlotRestrictedPolygons(false); 
+        // coverage_path_creator.setPlotIndexOfPath(false);
+
         coverage_path_creator.run();
         points = coverage_path_creator.getFinalPath(); 
 

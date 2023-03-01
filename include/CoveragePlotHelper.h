@@ -81,9 +81,7 @@ class CoveragePlotHelper {
          */
         void plotPoint(K::Point_2 point, char color, int cont); 
 
-        void plotLineForTest(CGAL::Line_2<K> line, string imageName);
-
-        void plotPerimeterForTest(shared_ptr<CGAL::Polygon_2<K>> poly, string imageName, bool printIndexes);
+        void plotLineForTest(CGAL::Line_2<K> line);
 
         void clearAllImages(); 
 
