@@ -7,9 +7,11 @@
 #include <CGAL/partition_2.h>
 #include <CGAL/Partition_traits_2.h>
 #include <CGAL/property_map.h>
+#ifdef ENABLE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#endif
 #include "utils.hpp" //controlla se serve
 
 class CoveragePlotHelper {
@@ -18,6 +20,12 @@ class CoveragePlotHelper {
         CoveragePlotHelper();
         ~CoveragePlotHelper();
         bool init(vector<K::Point_2>& perimeter_vertices);
+
+        /**
+         * @brief rapporto pixel/metri
+         * 
+         */
+        float m_resolution; 
 
         /**
          * @brief stampa in nero perimetro di un poligono su sfondo bianco
@@ -85,9 +93,23 @@ class CoveragePlotHelper {
 
         void clearAllImages(); 
 
+        /**
+         * @brief calcola il valore in pixel dati x metri in base a m_resolution 
+         * 
+         * @param x 
+         * @return float 
+         */
+        float pixelFromMetres (float x);
+
+        /**
+         * @brief calcola la risoluzione da usare per l'immagine 
+         * @param perimeter_vertices vertici del poligono da stampare 
+         */
+        void calculateResolution(vector<K::Point_2>& perimeter_vertices);
+
 
     private: 
-
+#ifdef ENABLE_OPENCV
         /**
          * @brief immagine del perimetro iniziale
          * 
@@ -105,32 +127,13 @@ class CoveragePlotHelper {
          * 
          */
         cv::Mat m_testImage; 
-
+#endif
         /**
          * @brief nome della decomposizione
          * 
          */
         string m_decompositionName;
 
-        /**
-         * @brief rapporto pixel/metri
-         * 
-         */
-        float m_resolution; 
-
-        /**
-         * @brief calcola il valore in pixel dati x metri in base a m_resolution 
-         * 
-         * @param x 
-         * @return float 
-         */
-        float pixelFromMetres (float x);
-
-        /**
-         * @brief calcola la risoluzione da usare per l'immagine 
-         * @param perimeter_vertices vertici del poligono da stampare 
-         */
-        void calculateResolution(vector<K::Point_2>& perimeter_vertices);
 
         
         

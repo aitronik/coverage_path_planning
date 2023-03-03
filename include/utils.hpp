@@ -34,7 +34,7 @@ using namespace std;
  * @param filename nome del file 
  * @return vector<pair<float,float>> 
  */
-vector<pair<float,float>> readFromFile(string filename); 
+vector<pair<double,double>> readFromFile(string filename); 
 
 /**
  * @brief crea un polygon_2 
@@ -43,37 +43,62 @@ vector<pair<float,float>> readFromFile(string filename);
  */
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 
-// void printInfo();
+
+// /**
+//  * @brief calcola i vertici di adiacenza tra due poligoni 
+//  * se ci sono due punti in comune tra container1 e container2 return true e salva i due vertici in vertex_i e vertex_2. 
+//  * Se c'è un solo punto di adiacenza salva punto,-1 . 
+//  * Altrimenti  salva -1 e -1 
+//  * @param container1 
+//  * @param container2 
+//  * @param vertex_i 
+//  * @param vertex_j 
+//  * @return true se c'è adiacenza 
+//  * @return false altrimenti
+//  */
+// bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
+
+bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j, vector<K::Point_2> decomposedVertices);
 
 /**
- * @brief calcola il coseno dell'angolo tra due vettori in radianti (controllare che siano radianti )
- * @param v 
- * @param w 
- * @return double 
+ * @brief 
+ * 
+ * @param polygon 
+ * @param p 
+ * @param approx
+ * @return true 
+ * @return false 
  */
-double calculateAngle (CGAL::Vector_2<K> v, CGAL::Vector_2<K> w);
+bool isPointIntoConvexPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, K::Point_2 p, float approx);
 
 /**
- * @brief calcola i vertici di adiacenza tra due poligoni 
- * se ci sono due punti in comune tra container1 e container2 return true e salva i due vertici in vertex_i e vertex_2. 
- * Se c'è un solo punto di adiacenza salva punto,-1 . 
- * Altrimenti  salva -1 e -1 
- * @param container1 
- * @param container2 
- * @param vertex_i 
- * @param vertex_j 
- * @return true se c'è adiacenza 
- * @return false altrimenti
+ * @brief 
+ * 
+ * @param line1 
+ * @param line2 
+ * @param approximation  
+ * @return vector<K::Point_2> 
  */
-bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
+vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float approximation);
+
+/**
+ * @brief 
+ * 
+ * @param line1 
+ * @param line2 
+ * @param sweepDistance 
+ * @return vector<K::Point_2> 
+ */
+vector<K::Point_2> intersect_lines(CGAL::Line_2<K> line1, CGAL::Line_2<K> line2, float sweepDistance);
 
 /**
  * @brief interseca un poligono con una retta
  * @param polygon 
  * @param line 
+ * @param approx
  * @return K::Point_2* coppia di punti in cui si intersecano (eventualmente coincidenti)
  */
-vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line);
+vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> polygon, CGAL::Line_2<K> line, float approx);
 
 
 
@@ -82,18 +107,11 @@ vector<K::Point_2> intersect_convex_polygon_line(shared_ptr<CGAL::Polygon_2<K>> 
  * 
  * @param polygon 
  * @param edgeIndex 
+ * @param vertexIndex 
  * @return pair<K::Point_2,int> 
  */
-pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex, int vertexIndex);
+pair<K::Point_2,int> intersect_concave_polygon_at_index(shared_ptr<CGAL::Polygon_2<K>> polygon, size_t edgeIndex, size_t vertexIndex);
 
-/**
- * @brief restituisce l'indice del vector a cui corrisponde il valore x
- * 
- * @param v 
- * @param x 
- * @return int 
- */
-int indexOf(vector<int> v, int x);
 
 /**
  * @brief divide un segmento in punti equidistanti in base a distance (eventualmente viene ridotta)
@@ -115,31 +133,27 @@ vector<K::Point_2> divideSegment(CGAL::Segment_2<K> segment, float distance);
  int isLeft(K::Point_2 a, K::Point_2 b, K::Point_2 c); 
 
 /**
- * @brief restituisce -1 se il lato edgeIndex del poligono polygon non è collineare con nessuno dei due lati adiacenti, 
- * altrimenti restituisce l'indice del lato con cui è collineare 
- * @param polygon 
- * @param edgeIndex 
- * @return index of collinear edge 
- * @return -1 
- */
-int isCollinear(shared_ptr<CGAL::Polygon_2<K>> polygon, int edgeIndex); 
-
-/**
- * @brief 
- * 
- * @param p 
- */
-void printPointCoordinates(K::Point_2 p); 
-
-/**
  * @brief 
  * 
  * @param a 
  * @param b 
+ * @param approx
  * @return true 
  * @return false 
  */
-bool areEqual(K::Point_2 a, K::Point_2 b);
+bool arePointsEqual(K::Point_2 a, K::Point_2 b, float approx);
+
+/**
+ * @brief 
+ * 
+ * @param s1 
+ * @param s2 
+ * @param approx 
+ * @return true 
+ * @return false 
+ */
+bool areSegmentsEqual(CGAL::Segment_2<K> s1, CGAL::Segment_2<K> s2, float approx);
+
 
 /**
  * @brief 
@@ -149,3 +163,16 @@ bool areEqual(K::Point_2 a, K::Point_2 b);
  * @return K::Point_2 
  */
 K::Point_2 nearestPoint(K::Point_2 p, vector<K::Point_2> points);
+
+
+/**
+ * @brief 
+ * 
+ * @param segment1 
+ * @param segment2 
+ * @param approx 
+ * @return pair<bool, CGAL::Segment_2<K>> 
+ */
+pair<bool, CGAL::Segment_2<K>> concatenateSegments(CGAL::Segment_2<K> segment1, CGAL::Segment_2<K> segment2, float approx);
+
+
