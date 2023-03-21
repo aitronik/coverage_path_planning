@@ -214,8 +214,6 @@ void CoveragePathCreator::createAdjMatrix() {
 // restituisce l'indice del poligono non ancora visitato a distanza minima dalla sorgente
 int CoveragePathCreator::indexOfMinimum(vector<float> &dist, vector<bool> &visited) {
 
-    // cout << "indexOfMinimum()" << endl; 
-
     int index = -1;
     float min = INT_MAX;
 
@@ -276,9 +274,6 @@ int CoveragePathCreator::numAdiacency(int node) {
 
 void CoveragePathCreator::Dijkstra(vector<vector<int>> &graph, int sorg, vector<float> &distances)
 {
-
-    // cout << "Dijkstra()" << endl; 
-
     size_t numNodes = graph[0].size();
     distances = vector<float>(numNodes, INT_MAX); 
     vector<bool> visited(numNodes, false);
@@ -336,10 +331,9 @@ void CoveragePathCreator::createAdjWeigthMatrix() { // crea una matrice di adiac
 /*******************************************************/
 
 // trova il percorso che tocca tutti i nodi minimizzando la distanza
-vector<int> CoveragePathCreator::findMinRouteTo(int start)
-{
+vector<int> CoveragePathCreator::findMinRouteFrom(int start) {
 
-    cout << "findMinRouteTo()" << endl; 
+    cout << "findMinRouteFrom()" << endl; 
     size_t N = m_adj.size();
     // inizializzo il vettore dei nodi visitati e dei costi
     // start è il nodo di partenza
@@ -536,7 +530,7 @@ bool CoveragePathCreator::orderSubPolygons()
     }
 
     createAdjWeigthMatrix();
-    vector<int> route = findMinRouteTo(start); // route è il vector dei precedenti -> all'indice i c'è il precedente del poligono i
+    vector<int> route = findMinRouteFrom(start); // route è il vector dei precedenti -> all'indice i c'è il precedente del poligono i
 
     // oridnamento effettivo
     size_t cont = 0;
@@ -623,7 +617,7 @@ tuple<CGAL::Segment_2<K>, K::Point_2> CoveragePathCreator::findSweepDirection(sh
     }
  
         // la direzione di spazzata è la direzione di polygon.edge(index)
-    return make_tuple(polygon->edge(index), corrispondent_points.at(index));
+    return make_tuple(polygon->edge(index), corrispondent_points[index]);
 }
 
 /*******************************************************/
@@ -777,16 +771,12 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
         intersections.push_back(edge.target()); 
     }
 
-    // for (size_t i = 0; i < grid.size(); i++) {
-    //     m_Helper.plotLineForTest(grid[i]);
-    // }
-
-
 
     for (size_t i = 1; i < grid.size(); i++) {
 
         vector<K::Point_2> a = intersect_convex_polygon_line(restrictedPolygon, grid[i], 0.01);
-       
+
+
         // o non interseca oppure interseca solo in un punto
         if (a.size() == 0) {
             cout << "generateGridForOnePolygon(): non trovate intersezioni tra linea e sottopoligono ristretto" << endl;
@@ -802,6 +792,7 @@ vector<K::Point_2> CoveragePathCreator::generateGridForOnePolygon(shared_ptr<CGA
         }
 
     }
+
 
     // affinché le intersezioni siano tutte direzionate allo stesso modo (es.prima sx poi dx)
     for (size_t i = 0; i < intersections.size(); i = i + 2) {
@@ -899,14 +890,14 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
     }
 
 
-    //non so perché ci siano punti duplicati, andrebbe risolto in altro modo ==> e comunque questo forse lo metto più alla fine 
-    if (path.size() > 2) {
-        for (size_t i = 0; i < path.size(); i++) {
-            if (arePointsEqual(path.at(i).source(), path.at(i).target(), 0.01)) {
-                path.erase(path.begin()+i);
-            }
-        }
-    }
+    // //non so perché ci siano punti duplicati, andrebbe risolto in altro modo ==> e comunque questo forse lo metto più alla fine 
+    // if (path.size() > 2) {
+    //     for (size_t i = 0; i < path.size(); i++) {
+    //         if (arePointsEqual(path.at(i).source(), path.at(i).target(), 0.01)) {
+    //             path.erase(path.begin()+i);
+    //         }
+    //     }
+    // }
 
 
     return path; // l'ultimo target del path è il punto dove finisce
@@ -914,6 +905,7 @@ vector<CGAL::Segment_2<K>> CoveragePathCreator::generatePathForOnePolygon(vector
 
 
 /*******************************************************/
+
 int CoveragePathCreator::generateLinkBetween(size_t indexOfLastPolygonCovered, size_t indexPolygon, int& cont) {
     
     cout << "generateLinkBetweeen()" << endl; 
@@ -1126,6 +1118,7 @@ void CoveragePathCreator::createPathToReturn() {
     
     cout << "createPathToReturn()" << endl; 
 
+    //qua eliminazione duplicati 
     for (size_t i = 0; i < m_finalPath.size(); i++)
     {
         vector<K::Point_2> v = divideSegment(m_finalPath.at(i), m_rangeToReturn);
@@ -1422,7 +1415,7 @@ bool CoveragePathCreator::run() {
     }
     for (size_t pol_i = 0; pol_i < partitionPolys_new.size(); pol_i++) {
         Polygon poly = partitionPolys_new.at(m_polygonsSorted[pol_i]);
-        m_Helper.plotSubPolygon(poly, m_decomposedVertices, m_decompositionName, false , to_string(pol_i) , false ); 
+        m_Helper.plotSubPolygon(poly, m_decomposedVertices, m_decompositionName, true , to_string(pol_i) , false ); 
     }
 
     // creazione dei path per ogni sottopoligoni e unione

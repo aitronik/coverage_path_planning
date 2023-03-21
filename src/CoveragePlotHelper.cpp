@@ -89,7 +89,7 @@ void CoveragePlotHelper::plotPerimeter(shared_ptr<CGAL::Polygon_2<K>> poly, stri
             first = point;
         }
         if (i == points.size()-1 ) last = point;
-        cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 2.5, 8, 0);
+        cv::line(m_perimeterImage, p_old, point, cv::Scalar(0,0,0) , 3, 8, 0);
         
         if (printIndexes)  {
             cv::putText(m_perimeterImage, std::to_string(i) ,point , cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255, 0, 255),2);
@@ -224,7 +224,7 @@ void CoveragePlotHelper::plotPartialPath(vector<CGAL::Segment_2<K>> path, int co
         K::Point_2 p = path.at(i).source();
         K::Point_2 q = path.at(i).target(); 
         cv::line(m_perimeterImage, cv::Point( pixelFromMetres(p.x()), pixelFromMetres(p.hy()) ) , 
-            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(0,0,255) , 1.5, 8, 0);
+            cv::Point(pixelFromMetres(q.x()), pixelFromMetres(q.hy()) ), cv::Scalar(204,0,0) , 1.5, 8, 0);
     }
 
     if (cont != -1) {
@@ -266,7 +266,7 @@ void CoveragePlotHelper::plotPoint(K::Point_2 point, char color, int cont) {
         c = cv::Scalar(255,0,0);
     }
     cv::Point p(pixelFromMetres(point.x()), pixelFromMetres(point.hy())); 
-    cv::circle(m_perimeterImage, p , 2, c, 2 ); 
+    cv::circle(m_perimeterImage, p , 3.5, c, 2 ); 
 
     if (cont != -1) {
         cv::putText(m_perimeterImage, to_string(cont), p,  cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(0, 0, 0), 2 );
@@ -315,11 +315,3 @@ void CoveragePlotHelper::clearAllImages() {
 }
 
 /***********************************/
-// void plotSubPolygons(Polygon_list decomposition, vector<K::Point_2>& vertices, bool putVertexText){
-    
-//     for (const Polygon &poly : decomposition) {
-//         for (const &p : poly.container() ) {
-
-//         }
-//     }
-// }
