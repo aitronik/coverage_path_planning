@@ -43,21 +43,17 @@ vector<pair<float,float>> readFromFile(string filename);
  */
 shared_ptr<CGAL::Polygon_2<K>> createPolygon(vector<K::Point_2> points) ;
 
-
-// /**
-//  * @brief calcola i vertici di adiacenza tra due poligoni 
-//  * se ci sono due punti in comune tra container1 e container2 return true e salva i due vertici in vertex_i e vertex_2. 
-//  * Se c'è un solo punto di adiacenza salva punto,-1 . 
-//  * Altrimenti  salva -1 e -1 
-//  * @param container1 
-//  * @param container2 
-//  * @param vertex_i 
-//  * @param vertex_j 
-//  * @return true se c'è adiacenza 
-//  * @return false altrimenti
-//  */
-// bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j );
-
+/**
+ * @brief 
+ * 
+ * @param container1 
+ * @param container2 
+ * @param vertex_i 
+ * @param vertex_j 
+ * @param decomposedVertices 
+ * @return true 
+ * @return false 
+ */
 bool adjacency(list<size_t> container1, list<size_t> container2, int& vertex_i, int& vertex_j, vector<K::Point_2> decomposedVertices);
 
 /**

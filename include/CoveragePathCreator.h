@@ -300,11 +300,11 @@ class CoveragePathCreator {
         vector<CGAL::Line_2<K>> createGrid(CGAL::Segment_2<K> parallelEdge, K::Point_2 point);
 
          /**
-         * @brief 
-         * 
+         * @brief setta a true isEdgeToReduce[i] se il lato i-esimo del poligono polygon deve essere ridotto, ovvero se non è completamente contenuto 
+         * in un'adiacenza tra sottopoligoni
          * @param polygon 
          * @param isEdgeToReduce 
-         * @param adjacences 
+         * @param adjacences contiene i segmenti adiacenza
          */
         void areEdgesToReduce(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &isEdgeToReduce, vector<CGAL::Segment_2<K>> adjacences);
 
@@ -327,7 +327,7 @@ class CoveragePathCreator {
 
         /**
          * @brief inserisce in m_finalPath il collegamento tra la fine del path creato fino a quel momento e l'inizio del path di indexedPolygon
-         *  , trovando di conseguenza il punto iniziale del nuvoo pezzo di path (uno dei 4 possibili) 
+         *  , trovando di conseguenza il punto iniziale del nuovo pezzo di path (uno dei 4 possibili) 
          * @param indexPolygon 
          * @param indexOfLastPolygonCovered
          * @return int, indice di inizio per la costruzione del nuovo path 
@@ -340,7 +340,7 @@ class CoveragePathCreator {
          * @param start sottopoligono di partenza 
          * @return vector<int> 
          */
-        vector<int> findMinRouteTo(int start);
+        vector<int> findMinRouteFrom(int start);
 
 
         /**
@@ -429,7 +429,7 @@ class CoveragePathCreator {
 
      
         /**
-         * @brief riduce un sottopoligono secondo il vector borders
+         * @brief riduce un sottopoligono secondo il vector edges
          * 
          * @param polygon 
          * @param edges 
@@ -438,8 +438,9 @@ class CoveragePathCreator {
         shared_ptr<CGAL::Polygon_2<K>> reduceSubPolygon(shared_ptr<CGAL::Polygon_2<K>> polygon, vector<bool> &edges );
 
         /**
-         * @brief 
-         * 
+         * @brief elimina i vertici in eccesso da polygon, ovvero 
+         * elimina un vertice i dal poligono se il lato successivo e il lato precedente sono collineari. Inoltre questi lati vengono sostituiti dal lato che collega 
+         * il vertice i-1 con il vertice i+1s
          * @param polygon
          * @param isAdjacent 
          * @return void
